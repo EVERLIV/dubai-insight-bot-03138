@@ -1488,7 +1488,18 @@ async function handleCallbackQuery(callbackQuery: any) {
         });
         
         await handleSearchResults(chatId, messageId, searchResult, 'Премиум недвижимость');
+      } else if (searchType === 'rent') {
+        await editTelegramMessage(chatId, messageId,
+          `🔍 <b>Поиск: rent</b>\n\nВыберите ценовой диапазон:`, {
+          reply_markup: getPriceRangeKeyboard('rent_rent')
+        });
+      } else if (searchType === 'sale') {
+        await editTelegramMessage(chatId, messageId,
+          `🔍 <b>Поиск: sale</b>\n\nВыберите ценовой диапазон:`, {
+          reply_markup: getPriceRangeKeyboard('sale_sale')
+        });
       } else {
+        // For apartment, villa, townhouse, commercial, new
         await editTelegramMessage(chatId, messageId,
           `🔍 <b>Поиск: ${searchType}</b>\n\nВыберите ценовой диапазон:`, {
           reply_markup: getPriceRangeKeyboard(`${searchType}_sale`)
@@ -1499,6 +1510,7 @@ async function handleCallbackQuery(callbackQuery: any) {
     else if (data.startsWith('price_')) {
       const parts = data.split('_');
       const searchType = parts[1];
+      const purposeType = parts[2];
       const minPrice = parseInt(parts[3]) || 0;
       const maxPrice = parseInt(parts[4]) || 0;
       
@@ -1508,9 +1520,22 @@ async function handleCallbackQuery(callbackQuery: any) {
         limit: 5
       };
       
+      // Set proper purpose for search
+      if (searchType === 'rent' || purposeType === 'rent') {
+        searchParams.purpose = 'for-rent';
+      } else if (searchType === 'sale' || purposeType === 'sale') {
+        searchParams.purpose = 'for-sale';
+      }
+      
+      // Set property type filter
+      if (['apartment', 'villa', 'townhouse', 'commercial'].includes(searchType)) {
+        searchParams.property_type = searchType;
+      }
+      
       if (minPrice > 0) searchParams.min_price = minPrice;
       if (maxPrice > 0) searchParams.max_price = maxPrice;
       
+      console.log('Calling multi-platform property search including scraped data');
       const searchResult = await callMultiPlatformSearch(searchParams);
       await handleSearchResults(chatId, messageId, searchResult, 
         `${searchType} ${formatPriceRange(minPrice, maxPrice)}`);
@@ -1707,17 +1732,44 @@ async function handleCallbackQuery(callbackQuery: any) {
 
 async function handleSearchResults(chatId: number, messageId: number, searchResult: any, title: string) {
   if (searchResult.success && searchResult.properties && searchResult.properties.length > 0) {
-    let response = `🏠 <b>${title}</b>\n\n📋 Найдено ${searchResult.count} объектов:\n\n`;
+    let response = `🏠 <b>${title}</b>\n\n📋 Найдено ${searchResult.count || searchResult.properties.length} объектов:\n\n`;
     
     searchResult.properties.forEach((property: any, index: number) => {
-      response += `${index + 1}. <b>${property.title}</b>\n`;
-      response += `💰 ${property.price?.toLocaleString() || 'Цена не указана'} AED\n`;
+      const purpose = property.purpose === 'for-sale' ? 'Продажа' : 
+                     property.purpose === 'for-rent' ? 'Аренда' : 
+                     property.purpose || 'Не указано';
+      
+      response += `${index + 1}. 🏢 <b>${property.title}</b>\n`;
+      response += `💰 <b>${property.price?.toLocaleString() || 'Цена не указана'} AED</b>\n`;
       response += `📍 ${property.location_area || 'Район не указан'}\n`;
-      response += `🏠 ${property.property_type} • ${property.bedrooms || 0}BR\n`;
-      response += `🆔 <code>${property.external_id}</code>\n\n`;
+      response += `🏠 ${property.property_type || 'Тип не указан'} • ${property.bedrooms || 0}BR`;
+      
+      if (property.bathrooms) {
+        response += ` • ${property.bathrooms} ванные`;
+      }
+      if (property.area_sqft) {
+        response += ` • ${property.area_sqft} кв.ft`;
+      }
+      
+      response += `\n🎯 <b>Назначение:</b> ${purpose}\n`;
+      
+      if (property.agent_name) {
+        response += `👨‍💼 Агент: ${property.agent_name}\n`;
+      }
+      if (property.agent_phone) {
+        response += `📞 ${property.agent_phone}\n`;
+      }
+      if (property.images && property.images.length > 0) {
+        response += `📸 ${property.images.length} фото доступно\n`;
+      }
+      if (property.source_name) {
+        response += `🔗 Источник: ${property.source_name}\n`;
+      }
+      
+      response += `🆔 <code>${property.external_id || 'ID не указан'}</code>\n\n`;
     });
 
-    response += `🌐 <i>Источники: ${searchResult.platforms?.join(', ') || 'Bayut'}</i>`;
+    response += `🌐 <i>Источники: ${getUniqueSources(searchResult.properties).join(', ')}</i>`;
     
     await editTelegramMessage(chatId, messageId, response, {
       reply_markup: {
@@ -1756,6 +1808,22 @@ function formatPriceRange(min: number, max: number): string {
   if (min === 0) return `до ${(max/1000).toFixed(0)}K AED`;
   if (max === 0) return `от ${(min/1000).toFixed(0)}K AED`;
   return `${(min/1000).toFixed(0)}K - ${(max/1000).toFixed(0)}K AED`;
+}
+
+function getUniqueSources(properties: any[]): string[] {
+  const sources = new Set<string>();
+  
+  properties.forEach(property => {
+    if (property.source_name) {
+      sources.add(property.source_name);
+    } else if (property.source) {
+      sources.add(property.source);
+    } else {
+      sources.add('Bayut');
+    }
+  });
+  
+  return Array.from(sources);
 }
 
 function getAreaROIData(area: string) {
