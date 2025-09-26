@@ -5,3 +5,12 @@ verify_jwt = false
 
 [functions.dubai-bot]
 verify_jwt = false
+
+[functions.property-sync]
+verify_jwt = false
+
+[functions.property-search]
+verify_jwt = false
+
+[functions.avm-valuation]
+verify_jwt = false
