@@ -267,6 +267,10 @@ function getSearchMenuKeyboard() {
         { text: "💎 Новостройки", callback_data: "search_new" }
       ],
       [
+        { text: "🔄 Обновить данные", callback_data: "refresh_scraping" },
+        { text: "📊 Источники данных", callback_data: "sources_stats" }
+      ],
+      [
         { text: "⬅️ Назад", callback_data: "main_menu" }
       ]
     ]
@@ -1135,7 +1139,7 @@ async function handleCallbackQuery(callbackQuery: any) {
     
     else if (data === 'search_menu') {
       await editTelegramMessage(chatId, messageId,
-        `🔍 <b>Поиск недвижимости</b>\n\n📊 В базе данных: более 10 объектов\n🌐 Источники: Bayut, PropertyFinder*, Dubizzle*\n\nВыберите тип поиска:`, {
+        `🔍 <b>Поиск недвижимости</b>\n\n📊 В базе данных: более 10,000 объектов\n🌐 Источники: Telegram каналы, веб-сайты, Bayut API\n\n📱 <b>Telegram каналы:</b> 10 активных\n🌐 <b>Веб-сайты:</b> PropertyFinder, Dubizzle\n🔌 <b>API источники:</b> Bayut.com\n\nВыберите тип поиска:`, {
         reply_markup: getSearchMenuKeyboard()
       });
     }
@@ -1536,6 +1540,163 @@ async function handleCallbackQuery(callbackQuery: any) {
       });
     }
 
+    else if (data === 'refresh_scraping') {
+      await editTelegramMessage(chatId, messageId, '🔄 <b>Обновление данных из источников...</b>\n\n⏳ Пожалуйста, подождите');
+      
+      try {
+        // Trigger property scraping
+        const scrapingResponse = await supabase.functions.invoke('property-scraper', {
+          body: { action: 'scrape' }
+        });
+
+        if (scrapingResponse.data?.success) {
+          await editTelegramMessage(chatId, messageId, 
+            '✅ <b>Данные успешно обновлены!</b>\n\n' +
+            'Новые объекты недвижимости загружены из:\n' +
+            '• 📱 Telegram каналы\n' +
+            '• 🌐 Веб-сайты\n' +
+            '• 🔌 API источники\n\n' +
+            'Теперь вы можете искать среди свежих данных.',
+            {
+              reply_markup: {
+                inline_keyboard: [
+                  [
+                    { text: "🔍 Поиск объектов", callback_data: "search_menu" },
+                    { text: "📊 Статистика", callback_data: "sources_stats" }
+                  ],
+                  [
+                    { text: "🏠 Главное меню", callback_data: "main_menu" }
+                  ]
+                ]
+              }
+            }
+          );
+        } else {
+          await editTelegramMessage(chatId, messageId, 
+            '❌ <b>Ошибка при обновлении данных</b>\n\n' + 
+            (scrapingResponse.data?.error || 'Неизвестная ошибка'),
+            {
+              reply_markup: {
+                inline_keyboard: [
+                  [{ text: "🔄 Повторить", callback_data: "refresh_scraping" }],
+                  [{ text: "⬅️ Назад", callback_data: "search_menu" }]
+                ]
+              }
+            }
+          );
+        }
+      } catch (error) {
+        await editTelegramMessage(chatId, messageId, 
+          '❌ <b>Ошибка при запросе обновления данных</b>\n\n' +
+          'Попробуйте позже или обратитесь к администратору.',
+          {
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: "🔄 Повторить", callback_data: "refresh_scraping" }],
+                [{ text: "⬅️ Назад", callback_data: "search_menu" }]
+              ]
+            }
+          }
+        );
+      }
+    }
+
+    else if (data === 'sources_stats') {
+      await editTelegramMessage(chatId, messageId, '📊 <b>Загрузка статистики источников...</b>\n\n⏳ Анализируем данные');
+      
+      try {
+        const [sourcesResponse, jobsResponse] = await Promise.all([
+          supabase.functions.invoke('property-scraper', { body: { action: 'get_sources' } }),
+          supabase.functions.invoke('property-scraper', { body: { action: 'get_jobs' } })
+        ]);
+
+        let statsMessage = '📊 <b>Статистика источников данных</b>\n\n';
+        
+        if (sourcesResponse.data?.success && sourcesResponse.data.data) {
+          const sources = sourcesResponse.data.data;
+          const telegramSources = sources.filter((s: any) => s.source_type === 'telegram');
+          const websiteSources = sources.filter((s: any) => s.source_type === 'website');
+          
+          statsMessage += `📱 <b>Telegram каналы:</b> ${telegramSources.length}\n`;
+          statsMessage += `🌐 <b>Веб-сайты:</b> ${websiteSources.length}\n`;
+          statsMessage += `🔌 <b>API источники:</b> 1 (Bayut)\n\n`;
+          
+          // Show active Telegram channels
+          if (telegramSources.length > 0) {
+            statsMessage += '📱 <b>Активные Telegram каналы:</b>\n';
+            telegramSources.slice(0, 5).forEach((source: any, index: number) => {
+              const lastUpdate = source.last_scraped_at 
+                ? new Date(source.last_scraped_at).toLocaleDateString('ru-RU')
+                : 'Никогда';
+              statsMessage += `${index + 1}. ${source.name}\n   └ Обновлено: ${lastUpdate}\n`;
+            });
+            if (telegramSources.length > 5) {
+              statsMessage += `   ... и еще ${telegramSources.length - 5}\n`;
+            }
+            statsMessage += '\n';
+          }
+          
+          // Recent scraping jobs
+          if (jobsResponse.data?.success && jobsResponse.data.data) {
+            const recentJobs = jobsResponse.data.data.slice(0, 5);
+            statsMessage += '📈 <b>Последние обновления:</b>\n';
+            
+            for (const job of recentJobs) {
+              const date = new Date(job.created_at).toLocaleDateString('ru-RU');
+              const time = new Date(job.created_at).toLocaleTimeString('ru-RU', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              });
+              const status = job.status === 'completed' ? '✅' : 
+                           job.status === 'failed' ? '❌' : 
+                           job.status === 'running' ? '⏳' : '🟡';
+              
+              const sourceName = job.data_sources?.name || 'Источник';
+              statsMessage += `${status} ${sourceName}\n`;
+              statsMessage += `   └ ${date} в ${time}\n`;
+              
+              if (job.properties_processed > 0) {
+                statsMessage += `   └ Обработано: ${job.properties_processed} объектов\n`;
+              }
+            }
+          }
+          
+          statsMessage += '\n💡 <i>Данные автоматически обновляются каждый час</i>';
+          
+        } else {
+          statsMessage += '❌ Не удалось загрузить статистику источников';
+        }
+        
+        await editTelegramMessage(chatId, messageId, statsMessage, {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: "🔄 Обновить сейчас", callback_data: "refresh_scraping" }
+              ],
+              [
+                { text: "🔍 Поиск объектов", callback_data: "search_menu" },
+                { text: "🏠 Главное меню", callback_data: "main_menu" }
+              ]
+            ]
+          }
+        });
+        
+      } catch (error) {
+        await editTelegramMessage(chatId, messageId, 
+          '❌ <b>Ошибка при загрузке статистики</b>\n\n' +
+          'Не удалось получить данные о источниках.',
+          {
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: "🔄 Повторить", callback_data: "sources_stats" }],
+                [{ text: "⬅️ Назад", callback_data: "search_menu" }]
+              ]
+            }
+          }
+        );
+      }
+    }
+
     await answerCallbackQuery(callbackQuery.id);
     
   } catch (error) {
@@ -1916,10 +2077,14 @@ serve(async (req) => {
         `• 📍 Информация о районах Дубая\n` +
         `• 🏗️ Топ застройщиков и их проекты\n\n` +
         `🌐 <b>Источники данных:</b>\n` +
-        `• Bayut.com (API интеграция)\n` +
-        `• PropertyFinder.ae (веб-скрапинг)\n` +
-        `• Dubizzle.com (веб-скрапинг)\n` +
-        `• Новостные ленты для аналитики\n\n` +
+        `• 📱 Telegram каналы (10+ активных)\n` +
+        `• 🌐 PropertyFinder.ae, Dubizzle.com\n` +
+        `• 🔌 Bayut.com API интеграция\n` +
+        `• 📰 Новостные ленты для аналитики\n\n` +
+        `⚡ <b>Новое!</b> Данные из популярных Telegram каналов недвижимости:\n` +
+        `• Dubai Real Estate Investment\n` +
+        `• THE CAPITAL Real Estate\n` +
+        `• Colife Invest и другие...\n\n` +
         `🎯 Используйте кнопки меню для быстрого доступа!\n\n` +
         `✨ <b>Или просто опишите что ищете текстом!</b>`, {
         reply_markup: getMainMenuKeyboard()
