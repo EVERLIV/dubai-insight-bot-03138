@@ -15,7 +15,17 @@ const corsHeaders = {
 const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
 // Store for tracking user message contexts and cleanup
-const userContexts = new Map<number, { lastBotMessageId?: number, searchContext?: any }>();
+const userContexts = new Map<number, { 
+  lastBotMessageId?: number; 
+  searchContext?: any;
+  state?: string;
+  roiData?: {
+    propertyPrice?: number;
+    monthlyRent?: number;
+    area?: string;
+    propertyType?: string;
+  };
+}>();
 
 async function cleanupPreviousMessages(chatId: number) {
   const context = userContexts.get(chatId);
@@ -525,56 +535,45 @@ async function handleCallbackQuery(callbackQuery: any) {
       
       if (roiType === 'by_price') {
         await editTelegramMessage(chatId, messageId,
-          `💰 <b>ROI по ценовым сегментам</b>\n\n` +
-          `📊 Средняя доходность по ценовым категориям:\n\n` +
-          `🏠 <b>Бюджетные (до 500K AED):</b>\n` +
-          `• Аренда: 8-12% в год\n` +
-          `• Перепродажа: 15-25% за 2-3 года\n` +
-          `• Районы: JVC, International City\n\n` +
-          `🏢 <b>Средний сегмент (500K-1.5M AED):</b>\n` +
-          `• Аренда: 6-9% в год\n` +
-          `• Перепродажа: 20-30% за 3-5 лет\n` +
-          `• Районы: Dubai South, Arjan, Al Furjan\n\n` +
-          `🏖️ <b>Премиум (1.5M+ AED):</b>\n` +
-          `• Аренда: 4-7% в год\n` +
-          `• Перепродажа: 25-40% за 5-7 лет\n` +
-          `• Районы: Marina, Downtown, Palm Jumeirah`, {
+          `💰 <b>Персональный расчет ROI</b>\n\n` +
+          `Для расчета рентабельности мне нужны данные о вашем объекте.\n\n` +
+          `📝 Укажите стоимость недвижимости в AED\n` +
+          `(например: 600000)`, {
           reply_markup: {
             inline_keyboard: [
-              [
-                { text: "📊 Аналитика", callback_data: "analytics_menu" },
-                { text: "🎯 ROI меню", callback_data: "roi_calculator" }
-              ]
+              [{ text: "❌ Отмена", callback_data: "roi_calculator" }]
             ]
           }
         });
+        
+        // Set user state for input
+        const context = userContexts.get(chatId) || {};
+        context.state = 'roi_enter_price';
+        context.roiData = {};
+        userContexts.set(chatId, context);
       }
       
       else if (roiType === 'by_area') {
         await editTelegramMessage(chatId, messageId,
-          `📍 <b>ROI по районам</b>\n\n` +
-          `🏆 <b>Топ районы по доходности:</b>\n\n` +
-          `1️⃣ <b>JVC (Jumeirah Village Circle):</b>\n` +
-          `• ROI: 8-11% в год\n` +
-          `• Средняя цена: 450K AED\n` +
-          `• Тренд: ↗️ Растущий\n\n` +
-          `2️⃣ <b>Dubai South:</b>\n` +
-          `• ROI: 7-10% в год\n` +
-          `• Средняя цена: 520K AED\n` +
-          `• Тренд: ↗️ Растущий\n\n` +
-          `3️⃣ <b>Al Furjan:</b>\n` +
-          `• ROI: 6-9% в год\n` +
-          `• Средняя цена: 680K AED\n` +
-          `• Тренд: ↗️ Стабильный\n\n` +
-          `4️⃣ <b>Dubai Marina:</b>\n` +
-          `• ROI: 5-8% в год\n` +
-          `• Средняя цена: 1.2M AED\n` +
-          `• Тренд: ↗️ Премиум сегмент`, {
+          `📍 <b>Расчет ROI по району</b>\n\n` +
+          `Выберите район для анализа рентабельности:`, {
           reply_markup: {
             inline_keyboard: [
               [
-                { text: "📊 Аналитика", callback_data: "analytics_menu" },
-                { text: "🎯 ROI меню", callback_data: "roi_calculator" }
+                { text: "🏙️ Dubai Marina", callback_data: "roi_area_marina" },
+                { text: "🏢 Downtown", callback_data: "roi_area_downtown" }
+              ],
+              [
+                { text: "🌊 JBR", callback_data: "roi_area_jbr" },
+                { text: "🌳 JVC", callback_data: "roi_area_jvc" }
+              ],
+              [
+                { text: "✈️ Dubai South", callback_data: "roi_area_south" },
+                { text: "🏗️ Business Bay", callback_data: "roi_area_business" }
+              ],
+              [
+                { text: "🎯 Свой район", callback_data: "roi_area_custom" },
+                { text: "❌ Отмена", callback_data: "roi_calculator" }
               ]
             ]
           }
@@ -632,6 +631,52 @@ async function handleCallbackQuery(callbackQuery: any) {
               [
                 { text: "🎯 ROI меню", callback_data: "roi_calculator" },
                 { text: "📊 Аналитика", callback_data: "analytics_menu" }
+              ]
+            ]
+          }
+        });
+      }
+    }
+    
+    else if (data.startsWith('roi_area_')) {
+      const area = data.replace('roi_area_', '');
+      
+      if (area === 'custom') {
+        await editTelegramMessage(chatId, messageId,
+          `📍 <b>Анализ по району</b>\n\n` +
+          `Напишите название района на русском или английском языке\n` +
+          `(например: Business Bay, JVC, Дубай Марина)`, {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: "❌ Отмена", callback_data: "roi_calculator" }]
+            ]
+          }
+        });
+        
+        const context = userContexts.get(chatId) || {};
+        context.state = 'roi_enter_area';
+        context.roiData = {};
+        userContexts.set(chatId, context);
+      } else {
+        // Show specific area analysis
+        const areaData = getAreaROIData(area);
+        await editTelegramMessage(chatId, messageId,
+          `📍 <b>ROI анализ: ${areaData.name}</b>\n\n` +
+          `📊 <b>Средние показатели:</b>\n` +
+          `• Арендная доходность: ${areaData.rental_yield}\n` +
+          `• Средняя цена: ${areaData.avg_price}\n` +
+          `• Рост за год: ${areaData.growth}\n` +
+          `• Ликвидность: ${areaData.liquidity}\n\n` +
+          `🏠 <b>Популярные типы:</b>\n` +
+          `${areaData.property_types}\n\n` +
+          `💡 <b>Инвестиционный потенциал:</b>\n` +
+          `${areaData.investment_potential}\n\n` +
+          `📈 <b>Прогноз:</b> ${areaData.forecast}`, {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: "💰 Рассчитать мой ROI", callback_data: "roi_by_price" },
+                { text: "🎯 ROI меню", callback_data: "roi_calculator" }
               ]
             ]
           }
@@ -765,6 +810,89 @@ function formatPriceRange(min: number, max: number): string {
   return `${(min/1000).toFixed(0)}K - ${(max/1000).toFixed(0)}K AED`;
 }
 
+function getAreaROIData(area: string) {
+  const areas: { [key: string]: any } = {
+    marina: {
+      name: "Dubai Marina",
+      rental_yield: "5-8% в год",
+      avg_price: "1.2M AED",
+      growth: "+12% за год",
+      liquidity: "Высокая",
+      property_types: "• Апартаменты с видом на море\n• Студии и 1BR для инвесторов\n• Пентхаусы премиум класса",
+      investment_potential: "Стабильный доход от аренды, высокий спрос у туристов и экспатов",
+      forecast: "Умеренный рост, стабильная аренда"
+    },
+    downtown: {
+      name: "Downtown Dubai",
+      rental_yield: "4-7% в год", 
+      avg_price: "1.8M AED",
+      growth: "+15% за год",
+      liquidity: "Очень высокая",
+      property_types: "• Апартаменты с видом на Burj Khalifa\n• 1-3BR в премиум башнях\n• Коммерческая недвижимость",
+      investment_potential: "Премиум локация, высокий потенциал роста стоимости",
+      forecast: "Сильный рост, премиальная аренда"
+    },
+    jbr: {
+      name: "JBR (Jumeirah Beach Residence)",
+      rental_yield: "6-9% в год",
+      avg_price: "950K AED", 
+      growth: "+10% за год",
+      liquidity: "Высокая",
+      property_types: "• Апартаменты на первой линии\n• Студии для краткосрочной аренды\n• 2-3BR семейные квартиры",
+      investment_potential: "Отличный доход от туристической аренды",
+      forecast: "Стабильный рост, сезонность аренды"
+    },
+    jvc: {
+      name: "JVC (Jumeirah Village Circle)",
+      rental_yield: "8-11% в год",
+      avg_price: "450K AED",
+      growth: "+18% за год", 
+      liquidity: "Средняя",
+      property_types: "• Студии и 1BR для инвесторов\n• Семейные таунхаусы\n• Бюджетные апартаменты",
+      investment_potential: "Высокая доходность, быстро развивающийся район",
+      forecast: "Высокий потенциал роста"
+    },
+    south: {
+      name: "Dubai South",
+      rental_yield: "7-10% в год",
+      avg_price: "520K AED",
+      growth: "+22% за год",
+      liquidity: "Растущая", 
+      property_types: "• Новые жилые комплексы\n• Виллы и таунхаусы\n• Апартаменты возле аэропорта",
+      investment_potential: "Новый растущий район с большим потенциалом",
+      forecast: "Очень высокий рост потенциал"
+    },
+    business: {
+      name: "Business Bay",
+      rental_yield: "5-8% в год",
+      avg_price: "850K AED",
+      growth: "+8% за год",
+      liquidity: "Высокая",
+      property_types: "• Офисные и жилые башни\n• 1-2BR для бизнесменов\n• Коммерческие помещения", 
+      investment_potential: "Деловой центр, стабильный спрос",
+      forecast: "Умеренный стабильный рост"
+    }
+  };
+  
+  return areas[area] || areas.marina;
+}
+
+function calculateROI(propertyPrice: number, monthlyRent: number) {
+  const annualRent = monthlyRent * 12;
+  const grossYield = (annualRent / propertyPrice) * 100;
+  const expenses = annualRent * 0.15; // 15% на расходы
+  const netYield = ((annualRent - expenses) / propertyPrice) * 100;
+  const paybackPeriod = propertyPrice / (annualRent - expenses);
+  
+  return {
+    grossYield: grossYield.toFixed(2),
+    netYield: netYield.toFixed(2), 
+    paybackPeriod: paybackPeriod.toFixed(1),
+    annualRent: annualRent,
+    expenses: expenses
+  };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -810,8 +938,133 @@ serve(async (req) => {
       return new Response('OK', { headers: corsHeaders });
     }
 
-    // Handle general text messages with search
+    // Handle general text messages with search or ROI input
     if (text.length > 0) {
+      const context = userContexts.get(chatId);
+      
+      // Handle ROI calculator states
+      if (context?.state) {
+        if (context.state === 'roi_enter_price') {
+          const price = parseFloat(text.replace(/[^\d.]/g, ''));
+          if (isNaN(price) || price <= 0) {
+            await sendTelegramMessageWithTracking(chatId,
+              `❌ <b>Некорректная цена</b>\n\n` +
+              `Пожалуйста, укажите стоимость недвижимости числом в AED\n` +
+              `(например: 600000 или 1200000)`, {
+              reply_markup: {
+                inline_keyboard: [[{ text: "❌ Отмена", callback_data: "roi_calculator" }]]
+              }
+            });
+            return new Response('OK', { headers: corsHeaders });
+          }
+          
+          context.roiData!.propertyPrice = price;
+          context.state = 'roi_enter_rent';
+          userContexts.set(chatId, context);
+          
+          await sendTelegramMessageWithTracking(chatId,
+            `💰 <b>Отлично!</b>\n\n` +
+            `Стоимость объекта: ${price.toLocaleString()} AED\n\n` +
+            `📅 Теперь укажите месячную арендную плату в AED\n` +
+            `(например: 3500)`, {
+            reply_markup: {
+              inline_keyboard: [[{ text: "❌ Отмена", callback_data: "roi_calculator" }]]
+            }
+          });
+          return new Response('OK', { headers: corsHeaders });
+        }
+        
+        else if (context.state === 'roi_enter_rent') {
+          const rent = parseFloat(text.replace(/[^\d.]/g, ''));
+          if (isNaN(rent) || rent <= 0) {
+            await sendTelegramMessageWithTracking(chatId,
+              `❌ <b>Некорректная арендная плата</b>\n\n` +
+              `Пожалуйста, укажите месячную аренду числом в AED\n` +
+              `(например: 3500 или 4200)`, {
+              reply_markup: {
+                inline_keyboard: [[{ text: "❌ Отмена", callback_data: "roi_calculator" }]]
+              }
+            });
+            return new Response('OK', { headers: corsHeaders });
+          }
+          
+          context.roiData!.monthlyRent = rent;
+          const propertyPrice = context.roiData!.propertyPrice!;
+          const roi = calculateROI(propertyPrice, rent);
+          
+          // Clear state
+          context.state = undefined;
+          context.roiData = undefined;
+          userContexts.set(chatId, context);
+          
+          const netYieldNum = parseFloat(roi.netYield);
+          
+          await sendTelegramMessageWithTracking(chatId,
+            `🎯 <b>Расчет ROI завершен</b>\n\n` +
+            `💰 <b>Ваши данные:</b>\n` +
+            `• Стоимость: ${propertyPrice.toLocaleString()} AED\n` +
+            `• Аренда в месяц: ${rent.toLocaleString()} AED\n` +
+            `• Аренда в год: ${roi.annualRent.toLocaleString()} AED\n\n` +
+            `📊 <b>Результаты:</b>\n` +
+            `• 📈 Валовая доходность: ${roi.grossYield}%\n` +
+            `• 💎 Чистая доходность: ${roi.netYield}%\n` +
+            `• ⏰ Срок окупаемости: ${roi.paybackPeriod} лет\n` +
+            `• 💸 Расходы в год: ~${roi.expenses.toLocaleString()} AED\n\n` +
+            `${netYieldNum >= 8 ? '🟢' : netYieldNum >= 5 ? '🟡' : '🔴'} <b>Оценка:</b> ${
+              netYieldNum >= 8 ? 'Отличная доходность!' :
+              netYieldNum >= 5 ? 'Хорошая доходность' :
+              'Низкая доходность'
+            }`, {
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  { text: "🎯 Новый расчет", callback_data: "roi_by_price" },
+                  { text: "📊 Аналитика", callback_data: "analytics_menu" }
+                ],
+                [
+                  { text: "🏠 Главное меню", callback_data: "main_menu" }
+                ]
+              ]
+            }
+          });
+          return new Response('OK', { headers: corsHeaders });
+        }
+        
+        else if (context.state === 'roi_enter_area') {
+          const area = text.trim();
+          
+          // Clear state
+          context.state = undefined;
+          userContexts.set(chatId, context);
+          
+          await sendTelegramMessageWithTracking(chatId,
+            `📍 <b>Анализ района: ${area}</b>\n\n` +
+            `📊 Для района "${area}" среднестатистические показатели:\n\n` +
+            `💰 <b>Средние цены:</b>\n` +
+            `• Студия: 250K - 400K AED\n` +
+            `• 1BR: 400K - 700K AED\n` +
+            `• 2BR: 700K - 1.2M AED\n\n` +
+            `📈 <b>Примерная доходность:</b>\n` +
+            `• Арендная: 6-9% в год\n` +
+            `• Рост стоимости: 10-15% в год\n\n` +
+            `💡 <b>Рекомендации:</b>\n` +
+            `• Изучите инфраструктуру района\n` +
+            `• Проверьте планы развития\n` +
+            `• Сравните с соседними районами`, {
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  { text: "💰 Рассчитать ROI", callback_data: "roi_by_price" },
+                  { text: "🎯 ROI меню", callback_data: "roi_calculator" }
+                ]
+              ]
+            }
+          });
+          return new Response('OK', { headers: corsHeaders });
+        }
+      }
+      
+      // Regular property search if not in ROI state
       const searchResult = await callMultiPlatformSearch({
         telegram_user_id: userId,
         query: text,
