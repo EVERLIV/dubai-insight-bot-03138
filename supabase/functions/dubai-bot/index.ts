@@ -507,6 +507,18 @@ async function handleCallbackQuery(callbackQuery: any) {
       await generateNewsAnalytics(chatId, messageId);
     }
     
+    else if (data === 'analytics_new_projects') {
+      await generateNewProjectsAnalysis(chatId, messageId);
+    }
+    
+    else if (data === 'analytics_investment') {
+      await generateInvestmentAnalysis(chatId, messageId);
+    }
+    
+    else if (data === 'analytics_reports') {
+      await generateMarketReports(chatId, messageId);
+    }
+    
     else if (data === 'roi_calculator') {
       await editTelegramMessage(chatId, messageId,
         `🎯 <b>ROI Калькулятор</b>\n\n` +
@@ -891,6 +903,207 @@ function calculateROI(propertyPrice: number, monthlyRent: number) {
     annualRent: annualRent,
     expenses: expenses
   };
+}
+
+async function generateNewProjectsAnalysis(chatId: number, messageId: number) {
+  try {
+    await editTelegramMessage(chatId, messageId,
+      `🏗️ <b>Анализ новых проектов...</b>\n\n⏳ Генерирую отчет с помощью ИИ...`, {
+      reply_markup: {
+        inline_keyboard: [[{ text: "❌ Отмена", callback_data: "analytics_menu" }]]
+      }
+    });
+
+    // Call DeepSeek API for new projects analysis
+    const response = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          {
+            role: 'system',
+            content: 'Ты эксперт по недвижимости Дубая. Создай анализ новых проектов недвижимости в Дубае на основе текущих рыночных трендов. Используй актуальную информацию о новых застройщиках, районах развития, и перспективных проектах. Ответ должен быть структурированным и содержать конкретные рекомендации для инвесторов.'
+          },
+          {
+            role: 'user',
+            content: 'Проанализируй новые проекты недвижимости в Дубае. Включи информацию о: 1) Топ-5 новых проектов, 2) Перспективные районы, 3) Ценовые сегменты, 4) Сроки сдачи, 5) Инвестиционный потенциал. Ответ в формате для Telegram с эмодзи.'
+          }
+        ],
+        max_tokens: 1000,
+        temperature: 0.7
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`DeepSeek API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const analysisText = data.choices[0]?.message?.content || 'Не удалось получить анализ';
+
+    await editTelegramMessage(chatId, messageId,
+      `🏗️ <b>Анализ новых проектов</b>\n\n${analysisText}\n\n🕐 <i>Обновлено: ${new Date().toLocaleString('ru-RU')}</i>`, {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: "💼 Инвестиции", callback_data: "analytics_investment" },
+            { text: "📊 Отчеты", callback_data: "analytics_reports" }
+          ],
+          [
+            { text: "📊 Аналитика", callback_data: "analytics_menu" },
+            { text: "🏠 Главное меню", callback_data: "main_menu" }
+          ]
+        ]
+      }
+    });
+
+  } catch (error) {
+    console.error('Error in new projects analysis:', error);
+    await editTelegramMessage(chatId, messageId,
+      `❌ <b>Ошибка анализа новых проектов</b>\n\n${error}`, {
+      reply_markup: {
+        inline_keyboard: [[{ text: "📊 Аналитика", callback_data: "analytics_menu" }]]
+      }
+    });
+  }
+}
+
+async function generateInvestmentAnalysis(chatId: number, messageId: number) {
+  try {
+    await editTelegramMessage(chatId, messageId,
+      `💼 <b>Инвестиционный анализ...</b>\n\n⏳ Анализирую рынок с помощью ИИ...`, {
+      reply_markup: {
+        inline_keyboard: [[{ text: "❌ Отмена", callback_data: "analytics_menu" }]]
+      }
+    });
+
+    // Call DeepSeek API for investment analysis
+    const response = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          {
+            role: 'system',
+            content: 'Ты опытный инвестиционный консультант по недвижимости Дубая. Создай детальный инвестиционный анализ рынка недвижимости с рекомендациями по стратегиям инвестирования, оценкой рисков и потенциальной доходности.'
+          },
+          {
+            role: 'user',
+            content: 'Создай инвестиционный анализ недвижимости Дубая. Включи: 1) Лучшие стратегии инвестирования, 2) Анализ рисков, 3) Прогноз доходности, 4) Рекомендации по районам, 5) Советы для новичков и опытных инвесторов. Формат для Telegram с эмодзи.'
+          }
+        ],
+        max_tokens: 1200,
+        temperature: 0.6
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`DeepSeek API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const analysisText = data.choices[0]?.message?.content || 'Не удалось получить анализ';
+
+    await editTelegramMessage(chatId, messageId,
+      `💼 <b>Инвестиционный анализ</b>\n\n${analysisText}\n\n🕐 <i>Обновлено: ${new Date().toLocaleString('ru-RU')}</i>`, {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: "🏗️ Новые проекты", callback_data: "analytics_new_projects" },
+            { text: "📊 Отчеты", callback_data: "analytics_reports" }
+          ],
+          [
+            { text: "🎯 ROI калькулятор", callback_data: "roi_calculator" },
+            { text: "📊 Аналитика", callback_data: "analytics_menu" }
+          ]
+        ]
+      }
+    });
+
+  } catch (error) {
+    console.error('Error in investment analysis:', error);
+    await editTelegramMessage(chatId, messageId,
+      `❌ <b>Ошибка инвестиционного анализа</b>\n\n${error}`, {
+      reply_markup: {
+        inline_keyboard: [[{ text: "📊 Аналитика", callback_data: "analytics_menu" }]]
+      }
+    });
+  }
+}
+
+async function generateMarketReports(chatId: number, messageId: number) {
+  try {
+    await editTelegramMessage(chatId, messageId,
+      `📊 <b>Генерация рыночных отчетов...</b>\n\n⏳ Собираю данные с помощью ИИ...`, {
+      reply_markup: {
+        inline_keyboard: [[{ text: "❌ Отмена", callback_data: "analytics_menu" }]]
+      }
+    });
+
+    // Call DeepSeek API for market reports
+    const response = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          {
+            role: 'system',
+            content: 'Ты ведущий аналитик рынка недвижимости Дубая. Создай комплексный рыночный отчет с актуальными данными о состоянии рынка, трендах, прогнозах и ключевых показателях.'
+          },
+          {
+            role: 'user',
+            content: 'Создай детальный рыночный отчет по недвижимости Дубая. Включи: 1) Обзор текущей ситуации, 2) Динамика цен по районам, 3) Объемы продаж и аренды, 4) Прогнозы на 6-12 месяцев, 5) Ключевые факторы влияния, 6) Статистика и графики в текстовом виде. Формат для Telegram.'
+          }
+        ],
+        max_tokens: 1500,
+        temperature: 0.5
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`DeepSeek API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const reportText = data.choices[0]?.message?.content || 'Не удалось сгенерировать отчет';
+
+    await editTelegramMessage(chatId, messageId,
+      `📊 <b>Рыночные отчеты</b>\n\n${reportText}\n\n🕐 <i>Обновлено: ${new Date().toLocaleString('ru-RU')}</i>`, {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: "📈 Топ районы", callback_data: "analytics_top_areas" },
+            { text: "📰 Анализ новостей", callback_data: "analytics_news" }
+          ],
+          [
+            { text: "💼 Инвестиции", callback_data: "analytics_investment" },
+            { text: "📊 Аналитика", callback_data: "analytics_menu" }
+          ]
+        ]
+      }
+    });
+
+  } catch (error) {
+    console.error('Error in market reports:', error);
+    await editTelegramMessage(chatId, messageId,
+      `❌ <b>Ошибка генерации отчетов</b>\n\n${error}`, {
+      reply_markup: {
+        inline_keyboard: [[{ text: "📊 Аналитика", callback_data: "analytics_menu" }]]
+      }
+    });
+  }
 }
 
 serve(async (req) => {
