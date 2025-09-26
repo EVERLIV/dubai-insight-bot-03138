@@ -119,27 +119,29 @@ async function analyzeMarketImpact(articles: NewsArticle[]): Promise<MarketAnaly
     ).join('\n\n---\n\n');
 
     const prompt = `
-    Analyze the following Dubai real estate news articles and provide market insights:
+    Analyze the following Dubai real estate news articles and provide market insights for 2025:
 
     ${newsContent}
 
-    Based on these news articles, provide a JSON response with the following structure:
+    Based on these news articles from 2025, provide a JSON response with the following structure:
     {
-      "sentiment": "positive|negative|neutral",
+      "sentiment": "positive|negative|neutral", 
       "impact_factors": ["factor1", "factor2", ...],
       "price_prediction": "increase|decrease|stable",
       "confidence": 0.0-1.0,
-      "summary": "Brief market summary in Russian",
+      "summary": "Brief market summary in Russian for 2025",
       "key_events": ["event1", "event2", ...]
     }
 
-    Focus on factors that directly impact Dubai real estate prices such as:
-    - Government policies and regulations
-    - Infrastructure developments
-    - Economic indicators
-    - International investment trends
-    - Supply and demand dynamics
-    - Interest rates and financing
+    Focus on factors that directly impact Dubai real estate prices in 2025 such as:
+    - Government policies and regulations for 2025
+    - Infrastructure developments planned/completed in 2025
+    - Economic indicators for current year 2025
+    - International investment trends in 2025
+    - Supply and demand dynamics in 2025
+    - Interest rates and financing conditions in 2025
+
+    Ensure all analysis reflects current 2025 market conditions and trends.
     `;
 
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
