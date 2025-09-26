@@ -47,6 +47,17 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Dubai Invest custom colors
+        dubai: {
+          gold: "hsl(var(--dubai-gold))",
+          "gold-light": "hsl(var(--dubai-gold-light))",
+          "gold-dark": "hsl(var(--dubai-gold-dark))",
+          blue: "hsl(var(--dubai-blue))",
+          "blue-light": "hsl(var(--dubai-blue-light))",
+          "blue-lighter": "hsl(var(--dubai-blue-lighter))",
+          glass: "hsl(var(--dubai-glass))",
+          "glass-dark": "hsl(var(--dubai-glass-dark))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

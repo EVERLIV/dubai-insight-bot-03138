@@ -2,41 +2,70 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Dubai Invest Design System - Luxury Real Estate Theme */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Dubai-inspired color palette */
+    --background: 215 30% 5%;
+    --foreground: 45 100% 96%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 220 20% 8%;
+    --card-foreground: 45 100% 96%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 220 20% 8%;
+    --popover-foreground: 45 100% 96%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Gold primary - Dubai luxury */
+    --primary: 45 100% 65%;
+    --primary-foreground: 220 20% 8%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Deep blue secondary - Dubai sky */
+    --secondary: 215 30% 12%;
+    --secondary-foreground: 45 100% 96%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 215 25% 15%;
+    --muted-foreground: 210 15% 65%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 45 80% 50%;
+    --accent-foreground: 220 20% 8%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 45 100% 96%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 215 25% 20%;
+    --input: 215 25% 15%;
+    --ring: 45 100% 65%;
 
-    --radius: 0.5rem;
+    --radius: 12px;
+
+    /* Dubai Invest custom tokens */
+    --dubai-gold: 45 100% 65%;
+    --dubai-gold-light: 45 100% 75%;
+    --dubai-gold-dark: 45 100% 55%;
+    
+    --dubai-blue: 215 30% 5%;
+    --dubai-blue-light: 215 30% 12%;
+    --dubai-blue-lighter: 215 25% 20%;
+    
+    --dubai-glass: 45 20% 95%;
+    --dubai-glass-dark: 220 20% 8%;
+
+    /* Gradients */
+    --gradient-gold: linear-gradient(135deg, hsl(var(--dubai-gold)), hsl(var(--dubai-gold-light)));
+    --gradient-blue: linear-gradient(135deg, hsl(var(--dubai-blue)), hsl(var(--dubai-blue-light)));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--dubai-blue)) 0%, hsl(var(--dubai-blue-light)) 50%, hsl(var(--dubai-gold) / 0.1) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(var(--dubai-blue-light)), hsl(var(--dubai-blue-lighter)));
+
+    /* Shadows */
+    --shadow-gold: 0 10px 40px hsl(var(--dubai-gold) / 0.3);
+    --shadow-elegant: 0 20px 60px hsl(var(--dubai-blue) / 0.5);
+    --shadow-card: 0 8px 32px hsl(var(--dubai-blue) / 0.4);
+
+    /* Animations */
+    --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
     --sidebar-background: 0 0% 98%;
 
@@ -100,6 +129,83 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+    background: var(--gradient-hero);
+    min-height: 100vh;
   }
+}
+
+@layer components {
+  /* Dubai Invest utility classes */
+  .font-display {
+    font-family: 'Playfair Display', serif;
+  }
+  
+  .font-sans {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .gradient-gold {
+    background: var(--gradient-gold);
+  }
+
+  .gradient-blue {
+    background: var(--gradient-blue);
+  }
+
+  .gradient-card {
+    background: var(--gradient-card);
+  }
+
+  .shadow-gold {
+    box-shadow: var(--shadow-gold);
+  }
+
+  .shadow-elegant {
+    box-shadow: var(--shadow-elegant);
+  }
+
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  .transition-smooth {
+    transition: var(--transition-smooth);
+  }
+
+  .transition-bounce {
+    transition: var(--transition-bounce);
+  }
+
+  /* Glass morphism effects */
+  .glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .glass-dark {
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 215, 0, 0.1);
+  }
+
+  /* Animations */
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes glow {
+  from { box-shadow: var(--shadow-gold); }
+  to { box-shadow: 0 15px 50px hsl(var(--dubai-gold) / 0.5); }
 }
