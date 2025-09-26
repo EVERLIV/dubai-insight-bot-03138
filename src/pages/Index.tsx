@@ -3,9 +3,10 @@ import PropertySearch from "@/components/PropertySearch";
 import MarketAnalytics from "@/components/MarketAnalytics";
 import AdvancedAnalytics from "@/components/AdvancedAnalytics";
 import RealtimeMarketIndicators from "@/components/RealtimeMarketIndicators";
+import Developers from "@/components/Developers";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart3, Activity, Search, TrendingUp } from 'lucide-react';
+import { BarChart3, Activity, Search, TrendingUp, Building2 } from 'lucide-react';
 
 const Index = () => {
   return (
@@ -22,7 +23,7 @@ const Index = () => {
         </div>
 
         <Tabs defaultValue="search" className="space-y-8">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsList className="grid w-full grid-cols-5 mb-8">
             <TabsTrigger value="search" className="flex items-center gap-2">
               <Search className="h-4 w-4" />
               Поиск объектов
@@ -38,6 +39,10 @@ const Index = () => {
             <TabsTrigger value="market" className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
               Рыночные данные
+            </TabsTrigger>
+            <TabsTrigger value="developers" className="flex items-center gap-2">
+              <Building2 className="h-4 w-4" />
+              Застройщики
             </TabsTrigger>
           </TabsList>
 
@@ -105,6 +110,23 @@ const Index = () => {
               </CardHeader>
               <CardContent>
                 <MarketAnalytics />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="developers" className="space-y-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-6 w-6" />
+                  Застройщики Дубая
+                </CardTitle>
+                <CardDescription>
+                  Топ-10 ведущих застройщиков с лучшими онлайн-платформами и сервисами
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Developers />
               </CardContent>
             </Card>
           </TabsContent>
