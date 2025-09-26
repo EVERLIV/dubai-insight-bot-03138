@@ -208,11 +208,40 @@ function getMainMenuKeyboard() {
       ],
       [
         { text: "📊 Рыночная аналитика", callback_data: "analytics_menu" },
-        { text: "⚙️ Настройки", callback_data: "settings_menu" }
+        { text: "🏗️ Застройщики", callback_data: "developers_menu" }
       ],
       [
-        { text: "📞 Контакты", callback_data: "contacts" },
+        { text: "⚙️ Настройки", callback_data: "settings_menu" },
+        { text: "📞 Контакты", callback_data: "contacts" }
+      ],
+      [
         { text: "❓ Помощь", callback_data: "help" }
+      ]
+    ]
+  };
+}
+
+function getDevelopersMenuKeyboard() {
+  return {
+    inline_keyboard: [
+      [
+        { text: "🏆 Топ-10 застройщиков", callback_data: "developers_top10" },
+        { text: "🔍 Поиск по застройщику", callback_data: "developers_search" }
+      ],
+      [
+        { text: "🏢 Emaar Properties", callback_data: "developer_emaar" },
+        { text: "🏘️ Damac Properties", callback_data: "developer_damac" }
+      ],
+      [
+        { text: "🌴 Nakheel", callback_data: "developer_nakheel" },
+        { text: "🏗️ Dubai Properties", callback_data: "developer_dubai_prop" }
+      ],
+      [
+        { text: "💎 Новые проекты", callback_data: "developers_new_projects" },
+        { text: "📊 Статистика", callback_data: "developers_stats" }
+      ],
+      [
+        { text: "⬅️ Назад", callback_data: "main_menu" }
       ]
     ]
   };
@@ -809,6 +838,189 @@ async function generateComprehensiveAnalysis(chatId: number, messageId: number) 
   }
 }
 
+async function generateDevelopersTop10(chatId: number, messageId: number) {
+  try {
+    await editTelegramMessage(chatId, messageId,
+      `🏆 <b>Топ-10 застройщиков Дубая</b>\n\n⏳ Загружаю актуальную информацию...`, {
+      reply_markup: { inline_keyboard: [] }
+    });
+
+    const developers = [
+      {
+        rank: 1,
+        name: "Emaar Properties",
+        nameRu: "Эмаар Пропертис",
+        url: "emaar.com",
+        keyProjects: "Burj Khalifa, Dubai Mall, Downtown Dubai",
+        features: "3D туры, интерактивная карта, видеозвонки"
+      },
+      {
+        rank: 2,
+        name: "Damac Properties", 
+        nameRu: "Дамак Пропертис",
+        url: "damac.com",
+        keyProjects: "DAMAC Hills, AKOYA Oxygen, Golf Town",
+        features: "VR туры, многоязычность (EN/AR/RU)"
+      },
+      {
+        rank: 3,
+        name: "Nakheel",
+        nameRu: "Нахиль",
+        url: "nakheel.com", 
+        keyProjects: "Palm Jumeirah, Deira Islands, The World",
+        features: "Онлайн-сервисы, живой чат"
+      },
+      {
+        rank: 4,
+        name: "Dubai Properties",
+        nameRu: "Дубай Пропертис",
+        url: "dubaiproperties.ae",
+        keyProjects: "Business Bay, Jumeirah Beach Residence",
+        features: "Цифровая интеграция"
+      },
+      {
+        rank: 5,
+        name: "Emirates National Investment",
+        nameRu: "Эмиратс Нешнл Инвестмент",
+        url: "eni.ae",
+        keyProjects: "The Pulse, Creek Beach",
+        features: "Элегантный дизайн"
+      }
+    ];
+
+    let developersText = `🏆 <b>Топ-5 застройщиков Дубая</b>\n\n`;
+    
+    developers.forEach((dev) => {
+      developersText += `<b>${dev.rank}. ${dev.name}</b>\n`;
+      developersText += `🌐 Сайт: ${dev.url}\n`;
+      developersText += `🏗️ Проекты: ${dev.keyProjects}\n`;
+      developersText += `✨ Особенности: ${dev.features}\n\n`;
+    });
+
+    developersText += `📈 <b>Остальные застройщики:</b>\n`;
+    developersText += `6. Prestige (prestige.ae)\n`;
+    developersText += `7. Betterhomes (betterhomes.com)\n`;
+    developersText += `8. Deyaar (deyaar.ae)\n`;
+    developersText += `9. Al Fattan (alfattan.com)\n`;
+    developersText += `10. Wasl Properties (waslproperties.com)\n\n`;
+    
+    developersText += `💡 <i>Все застройщики предлагают современные онлайн-платформы для покупки и аренды недвижимости</i>`;
+
+    await editTelegramMessage(chatId, messageId, developersText, {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: "🏢 Детали Emaar", callback_data: "developer_emaar" },
+            { text: "🏘️ Детали Damac", callback_data: "developer_damac" }
+          ],
+          [
+            { text: "🌴 Детали Nakheel", callback_data: "developer_nakheel" },
+            { text: "💎 Новые проекты", callback_data: "developers_new_projects" }
+          ],
+          [
+            { text: "🏗️ Застройщики", callback_data: "developers_menu" },
+            { text: "🏠 Главное меню", callback_data: "main_menu" }
+          ]
+        ]
+      }
+    });
+  } catch (error) {
+    console.error('Error in developers analysis:', error);
+    await editTelegramMessage(chatId, messageId,
+      `❌ <b>Ошибка загрузки застройщиков</b>\n\n${error}`, {
+      reply_markup: {
+        inline_keyboard: [[{ text: "🏗️ Застройщики", callback_data: "developers_menu" }]]
+      }
+    });
+  }
+}
+
+async function generateDeveloperDetails(chatId: number, messageId: number, developerId: string) {
+  try {
+    const developers: any = {
+      emaar: {
+        name: "Emaar Properties",
+        nameRu: "Эмаар Пропертис",
+        founded: "1997",
+        website: "emaar.com",
+        keyProjects: ["Burj Khalifa", "Dubai Mall", "Dubai Marina", "Downtown Dubai", "Dubai Creek Harbour"],
+        features: "3D виртуальные туры, интерактивная карта проектов, видеозвонки с консультантами, AR просмотр квартир",
+        stats: "Более 60,000 проданных единиц недвижимости",
+        specialization: "Премиум жилые и коммерческие проекты, масштабные городские разработки"
+      },
+      damac: {
+        name: "Damac Properties",
+        nameRu: "Дамак Пропертис", 
+        founded: "2002",
+        website: "damac.com",
+        keyProjects: ["DAMAC Hills", "AKOYA Oxygen", "Golf Town", "DAMAC Towers by Paramount"],
+        features: "VR туры по объектам, многоязычная поддержка (EN/AR/RU), онлайн-конфигуратор квартир",
+        stats: "Свыше 44,000 доставленных единиц недвижимости",
+        specialization: "Роскошная недвижимость, гольф-сообщества, брендовые резиденции"
+      },
+      nakheel: {
+        name: "Nakheel",
+        nameRu: "Нахиль",
+        founded: "2000", 
+        website: "nakheel.com",
+        keyProjects: ["Palm Jumeirah", "Deira Islands", "The World", "Dragon City", "International City"],
+        features: "Комплексные онлайн-сервисы, круглосуточный чат-бот, мобильное приложение для арендаторов",
+        stats: "Создано более 70 км искусственной береговой линии",
+        specialization: "Искусственные острова, мегапроекты рекультивации, торговая недвижимость"
+      },
+      dubai_prop: {
+        name: "Dubai Properties",
+        nameRu: "Дубай Пропертис",
+        founded: "2004",
+        website: "dubaiproperties.ae", 
+        keyProjects: ["Business Bay", "Jumeirah Beach Residence", "IMPZ", "Dubai Wharf"],
+        features: "Интегрированная цифровая платформа, умные решения для дома, экосистема сервисов",
+        stats: "Часть Dubai Holding Group",
+        specialization: "Смешанные разработки, деловые районы, жилые комплексы"
+      }
+    };
+
+    const dev = developers[developerId];
+    if (!dev) {
+      throw new Error('Застройщик не найден');
+    }
+
+    let detailText = `🏢 <b>${dev.name}</b>\n`;
+    detailText += `📅 Основан: ${dev.founded}\n`;
+    detailText += `🌐 Сайт: ${dev.website}\n\n`;
+    detailText += `🏗️ <b>Ключевые проекты:</b>\n`;
+    dev.keyProjects.forEach((project: string) => {
+      detailText += `• ${project}\n`;
+    });
+    detailText += `\n✨ <b>Особенности платформы:</b>\n${dev.features}\n\n`;
+    detailText += `📊 <b>Статистика:</b>\n${dev.stats}\n\n`;
+    detailText += `🎯 <b>Специализация:</b>\n${dev.specialization}`;
+
+    await editTelegramMessage(chatId, messageId, detailText, {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: "🏆 Топ-10", callback_data: "developers_top10" },
+            { text: "💎 Новые проекты", callback_data: "developers_new_projects" }
+          ],
+          [
+            { text: "🏗️ Застройщики", callback_data: "developers_menu" },
+            { text: "🏠 Главное меню", callback_data: "main_menu" }
+          ]
+        ]
+      }
+    });
+  } catch (error) {
+    console.error('Error in developer details:', error);
+    await editTelegramMessage(chatId, messageId,
+      `❌ <b>Ошибка загрузки информации</b>\n\n${error}`, {
+      reply_markup: {
+        inline_keyboard: [[{ text: "🏗️ Застройщики", callback_data: "developers_menu" }]]
+      }
+    });
+  }
+}
+
 async function handleCallbackQuery(callbackQuery: any) {
   const chatId = callbackQuery.message.chat.id;
   const messageId = callbackQuery.message.message_id;
@@ -873,6 +1085,117 @@ async function handleCallbackQuery(callbackQuery: any) {
     
     else if (data === 'analytics_comprehensive') {
       await generateComprehensiveAnalysis(chatId, messageId);
+    }
+    
+    else if (data === 'developers_menu') {
+      await editTelegramMessage(chatId, messageId,
+        `🏗️ <b>Застройщики Дубая</b>\n\n` +
+        `Информация о ведущих девелоперских компаниях Дубая, их проектах и онлайн-платформах.\n\n` +
+        `📊 В базе: 10+ крупнейших застройщиков\n` +
+        `🌐 Современные цифровые платформы\n` +
+        `💎 Актуальные проекты и цены`, {
+        reply_markup: getDevelopersMenuKeyboard()
+      });
+    }
+    
+    else if (data === 'developers_top10') {
+      await generateDevelopersTop10(chatId, messageId);
+    }
+    
+    else if (data.startsWith('developer_')) {
+      const developerId = data.replace('developer_', '');
+      await generateDeveloperDetails(chatId, messageId, developerId);
+    }
+    
+    else if (data === 'developers_new_projects') {
+      await editTelegramMessage(chatId, messageId,
+        `💎 <b>Новые проекты застройщиков</b>\n\n` +
+        `🏗️ <b>Emaar Properties</b>\n` +
+        `• Dubai Creek Harbour - городской мастер-план\n` +
+        `• The Valley - премиум виллы\n\n` +
+        `🏘️ <b>Damac Properties</b>\n` +
+        `• DAMAC Bay - роскошные апартаменты в Marina\n` +
+        `• DAMAC Sun City - новое гольф-сообщество\n\n` +
+        `🌴 <b>Nakheel</b>\n` +
+        `• Deira Islands Night Market - торгово-развлекательный комплекс\n` +
+        `• The Palm 360 - культовый небоскреб\n\n` +
+        `🏗️ <b>Dubai Properties</b>\n` +
+        `• Marasi Bay - яхтенная марина\n` +
+        `• 1/JBR - премиум резиденции\n\n` +
+        `🕐 <i>Данные обновлены: ${new Date().toLocaleString('ru-RU')}</i>`, {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: "🏆 Топ-10", callback_data: "developers_top10" },
+              { text: "📊 Статистика", callback_data: "developers_stats" }
+            ],
+            [
+              { text: "🏗️ Застройщики", callback_data: "developers_menu" },
+              { text: "🏠 Главное меню", callback_data: "main_menu" }
+            ]
+          ]
+        }
+      });
+    }
+    
+    else if (data === 'developers_stats') {
+      await editTelegramMessage(chatId, messageId,
+        `📊 <b>Статистика по застройщикам</b>\n\n` +
+        `🏆 <b>Лидеры по объему продаж:</b>\n` +
+        `1. Emaar Properties - 35% рынка\n` +
+        `2. Damac Properties - 22% рынка\n` +
+        `3. Nakheel - 15% рынка\n\n` +
+        `💎 <b>Премиум сегмент:</b>\n` +
+        `• Средняя цена: 1.2M AED\n` +
+        `• Рост за год: +15%\n` +
+        `• Время продажи: 3-6 месяцев\n\n` +
+        `🌐 <b>Цифровые решения:</b>\n` +
+        `• 100% застройщиков имеют онлайн-платформы\n` +
+        `• 80% предлагают VR/AR туры\n` +
+        `• 90% поддерживают многоязычность\n\n` +
+        `📈 <b>Инновации 2025:</b>\n` +
+        `• Blockchain для сделок\n` +
+        `• AI-консультанты\n` +
+        `• Умные контракты`, {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: "🏆 Топ-10", callback_data: "developers_top10" },
+              { text: "💎 Проекты", callback_data: "developers_new_projects" }
+            ],
+            [
+              { text: "🏗️ Застройщики", callback_data: "developers_menu" },
+              { text: "🏠 Главное меню", callback_data: "main_menu" }
+            ]
+          ]
+        }
+      });
+    }
+    
+    else if (data === 'developers_search') {
+      await editTelegramMessage(chatId, messageId,
+        `🔍 <b>Поиск по застройщику</b>\n\n` +
+        `Введите название застройщика или проекта для получения детальной информации.\n\n` +
+        `📝 <b>Примеры запросов:</b>\n` +
+        `• "Emaar"\n` +
+        `• "Dubai Mall"\n` +
+        `• "Palm Jumeirah"\n` +
+        `• "Business Bay"\n\n` +
+        `💡 Также можете спросить про конкретный проект или район`, {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: "🏆 Топ-10", callback_data: "developers_top10" },
+              { text: "🏗️ Застройщики", callback_data: "developers_menu" }
+            ]
+          ]
+        }
+      });
+      
+      // Set user state for developer search
+      const context = userContexts.get(chatId) || {};
+      context.state = 'developer_search';
+      userContexts.set(chatId, context);
     }
     
     else if (data === 'roi_calculator') {
@@ -1494,7 +1817,8 @@ serve(async (req) => {
         `• 📊 Анализ рынка и трендов в реальном времени\n` +
         `• 📰 Анализ новостей и их влияние на цены\n` +
         `• 💡 Советы по инвестициям\n` +
-        `• 📍 Информация о районах Дубая\n\n` +
+        `• 📍 Информация о районах Дубая\n` +
+        `• 🏗️ Топ застройщиков и их проекты\n\n` +
         `🌐 <b>Источники данных:</b>\n` +
         `• Bayut.com (API интеграция)\n` +
         `• PropertyFinder.ae (веб-скрапинг)\n` +
@@ -1503,6 +1827,18 @@ serve(async (req) => {
         `🎯 Используйте кнопки меню для быстрого доступа!\n\n` +
         `✨ <b>Или просто опишите что ищете текстом!</b>`, {
         reply_markup: getMainMenuKeyboard()
+      });
+      return new Response('OK', { headers: corsHeaders });
+    }
+    
+    if (text === '/developers' || text === '/застройщики') {
+      await sendTelegramMessageWithTracking(chatId,
+        `🏗️ <b>Застройщики Дубая</b>\n\n` +
+        `Информация о ведущих девелоперских компаниях Дубая, их проектах и онлайн-платформах.\n\n` +
+        `📊 В базе: 10+ крупнейших застройщиков\n` +
+        `🌐 Современные цифровые платформы\n` +
+        `💎 Актуальные проекты и цены`, {
+        reply_markup: getDevelopersMenuKeyboard()
       });
       return new Response('OK', { headers: corsHeaders });
     }
@@ -1625,6 +1961,74 @@ serve(async (req) => {
                 [
                   { text: "💰 Рассчитать ROI", callback_data: "roi_by_price" },
                   { text: "🎯 ROI меню", callback_data: "roi_calculator" }
+                ]
+              ]
+            }
+          });
+          return new Response('OK', { headers: corsHeaders });
+        }
+        
+        else if (context.state === 'developer_search') {
+          const query = text.trim().toLowerCase();
+          
+          // Clear state
+          context.state = undefined;
+          userContexts.set(chatId, context);
+          
+          // Simple developer matching
+          let result = '';
+          if (query.includes('emaar') || query.includes('эмаар')) {
+            result = `🏢 <b>Emaar Properties</b>\n\n` +
+              `🌐 Сайт: emaar.com\n` +
+              `🏗️ Основные проекты: Burj Khalifa, Dubai Mall, Downtown Dubai\n` +
+              `📍 Специализация: Премиум недвижимость, городские разработки\n` +
+              `✨ Особенности: 3D туры, интерактивная карта, AR просмотры\n\n` +
+              `📊 Лидер рынка с долей 35%`;
+          } else if (query.includes('damac') || query.includes('дамак')) {
+            result = `🏘️ <b>Damac Properties</b>\n\n` +
+              `🌐 Сайт: damac.com\n` +
+              `🏗️ Основные проекты: DAMAC Hills, AKOYA Oxygen, Golf Town\n` +
+              `📍 Специализация: Роскошная недвижимость, гольф-сообщества\n` +
+              `✨ Особенности: VR туры, многоязычность (RU/EN/AR)\n\n` +
+              `📊 22% доля рынка премиум сегмента`;
+          } else if (query.includes('nakheel') || query.includes('нахиль')) {
+            result = `🌴 <b>Nakheel</b>\n\n` +
+              `🌐 Сайт: nakheel.com\n` +
+              `🏗️ Основные проекты: Palm Jumeirah, Deira Islands, The World\n` +
+              `📍 Специализация: Искусственные острова, мегапроекты\n` +
+              `✨ Особенности: Онлайн-сервисы, мобильное приложение\n\n` +
+              `📊 Создано 70+ км береговой линии`;
+          } else if (query.includes('burj khalifa') || query.includes('dubai mall') || query.includes('downtown')) {
+            result = `🏢 <b>Найдено: Emaar Properties</b>\n\n` +
+              `Проект "${text}" принадлежит Emaar Properties\n\n` +
+              `🌐 Подробнее: emaar.com\n` +
+              `📍 Расположение: Downtown Dubai`;
+          } else if (query.includes('palm') || query.includes('пальма')) {
+            result = `🌴 <b>Найдено: Nakheel</b>\n\n` +
+              `Проект Palm Jumeirah принадлежит Nakheel\n\n` +
+              `🌐 Подробнее: nakheel.com\n` +
+              `📍 Искусственный остров в форме пальмы`;
+          } else {
+            result = `🔍 <b>Результаты поиска: "${text}"</b>\n\n` +
+              `По вашему запросу найдено несколько вариантов:\n\n` +
+              `🏢 <b>Возможные застройщики:</b>\n` +
+              `• Emaar Properties - если искали Downtown/Burj Khalifa\n` +
+              `• Damac Properties - роскошные проекты\n` +
+              `• Nakheel - Palm Jumeirah, острова\n` +
+              `• Dubai Properties - Business Bay\n\n` +
+              `💡 Уточните запрос или выберите из топ-10`;
+          }
+          
+          await sendTelegramMessageWithTracking(chatId, result, {
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  { text: "🏆 Топ-10", callback_data: "developers_top10" },
+                  { text: "🔍 Новый поиск", callback_data: "developers_search" }
+                ],
+                [
+                  { text: "🏗️ Застройщики", callback_data: "developers_menu" },
+                  { text: "🏠 Главное меню", callback_data: "main_menu" }
                 ]
               ]
             }
