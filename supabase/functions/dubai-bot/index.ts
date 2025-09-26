@@ -1201,8 +1201,8 @@ serve(async (req) => {
             return new Response('OK', { headers: corsHeaders });
           }
           
-          context.roiData!.monthlyRent = rent;
           const propertyPrice = context.roiData!.propertyPrice!;
+          context.roiData!.monthlyRent = rent;
           const roi = calculateROI(propertyPrice, rent);
           
           // Clear state
@@ -1275,6 +1275,10 @@ serve(async (req) => {
           });
           return new Response('OK', { headers: corsHeaders });
         }
+        
+        // If we have a state but didn't handle it above, clear it
+        context.state = undefined;
+        userContexts.set(chatId, context);
       }
       
       // Regular property search if not in ROI state
