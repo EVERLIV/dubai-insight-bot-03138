@@ -11,8 +11,8 @@ import { toast } from "sonner";
 
 const PropertySearch = () => {
   const [budget, setBudget] = useState([1000000]);
-  const [propertyType, setPropertyType] = useState("");
-  const [location, setLocation] = useState("");
+  const [propertyType, setPropertyType] = useState("all");
+  const [location, setLocation] = useState("all");
   const [sourceType, setSourceType] = useState("all");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -26,16 +26,21 @@ const PropertySearch = () => {
     setSearchPerformed(false);
     
     try {
+      // Prepare search parameters, converting "all" to null
+      const searchLocation = location === "all" ? null : location;
+      const searchPropertyType = propertyType === "all" ? null : propertyType;
+      const searchSourceType = sourceType === "all" ? null : sourceType;
+
       // Call the property search with scraped data integration
       const { data, error } = await supabase.rpc('search_scraped_properties', {
         search_purpose: null,
         min_price_param: budget[0] * 0.8, // 20% buffer
         max_price_param: budget[0] * 1.2,
-        property_type_param: propertyType || null,
-        location_param: location || null,
+        property_type_param: searchPropertyType,
+        location_param: searchLocation,
         min_bedrooms_param: null,
         max_bedrooms_param: null,
-        source_type_param: sourceType === "all" ? null : sourceType,
+        source_type_param: searchSourceType,
         limit_param: 20
       });
 
@@ -48,8 +53,8 @@ const PropertySearch = () => {
         search_purpose: null,
         min_price_param: budget[0] * 0.8,
         max_price_param: budget[0] * 1.2,
-        property_type_param: propertyType || null,
-        location_param: location || null,
+        property_type_param: searchPropertyType,
+        location_param: searchLocation,
         min_bedrooms_param: null,
         max_bedrooms_param: null,
         limit_param: 10
@@ -161,7 +166,7 @@ const PropertySearch = () => {
                     <SelectValue placeholder="Выберите район" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Любой район</SelectItem>
+                    <SelectItem value="all">Любой район</SelectItem>
                     <SelectItem value="Downtown Dubai">Downtown Dubai</SelectItem>
                     <SelectItem value="Dubai Marina">Dubai Marina</SelectItem>
                     <SelectItem value="JBR">Jumeirah Beach Residence</SelectItem>
@@ -181,7 +186,7 @@ const PropertySearch = () => {
                     <SelectValue placeholder="Выберите тип" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Любой тип</SelectItem>
+                    <SelectItem value="all">Любой тип</SelectItem>
                     <SelectItem value="Apartment">Квартира</SelectItem>
                     <SelectItem value="Villa">Вилла</SelectItem>
                     <SelectItem value="Penthouse">Пентхаус</SelectItem>
