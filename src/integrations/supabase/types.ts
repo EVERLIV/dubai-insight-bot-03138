@@ -47,6 +47,48 @@ export type Database = {
         }
         Relationships: []
       }
+      market_analysis: {
+        Row: {
+          analysis_date: string
+          confidence_score: number
+          created_at: string
+          id: string
+          impact_factors: string[]
+          key_events: string[]
+          news_articles: Json | null
+          price_prediction: string
+          sentiment: string
+          summary: string
+          updated_at: string
+        }
+        Insert: {
+          analysis_date: string
+          confidence_score: number
+          created_at?: string
+          id?: string
+          impact_factors?: string[]
+          key_events?: string[]
+          news_articles?: Json | null
+          price_prediction: string
+          sentiment: string
+          summary: string
+          updated_at?: string
+        }
+        Update: {
+          analysis_date?: string
+          confidence_score?: number
+          created_at?: string
+          id?: string
+          impact_factors?: string[]
+          key_events?: string[]
+          news_articles?: Json | null
+          price_prediction?: string
+          sentiment?: string
+          summary?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       property_listings: {
         Row: {
           agent_name: string | null

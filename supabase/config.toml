@@ -37,3 +37,6 @@ verify_jwt = false
 
 [functions.web-scraper]
 verify_jwt = false
+
+[functions.news-analytics]
+verify_jwt = false
