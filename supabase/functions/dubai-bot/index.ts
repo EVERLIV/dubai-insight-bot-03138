@@ -529,9 +529,12 @@ async function handleCallbackQuery(callbackQuery: any) {
         `• Получайте отчеты по районам и трендам\n` +
         `• Сравнивайте инвестиционную привлекательность\n\n` +
         `🌐 <b>Источники данных:</b>\n` +
-        `• Bayut.com (активно)\n` +
-        `• PropertyFinder.ae (планируется)\n` +
-        `• Dubizzle.com (планируется)\n\n` +
+        `• Bayut.com (API интеграция)\n` +
+        `• PropertyFinder.ae (веб-скрапинг)\n` +
+        `• Dubizzle.com (веб-скрапинг)\n\n` +
+        `⚡ <b>Команды админа:</b>\n` +
+        `• /sync_data - Загрузить данные\n` +
+        `• /scrape_web - Парсинг сайтов\n\n` +
         `💡 <b>Советы:</b>\n` +
         `• Задавайте вопросы на русском языке\n` +
         `• Используйте конкретные параметры в запросах`, {
@@ -539,6 +542,60 @@ async function handleCallbackQuery(callbackQuery: any) {
           inline_keyboard: [[{ text: "⬅️ Назад", callback_data: "main_menu" }]]
         }
       });
+    }
+    
+    else if (data === 'admin_sync_data') {
+      await editTelegramMessage(chatId, messageId,
+        `🔄 <b>Загрузка данных с внешних источников...</b>\n\n⏳ Пожалуйста, подождите`, {
+        reply_markup: { inline_keyboard: [] }
+      });
+      
+      try {
+        // Sync from Bayut API
+        const bayutSync = await supabase.functions.invoke('property-sync', {
+          body: { purpose: 'for-sale', pages: 2 }
+        });
+        
+        // Scrape web sources
+        const webScrape = await supabase.functions.invoke('web-scraper', {
+          body: { 
+            sources: ['propertyfinder', 'dubizzle'],
+            location: 'dubai',
+            limit: 20
+          }
+        });
+        
+        let message = `✅ <b>Загрузка данных завершена!</b>\n\n`;
+        
+        if (bayutSync.data?.success) {
+          message += `📊 <b>Bayut API:</b> ${bayutSync.data.totalSynced} объектов\n`;
+        }
+        
+        if (webScrape.data?.success) {
+          message += `🌐 <b>Веб-парсинг:</b> ${webScrape.data.totalSaved} объектов\n`;
+        }
+        
+        message += `\n🎯 Теперь поиск недвижимости работает!`;
+        
+        await editTelegramMessage(chatId, messageId, message, {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: "🔍 Проверить поиск", callback_data: "search_menu" },
+                { text: "🏠 Главное меню", callback_data: "main_menu" }
+              ]
+            ]
+          }
+        });
+      } catch (error) {
+        console.error('Error in data sync:', error);
+        await editTelegramMessage(chatId, messageId,
+          `❌ <b>Ошибка загрузки данных</b>\n\n${error}`, {
+          reply_markup: {
+            inline_keyboard: [[{ text: "🏠 Главное меню", callback_data: "main_menu" }]]
+          }
+        });
+      }
     }
 
     await answerCallbackQuery(callbackQuery.id);
@@ -771,6 +828,63 @@ serve(async (req) => {
     const chatId = update.message.chat.id;
     const userId = update.message.from.id;
     const text = update.message.text || '';
+
+    // Admin commands for data loading
+    if (text === '/sync_data' && userId === 7484237553) { // Replace with your Telegram user ID
+      await sendTelegramMessageWithTracking(chatId,
+        `🔄 <b>Запуск синхронизации данных...</b>\n\n⏳ Загружаю недвижимость из всех источников`, {
+        reply_markup: {
+          inline_keyboard: [[{ text: "✅ Начать загрузку", callback_data: "admin_sync_data" }]]
+        }
+      });
+      return new Response('OK', { headers: corsHeaders });
+    }
+    
+    if (text === '/scrape_web' && userId === 7484237553) {
+      await sendTelegramMessageWithTracking(chatId,
+        `🌐 <b>Запуск веб-парсинга...</b>\n\n` +
+        `Сканирую:\n` +
+        `• PropertyFinder.ae\n` +
+        `• Dubizzle.com\n\n` +
+        `⏳ Начинаю парсинг сайтов...`, {
+        reply_markup: { inline_keyboard: [] }
+      });
+      
+      try {
+        const webScrapeResult = await supabase.functions.invoke('web-scraper', {
+          body: {
+            sources: ['propertyfinder', 'dubizzle'],
+            location: 'dubai',
+            property_type: 'apartment',
+            purpose: 'for-sale',
+            limit: 30
+          }
+        });
+        
+        if (webScrapeResult.data?.success) {
+          await sendTelegramMessageWithTracking(chatId,
+            `✅ <b>Веб-парсинг завершен!</b>\n\n` +
+            `📊 Обработано: ${webScrapeResult.data.totalScraped} объектов\n` +
+            `💾 Сохранено: ${webScrapeResult.data.totalSaved} в базу данных\n` +
+            `🌐 Источники: ${webScrapeResult.data.sources?.join(', ')}\n\n` +
+            `🎯 Поиск недвижимости теперь доступен!`, {
+            reply_markup: getMainMenuKeyboard()
+          });
+        } else {
+          await sendTelegramMessageWithTracking(chatId,
+            `❌ Ошибка веб-парсинга: ${webScrapeResult.error}`, {
+            reply_markup: getMainMenuKeyboard()
+          });
+        }
+      } catch (error) {
+        console.error('Web scraping error:', error);
+        await sendTelegramMessageWithTracking(chatId,
+          `❌ Ошибка парсинга: ${error}`, {
+          reply_markup: getMainMenuKeyboard()
+        });
+      }
+      return new Response('OK', { headers: corsHeaders });
+    }
 
     if (text === '/start') {
       await sendTelegramMessageWithTracking(chatId,
