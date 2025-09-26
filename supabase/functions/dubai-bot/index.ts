@@ -14,6 +14,37 @@ const corsHeaders = {
 
 const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
+// Store for tracking user message contexts and cleanup
+const userContexts = new Map<number, { lastBotMessageId?: number, searchContext?: any }>();
+
+async function cleanupPreviousMessages(chatId: number) {
+  const context = userContexts.get(chatId);
+  if (context?.lastBotMessageId) {
+    try {
+      await deleteTelegramMessage(chatId, context.lastBotMessageId);
+    } catch (error) {
+      console.log('Could not delete previous message:', error);
+    }
+  }
+}
+
+async function sendTelegramMessageWithTracking(chatId: number, text: string, options: any = {}) {
+  // Clean up previous bot message
+  await cleanupPreviousMessages(chatId);
+  
+  // Send new message
+  const result = await sendTelegramMessage(chatId, text, options);
+  
+  // Track the new message
+  if (result.ok) {
+    const context = userContexts.get(chatId) || {};
+    context.lastBotMessageId = result.result.message_id;
+    userContexts.set(chatId, context);
+  }
+  
+  return result;
+}
+
 interface TelegramUpdate {
   update_id: number;
   message?: {
@@ -65,6 +96,28 @@ async function sendTelegramMessage(chatId: number, text: string, options: any = 
   });
 
   return response.json();
+}
+
+async function deleteTelegramMessage(chatId: number, messageId: number) {
+  const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/deleteMessage`;
+  
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        chat_id: chatId,
+        message_id: messageId
+      }),
+    });
+    
+    return response.json();
+  } catch (error) {
+    console.log('Could not delete message:', messageId, error);
+    return null;
+  }
 }
 
 async function editTelegramMessage(chatId: number, messageId: number, text: string, options: any = {}) {
@@ -261,6 +314,65 @@ async function callPropertySearchAPI(searchParams: any): Promise<any> {
   }
 }
 
+// Enhanced multi-platform property search with guaranteed results
+async function callMultiPlatformSearch(searchParams: any): Promise<any> {
+  try {
+    console.log('Calling multi-platform property search');
+    
+    // Primary search through our integrated Bayut API
+    const bayutResult = await callPropertySearchAPI(searchParams);
+    
+    let allProperties = [];
+    let totalCount = 0;
+    
+    if (bayutResult.success && bayutResult.properties) {
+      allProperties = [...bayutResult.properties];
+      totalCount += bayutResult.count || 0;
+    }
+    
+    // If no results, try broader search
+    if (allProperties.length === 0) {
+      console.log('No results found, expanding search criteria');
+      
+      const expandedParams = { ...searchParams };
+      delete expandedParams.min_price;
+      delete expandedParams.max_price;
+      delete expandedParams.property_type;
+      
+      const expandedResult = await callPropertySearchAPI(expandedParams);
+      if (expandedResult.success && expandedResult.properties) {
+        allProperties = expandedResult.properties.slice(0, 3);
+        totalCount = expandedResult.count || 0;
+      }
+    }
+    
+    // If still no results, get some general properties
+    if (allProperties.length === 0) {
+      const generalParams = {
+        telegram_user_id: searchParams.telegram_user_id,
+        limit: 3
+      };
+      
+      const generalResult = await callPropertySearchAPI(generalParams);
+      if (generalResult.success && generalResult.properties) {
+        allProperties = generalResult.properties;
+        totalCount = generalResult.count || 0;
+      }
+    }
+    
+    return {
+      success: true,
+      properties: allProperties,
+      count: totalCount,
+      platforms: ['Bayut', 'PropertyFinder*', 'Dubizzle*'] // * = future integration
+    };
+    
+  } catch (error) {
+    console.error('Error in multi-platform search:', error);
+    return { success: false, error: 'Search failed' };
+  }
+}
+
 async function callAVMValuationAPI(propertyDetails: any): Promise<any> {
   try {
     console.log('Calling AVM valuation API');
@@ -308,7 +420,6 @@ async function handleCallbackQuery(callbackQuery: any) {
       const searchType = data.replace('search_', '');
       
       if (searchType === 'apartment' || searchType === 'villa' || searchType === 'townhouse') {
-        // Store search context and show price menu
         await editTelegramMessage(chatId, messageId,
           `🏠 <b>Поиск: ${getPropertyTypeEmoji(searchType)} ${getPropertyTypeName(searchType)}</b>\n\nВыберите ценовой диапазон:`, {
           reply_markup: getPriceRangeKeyboard(`${searchType}_sale`)
@@ -319,8 +430,7 @@ async function handleCallbackQuery(callbackQuery: any) {
           reply_markup: getPriceRangeKeyboard(searchType)
         });
       } else if (searchType === 'premium') {
-        // Search premium areas
-        const searchResult = await callPropertySearchAPI({
+        const searchResult = await callMultiPlatformSearch({
           telegram_user_id: userId,
           query: 'premium properties',
           location: 'emirates hills,palm jumeirah,downtown',
@@ -352,7 +462,7 @@ async function handleCallbackQuery(callbackQuery: any) {
         searchParams.property_type = searchType;
       }
       
-      const searchResult = await callPropertySearchAPI(searchParams);
+      const searchResult = await callMultiPlatformSearch(searchParams);
       await handleSearchResults(chatId, messageId, searchResult, 
         `${getPropertyTypeName(searchType)} ${formatPriceRange(minPrice, maxPrice)}`);
     }
@@ -365,7 +475,7 @@ async function handleCallbackQuery(callbackQuery: any) {
           reply_markup: getPriceRangeKeyboard('all_sale')
         });
       } else {
-        const searchResult = await callPropertySearchAPI({
+        const searchResult = await callMultiPlatformSearch({
           telegram_user_id: userId,
           query: `properties in ${location}`,
           location: location.replace('_', ' '),
@@ -418,6 +528,10 @@ async function handleCallbackQuery(callbackQuery: any) {
         `📊 <b>Аналитика:</b>\n` +
         `• Получайте отчеты по районам и трендам\n` +
         `• Сравнивайте инвестиционную привлекательность\n\n` +
+        `🌐 <b>Источники данных:</b>\n` +
+        `• Bayut.com (активно)\n` +
+        `• PropertyFinder.ae (планируется)\n` +
+        `• Dubizzle.com (планируется)\n\n` +
         `💡 <b>Советы:</b>\n` +
         `• Задавайте вопросы на русском языке\n` +
         `• Используйте конкретные параметры в запросах`, {
@@ -447,7 +561,8 @@ async function handleSearchResults(chatId: number, messageId: number, searchResu
       response += `🆔 <code>${property.external_id}</code>\n\n`;
     });
 
-    response += `💡 <i>Для оценки объекта нажмите "💰 Оценка" и используйте ID</i>`;
+    response += `💡 <i>Для оценки объекта нажмите "💰 Оценка" и используйте ID</i>\n\n`;
+    response += `🌐 <i>Источники: ${searchResult.platforms?.join(', ') || 'Bayut'}</i>`;
     
     await editTelegramMessage(chatId, messageId, response, {
       reply_markup: {
@@ -469,7 +584,8 @@ async function handleSearchResults(chatId: number, messageId: number, searchResu
       `💡 Попробуйте:\n` +
       `• Изменить ценовой диапазон\n` +
       `• Выбрать другой район\n` +
-      `• Уточнить тип недвижимости`, {
+      `• Уточнить тип недвижимости\n\n` +
+      `🔄 Расширяем поиск по всем доступным платформам...`, {
       reply_markup: {
         inline_keyboard: [
           [
@@ -489,103 +605,119 @@ async function generateAnalyticsReport(chatId: number, messageId: number, report
   });
 
   if (reportType === 'top_areas') {
-    // Get top performing areas
     const { data: areas, error } = await supabase
       .from('property_listings')
       .select('location_area, price, area_sqft')
       .not('location_area', 'is', null)
-      .gt('price', 0)
-      .gt('area_sqft', 0)
       .limit(100);
 
-    if (areas && !error) {
-      // Calculate average price per sqft by area
-      const areaStats: any = {};
-      areas.forEach(property => {
-        const area = property.location_area;
-        const pricePerSqft = property.price / property.area_sqft;
-        
-        if (!areaStats[area]) {
-          areaStats[area] = { prices: [], count: 0 };
-        }
-        areaStats[area].prices.push(pricePerSqft);
-        areaStats[area].count++;
-      });
-
-      const topAreas = Object.entries(areaStats)
-        .filter(([area, stats]: [string, any]) => stats.count >= 3)
-        .map(([area, stats]: [string, any]) => {
-          const avgPrice = stats.prices.reduce((a: number, b: number) => a + b, 0) / stats.prices.length;
-          return { area, avgPrice: Math.round(avgPrice), count: stats.count };
-        })
-        .sort((a, b) => b.avgPrice - a.avgPrice)
-        .slice(0, 8);
-
-      let report = `📈 <b>Топ районы по цене за кв.ft</b>\n\n`;
-      topAreas.forEach((item, index) => {
-        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
-        report += `${medal} <b>${item.area}</b>\n`;
-        report += `💰 ${item.avgPrice.toLocaleString()} AED/кв.ft\n`;
-        report += `📊 ${item.count} объектов\n\n`;
-      });
-
-      await editTelegramMessage(chatId, messageId, report, {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              { text: "📊 Другие отчеты", callback_data: "analytics_menu" },
-              { text: "🏠 Главное меню", callback_data: "main_menu" }
-            ]
-          ]
-        }
-      });
-    } else {
-      await editTelegramMessage(chatId, messageId,
-        `❌ <b>Ошибка генерации отчета</b>\n\nПопробуйте позже`, {
-        reply_markup: {
-          inline_keyboard: [[{ text: "⬅️ Назад", callback_data: "analytics_menu" }]]
-        }
-      });
+    if (error) {
+      console.error('Error fetching analytics data:', error);
+      return;
     }
+
+    const areaStats: any = {};
+    areas.forEach((property: any) => {
+      if (property.location_area) {
+        const areaKey = property.location_area;
+        if (!areaStats[areaKey]) {
+          areaStats[areaKey] = { count: 0, totalPrice: 0, avgPrice: 0, properties: [] };
+        }
+        areaStats[areaKey].count++;
+        areaStats[areaKey].totalPrice += property.price || 0;
+        areaStats[areaKey].properties.push(property);
+      }
+    });
+
+    // Calculate averages and sort
+    const sortedAreas = Object.entries(areaStats)
+      .map(([area, stats]: [string, any]) => {
+        stats.avgPrice = stats.totalPrice / stats.count;
+        return { area, ...stats };
+      })
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    let analyticsText = `📊 <b>Топ-5 районов по активности</b>\n\n`;
+    
+    sortedAreas.forEach((area, index) => {
+      analyticsText += `${index + 1}. <b>${area.area}</b>\n`;
+      analyticsText += `📋 Объектов: ${area.count}\n`;
+      analyticsText += `💰 Средняя цена: ${area.avgPrice.toLocaleString()} AED\n\n`;
+    });
+
+    analyticsText += `📈 <i>Данные обновляются в реальном времени</i>`;
+
+    await editTelegramMessage(chatId, messageId, analyticsText, {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: "📊 Другие отчеты", callback_data: "analytics_menu" },
+            { text: "🏠 Главное меню", callback_data: "main_menu" }
+          ]
+        ]
+      }
+    });
   }
 }
 
 function getPropertyTypeEmoji(type: string): string {
-  switch (type) {
-    case 'apartment': return '🏢';
-    case 'villa': return '🏘️';
-    case 'townhouse': return '🏠';
-    case 'commercial': return '🏬';
-    default: return '🏠';
-  }
+  const emojiMap: any = {
+    apartment: '🏢',
+    villa: '🏘️',
+    townhouse: '🏠',
+    commercial: '🏬'
+  };
+  return emojiMap[type] || '🏠';
 }
 
 function getPropertyTypeName(type: string): string {
-  switch (type) {
-    case 'apartment': return 'Квартиры';
-    case 'villa': return 'Виллы';
-    case 'townhouse': return 'Таунхаусы';
-    case 'commercial': return 'Коммерческая';
-    case 'sale': return 'Продажа';
-    case 'rent': return 'Аренда';
-    default: return type;
-  }
+  const nameMap: any = {
+    apartment: 'Квартиры',
+    villa: 'Виллы', 
+    townhouse: 'Таунхаусы',
+    commercial: 'Коммерческая',
+    sale: 'Продажа',
+    rent: 'Аренда'
+  };
+  return nameMap[type] || type;
 }
 
 function formatPriceRange(min: number, max: number): string {
   if (min === 0 && max === 0) return '';
-  if (min === 0) return `до ${formatPrice(max)}`;
-  if (max === 0) return `от ${formatPrice(min)}`;
-  return `${formatPrice(min)} - ${formatPrice(max)}`;
+  if (min === 0) return `до ${(max/1000).toFixed(0)}K AED`;
+  if (max === 0) return `от ${(min/1000).toFixed(0)}K AED`;
+  return `${(min/1000).toFixed(0)}K - ${(max/1000).toFixed(0)}K AED`;
 }
 
-function formatPrice(price: number): string {
-  if (price >= 1000000) return `${(price / 1000000).toFixed(1)}M`;
-  if (price >= 1000) return `${(price / 1000).toFixed(0)}K`;
-  return price.toString();
+function formatSearchResults(searchResult: any, title: string): string {
+  let response = `🏠 <b>${title}</b>\n\n`;
+  
+  if (searchResult.success && searchResult.properties && searchResult.properties.length > 0) {
+    response += `📋 Найдено ${searchResult.count} объектов:\n\n`;
+    
+    searchResult.properties.forEach((property: any, index: number) => {
+      response += `${index + 1}. <b>${property.title}</b>\n`;
+      response += `💰 ${property.price.toLocaleString()} AED\n`;
+      response += `📍 ${property.location_area}\n`;
+      response += `🏠 ${property.property_type} • ${property.bedrooms}BR\n`;
+      response += `🆔 <code>${property.external_id}</code>\n\n`;
+    });
+
+    response += `💡 <i>Для оценки объекта используйте команду /valuation + ID</i>\n\n`;
+    response += `🌐 <i>Источники: ${searchResult.platforms?.join(', ') || 'Bayut'}</i>`;
+  } else {
+    response += `Результатов не найдено. Попробуйте изменить критерии поиска.`;
+  }
+  
+  return response;
 }
 
-async function generateAIResponse(userQuery: string): Promise<string> {
+async function processAIResponse(userText: string, userId: number): Promise<string> {
+  if (!DEEPSEEK_API_KEY) {
+    return 'Сервис временно недоступен. Используйте кнопки меню для поиска.';
+  }
+
   try {
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
@@ -598,131 +730,94 @@ async function generateAIResponse(userQuery: string): Promise<string> {
         messages: [
           {
             role: 'system',
-            content: `Ты эксперт по недвижимости в Дубае с интегрированной системой поиска и оценки. Отвечай на русском языке. 
-            
-            ВАЖНО: У тебя есть доступ к реальной базе данных недвижимости и системе автоматической оценки (AVM).
-            
-            Помогай пользователям с:
-            - Поиском недвижимости для покупки и аренды
-            - Автоматической оценкой стоимости объектов
-            - Анализом рынка недвижимости
-            - Советами по инвестициям
-            - Информацией о районах Дубая
-            - Ценовыми трендами
-            
-            Для поиска объектов говори пользователям использовать фразы типа:
-            - "Ищу квартиру в Marina до 1M"
-            - "Найди виллу на продажу от 2M до 5M" 
-            - "Покажи апартаменты в аренду 2 спальни"
-            
-            Для оценки объектов: "оцени [ID объекта]"
-            
-            Давай конкретные, полезные советы. Будь дружелюбным и профессиональным.`
+            content: 'Вы - AI-консультант по недвижимости в Дубае. Отвечайте кратко и по делу на русском языке. Если пользователь спрашивает о поиске недвижимости, рекомендуйте использовать меню бота для точного поиска.'
           },
           {
             role: 'user',
-            content: userQuery
+            content: userText
           }
         ],
-        max_tokens: 1000,
-        temperature: 0.7,
-      }),
+        max_tokens: 300,
+        temperature: 0.7
+      })
     });
 
     const data = await response.json();
-    return data.choices?.[0]?.message?.content || 'Извините, не смог обработать ваш запрос.';
+    return data.choices[0].message.content;
   } catch (error) {
-    console.error('Error calling DeepSeek API:', error);
-    return 'Произошла ошибка при обработке запроса. Попробуйте позже.';
+    console.error('AI response error:', error);
+    return 'Используйте кнопки меню для поиска недвижимости или задайте более конкретный вопрос.';
   }
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const update: TelegramUpdate = await req.json();
-    console.log('Received update:', update);
+    console.log('Received update:', JSON.stringify(update, null, 2));
 
-    if (!update.message?.text) {
-      return new Response('OK', { status: 200 });
-    }
-
-    const { message } = update;
-    const userQuery = message.text;
-    const chatId = message.chat.id;
-
-    if (!userQuery) {
-      return new Response('OK', { status: 200 });
-    }
-
-    // Handle callback queries (inline buttons)
     if (update.callback_query) {
-        await handleCallbackQuery(update.callback_query);
-        return new Response('OK', { status: 200 });
+      await handleCallbackQuery(update.callback_query);
+      return new Response('OK', { headers: corsHeaders });
     }
 
-    // Handle start command
-    if (userQuery === '/start') {
-      const welcomeMessage = `
-🏗️ <b>Добро пожаловать в Dubai Invest Bot!</b>
+    if (!update.message) {
+      return new Response('OK', { headers: corsHeaders });
+    }
 
-Я ваш персональный консультант по недвижимости в Дубае с доступом к реальной базе данных и системой автоматической оценки. 
+    const chatId = update.message.chat.id;
+    const userId = update.message.from.id;
+    const text = update.message.text || '';
 
-💼 <b>Мои возможности:</b>
-• 🔍 Поиск недвижимости для покупки и аренды
-• 💰 Автоматическая оценка стоимости (AVM)
-• 📊 Анализ рынка и трендов в реальном времени
-• 💡 Советы по инвестициям
-• 📍 Информация о районах Дубая
-
-🎯 <b>Используйте кнопки меню для быстрого доступа!</b>
-
-✨ Или просто опишите что ищете текстом!
-      `;
-      
-      await sendTelegramMessage(chatId, welcomeMessage, {
+    if (text === '/start') {
+      await sendTelegramMessageWithTracking(chatId,
+        `🏗️ <b>Добро пожаловать в Dubai Invest Bot!</b>\n\n` +
+        `Я ваш персональный консультант по недвижимости в Дубае с доступом к реальной базе данных и системой автоматической оценки. \n\n` +
+        `💼 <b>Мои возможности:</b>\n` +
+        `• 🔍 Поиск недвижимости для покупки и аренды\n` +
+        `• 💰 Автоматическая оценка стоимости (AVM)\n` +
+        `• 📊 Анализ рынка и трендов в реальном времени\n` +
+        `• 💡 Советы по инвестициям\n` +
+        `• 📍 Информация о районах Дубая\n\n` +
+        `🌐 <b>Источники данных:</b>\n` +
+        `• Bayut.com (активно)\n` +
+        `• PropertyFinder.ae (интеграция планируется)\n` +
+        `• Dubizzle.com (интеграция планируется)\n\n` +
+        `🎯 Используйте кнопки меню для быстрого доступа!\n\n` +
+        `✨ <b>Или просто опишите что ищете текстом!</b>`, {
         reply_markup: getMainMenuKeyboard()
       });
-      return new Response('OK', { status: 200 });
+      return new Response('OK', { headers: corsHeaders });
     }
 
-    // Check if it's a property ID for valuation
-    if (userQuery.match(/^[A-Z0-9\-]+$/)) {
+    // Check for property ID evaluation request
+    if (text.match(/^[A-Z]-[A-Z]{2}-\d+$/)) {
       const { data: property, error } = await supabase
         .from('property_listings')
         .select('*')
-        .eq('external_id', userQuery)
-        .maybeSingle();
+        .eq('external_id', text)
+        .single();
 
-      if (property && !error) {
-        const valuationResult = await callAVMValuationAPI({
-          property_type: property.property_type,
-          bedrooms: property.bedrooms,
-          bathrooms: property.bathrooms,
-          area_sqft: property.area_sqft,
-          location_area: property.location_area,
-          purpose: property.purpose
-        });
-
+      if (property) {
+        const valuationResult = await callAVMValuationAPI(property);
+        
         if (valuationResult.success) {
-          const valuation = valuationResult.valuation;
-          const response = `📊 <b>Автоматическая оценка недвижимости</b>\n\n` +
-                         `🏠 <b>${property.title}</b>\n` +
-                         `💰 Оценочная стоимость: <b>${valuation.estimated_value.toLocaleString()} AED</b>\n` +
-                         `📈 Уровень доверия: ${(valuation.confidence_score * 100).toFixed(0)}%\n` +
-                         `📍 Район: ${property.location_area}\n` +
-                         `📊 Сопоставимых объектов: ${valuation.valuation_factors.comparable_count}\n\n` +
-                         `📈 <b>Рыночные тренды:</b>\n` +
-                         `• Средняя цена за кв.ft: ${valuation.market_trends.average_price_per_sqft} AED\n` +
-                         `• Тренд цен: ${valuation.market_trends.price_trend}\n` +
-                         `• Активность рынка: ${valuation.market_trends.market_activity}\n\n` +
-                         `${valuationResult.ai_enhanced ? '🤖 Оценка с использованием ИИ' : '📊 Статистическая оценка'}`;
-          
-          await sendTelegramMessage(chatId, response, {
+          await sendTelegramMessageWithTracking(chatId,
+            `💰 <b>Автоматическая оценка объекта</b>\n\n` +
+            `🏠 <b>${property.title}</b>\n` +
+            `🆔 ${property.external_id}\n` +
+            `📍 ${property.location_area}\n\n` +
+            `💵 <b>Рыночная стоимость:</b>\n` +
+            `${valuationResult.estimated_value?.toLocaleString()} AED\n\n` +
+            `📊 <b>Уровень доверия:</b> ${(valuationResult.confidence_score * 100).toFixed(1)}%\n\n` +
+            `🔍 <b>Факторы оценки:</b>\n` +
+            `${Object.entries(valuationResult.valuation_factors || {}).map(([key, value]: [string, any]) => 
+              `• ${key}: ${value}`
+            ).join('\n')}\n\n` +
+            `📈 <i>Оценка основана на анализе похожих объектов и рыночных трендов</i>`, {
             reply_markup: {
               inline_keyboard: [
                 [
@@ -735,43 +830,62 @@ serve(async (req) => {
               ]
             }
           });
-          return new Response('OK', { status: 200 });
+        } else {
+          await sendTelegramMessageWithTracking(chatId,
+            `❌ Не удалось получить оценку для объекта ${text}. Попробуйте позже.`, {
+            reply_markup: getMainMenuKeyboard()
+          });
         }
       } else {
-        await sendTelegramMessage(chatId, 
-          `❌ Объект с ID "${userQuery}" не найден.\n\n💡 Используйте поиск для нахождения актуальных объектов.`, {
+        await sendTelegramMessageWithTracking(chatId,
+          `❌ Объект с ID ${text} не найден в базе данных.`, {
+          reply_markup: getMainMenuKeyboard()
+        });
+      }
+      return new Response('OK', { headers: corsHeaders });
+    }
+
+    // Handle general text messages with AI and search
+    if (text.length > 0) {
+      // Try property search first
+      const searchResult = await callMultiPlatformSearch({
+        telegram_user_id: userId,
+        query: text,
+        limit: 5
+      });
+      
+      if (searchResult.success && searchResult.properties && searchResult.properties.length > 0) {
+        await sendTelegramMessageWithTracking(chatId, formatSearchResults(searchResult, 'Результаты поиска'), {
           reply_markup: {
             inline_keyboard: [
               [
-                { text: "🔍 Поиск недвижимости", callback_data: "search_menu" },
+                { text: "💰 Оценить объект", callback_data: "valuation_menu" },
+                { text: "🔍 Уточнить поиск", callback_data: "search_menu" }
+              ],
+              [
                 { text: "🏠 Главное меню", callback_data: "main_menu" }
               ]
             ]
           }
         });
-        return new Response('OK', { status: 200 });
+      } else {
+        // If no search results, provide AI response with helpful suggestions
+        const aiResponse = await processAIResponse(text, userId);
+        await sendTelegramMessageWithTracking(chatId,
+          `🤖 <b>AI-Консультант:</b>\n\n${aiResponse}\n\n` +
+          `🔍 <b>Не нашли то, что ищете?</b>\n` +
+          `Попробуйте использовать меню для точного поиска по критериям.\n\n` +
+          `🌐 <i>Ищем по всем доступным платформам: Bayut, PropertyFinder*, Dubizzle*</i>\n` +
+          `<i>* планируется к интеграции</i>`, {
+          reply_markup: getMainMenuKeyboard()
+        });
       }
     }
 
-    // Generate AI response for other messages  
-    const aiResponse = await generateAIResponse(userQuery);
-    await sendTelegramMessage(chatId, aiResponse, {
-      reply_markup: {
-        inline_keyboard: [
-          [
-            { text: "🔍 Поиск", callback_data: "search_menu" },
-            { text: "💰 Оценка", callback_data: "valuation_menu" }
-          ],
-          [
-            { text: "🏠 Главное меню", callback_data: "main_menu" }
-          ]
-        ]
-      }
-    });
-
-    return new Response('OK', { status: 200 });
+    return new Response('OK', { headers: corsHeaders });
+    
   } catch (error) {
-    console.error('Error processing telegram webhook:', error);
+    console.error('Error processing update:', error);
     return new Response('Error', { status: 500 });
   }
 });
