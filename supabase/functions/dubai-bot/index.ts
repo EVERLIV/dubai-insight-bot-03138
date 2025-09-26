@@ -348,18 +348,45 @@ async function callPropertySearchAPI(searchParams: any): Promise<any> {
 
 async function callMultiPlatformSearch(searchParams: any): Promise<any> {
   try {
-    console.log('Calling multi-platform property search');
+    console.log('Calling multi-platform property search including scraped data');
     
-    const bayutResult = await callPropertySearchAPI(searchParams);
+    // Search both regular API properties and scraped properties in parallel
+    const [bayutResult, scrapedResult] = await Promise.all([
+      callPropertySearchAPI(searchParams),
+      searchScrapedProperties(searchParams)
+    ]);
     
-    let allProperties = [];
+    let allProperties: any[] = [];
     let totalCount = 0;
+    let sources = ['Bayut'];
     
+    // Add API properties
     if (bayutResult.success && bayutResult.properties) {
       allProperties = [...bayutResult.properties];
       totalCount += bayutResult.count || 0;
     }
     
+    // Add scraped properties
+    if (scrapedResult.success && scrapedResult.data) {
+      // Mark scraped properties with source info
+      const scrapedProps = scrapedResult.data.map((prop: any) => ({
+        ...prop,
+        source_type: 'scraped',
+        source_name: prop.source_name || 'External Source'
+      }));
+      
+      allProperties = [...allProperties, ...scrapedProps];
+      totalCount += scrapedResult.data.length;
+      
+      // Add unique sources
+      const scrapedSources = scrapedResult.data
+        .map((prop: any) => prop.source_name)
+        .filter((name: string, index: number, arr: string[]) => arr.indexOf(name) === index);
+      
+      sources = [...sources, ...scrapedSources.slice(0, 3)];
+    }
+    
+    // If no results, try expanded search
     if (allProperties.length === 0) {
       console.log('No results found, expanding search criteria');
       
@@ -368,36 +395,105 @@ async function callMultiPlatformSearch(searchParams: any): Promise<any> {
       delete expandedParams.max_price;
       delete expandedParams.property_type;
       
-      const expandedResult = await callPropertySearchAPI(expandedParams);
-      if (expandedResult.success && expandedResult.properties) {
-        allProperties = expandedResult.properties.slice(0, 3);
-        totalCount = expandedResult.count || 0;
+      const [expandedBayut, expandedScraped] = await Promise.all([
+        callPropertySearchAPI(expandedParams),
+        searchScrapedProperties(expandedParams)
+      ]);
+      
+      if (expandedBayut.success && expandedBayut.properties) {
+        allProperties = [...allProperties, ...expandedBayut.properties.slice(0, 2)];
+        totalCount += expandedBayut.count || 0;
+      }
+      
+      if (expandedScraped.success && expandedScraped.data) {
+        const scrapedProps = expandedScraped.data.slice(0, 3).map((prop: any) => ({
+          ...prop,
+          source_type: 'scraped',
+          source_name: prop.source_name || 'External Source'
+        }));
+        allProperties = [...allProperties, ...scrapedProps];
+        totalCount += expandedScraped.data.length;
       }
     }
     
+    // Final fallback - get some general properties
     if (allProperties.length === 0) {
       const generalParams = {
         telegram_user_id: searchParams.telegram_user_id,
-        limit: 5
+        limit: 3
       };
       
-      const generalResult = await callPropertySearchAPI(generalParams);
-      if (generalResult.success && generalResult.properties) {
-        allProperties = generalResult.properties;
-        totalCount = generalResult.count || 0;
+      const [generalBayut, generalScraped] = await Promise.all([
+        callPropertySearchAPI(generalParams),
+        searchScrapedProperties(generalParams)
+      ]);
+      
+      if (generalBayut.success && generalBayut.properties) {
+        allProperties = [...allProperties, ...generalBayut.properties];
+        totalCount += generalBayut.count || 0;
+      }
+      
+      if (generalScraped.success && generalScraped.data) {
+        const scrapedProps = generalScraped.data.slice(0, 2).map((prop: any) => ({
+          ...prop,
+          source_type: 'scraped',
+          source_name: prop.source_name || 'External Source'
+        }));
+        allProperties = [...allProperties, ...scrapedProps];
+        totalCount += generalScraped.data.length;
       }
     }
+    
+    // Sort by most recent and limit results
+    allProperties = allProperties
+      .sort((a: any, b: any) => {
+        const aDate = new Date(a.scraped_at || a.updated_at || a.created_at || 0);
+        const bDate = new Date(b.scraped_at || b.updated_at || b.created_at || 0);
+        return bDate.getTime() - aDate.getTime();
+      })
+      .slice(0, 10);
     
     return {
       success: true,
       properties: allProperties,
       count: totalCount,
-      platforms: ['Bayut', 'PropertyFinder*', 'Dubizzle*']
+      platforms: sources,
+      has_scraped_data: scrapedResult.success && (scrapedResult.data?.length || 0) > 0
     };
     
   } catch (error) {
     console.error('Error in multi-platform search:', error);
-    return { success: false, error: 'Search failed' };
+    return { success: false, error: error instanceof Error ? error.message : 'Search failed' };
+  }
+}
+
+// Search scraped properties from Telegram and website sources
+async function searchScrapedProperties(searchParams: any): Promise<any> {
+  try {
+    const { data, error } = await supabase.rpc('search_scraped_properties', {
+      search_purpose: searchParams.purpose || null,
+      min_price_param: searchParams.min_price || null,
+      max_price_param: searchParams.max_price || null,
+      property_type_param: searchParams.property_type || null,
+      location_param: searchParams.location || null,
+      min_bedrooms_param: searchParams.bedrooms_min || null,
+      max_bedrooms_param: searchParams.bedrooms_max || null,
+      source_type_param: searchParams.source_type || null,
+      limit_param: searchParams.limit || 10
+    });
+
+    if (error) {
+      console.error('Scraped properties search error:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data: data || [] };
+  } catch (error) {
+    console.error('Error searching scraped properties:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Search failed' 
+    };
   }
 }
 

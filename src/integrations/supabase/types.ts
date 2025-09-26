@@ -47,6 +47,45 @@ export type Database = {
         }
         Relationships: []
       }
+      data_sources: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          last_scraped_at: string | null
+          name: string
+          scraping_frequency: number
+          source_type: string
+          telegram_username: string | null
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_scraped_at?: string | null
+          name: string
+          scraping_frequency?: number
+          source_type: string
+          telegram_username?: string | null
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_scraped_at?: string | null
+          name?: string
+          scraping_frequency?: number
+          source_type?: string
+          telegram_username?: string | null
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       market_analysis: {
         Row: {
           analysis_date: string
@@ -217,6 +256,133 @@ export type Database = {
           },
         ]
       }
+      scraped_properties: {
+        Row: {
+          agent_name: string | null
+          agent_phone: string | null
+          area_sqft: number | null
+          bathrooms: number | null
+          bedrooms: number | null
+          created_at: string
+          description: string | null
+          external_id: string | null
+          id: string
+          images: string[] | null
+          location_area: string | null
+          location_city: string | null
+          price: number | null
+          price_currency: string | null
+          property_type: string | null
+          purpose: string | null
+          raw_content: string | null
+          scraped_at: string
+          source_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          agent_name?: string | null
+          agent_phone?: string | null
+          area_sqft?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          created_at?: string
+          description?: string | null
+          external_id?: string | null
+          id?: string
+          images?: string[] | null
+          location_area?: string | null
+          location_city?: string | null
+          price?: number | null
+          price_currency?: string | null
+          property_type?: string | null
+          purpose?: string | null
+          raw_content?: string | null
+          scraped_at?: string
+          source_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          agent_name?: string | null
+          agent_phone?: string | null
+          area_sqft?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          created_at?: string
+          description?: string | null
+          external_id?: string | null
+          id?: string
+          images?: string[] | null
+          location_area?: string | null
+          location_city?: string | null
+          price?: number | null
+          price_currency?: string | null
+          property_type?: string | null
+          purpose?: string | null
+          raw_content?: string | null
+          scraped_at?: string
+          source_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scraped_properties_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "data_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scraping_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          properties_found: number | null
+          properties_processed: number | null
+          source_id: string
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          properties_found?: number | null
+          properties_processed?: number | null
+          source_id: string
+          started_at?: string | null
+          status: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          properties_found?: number | null
+          properties_processed?: number | null
+          source_id?: string
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scraping_jobs_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "data_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       search_history: {
         Row: {
           created_at: string | null
@@ -324,6 +490,36 @@ export type Database = {
           price: number
           property_type: string
           purpose: string
+          title: string
+        }[]
+      }
+      search_scraped_properties: {
+        Args: {
+          limit_param?: number
+          location_param?: string
+          max_bedrooms_param?: number
+          max_price_param?: number
+          min_bedrooms_param?: number
+          min_price_param?: number
+          property_type_param?: string
+          search_purpose?: string
+          source_type_param?: string
+        }
+        Returns: {
+          agent_name: string
+          agent_phone: string
+          area_sqft: number
+          bathrooms: number
+          bedrooms: number
+          id: string
+          images: string[]
+          location_area: string
+          price: number
+          property_type: string
+          purpose: string
+          scraped_at: string
+          source_name: string
+          source_type: string
           title: string
         }[]
       }
