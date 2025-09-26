@@ -14,13 +14,277 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      api_usage_logs: {
+        Row: {
+          api_source: string
+          created_at: string | null
+          credits_used: number | null
+          endpoint: string | null
+          execution_time_ms: number | null
+          id: string
+          request_params: Json | null
+          response_status: number | null
+        }
+        Insert: {
+          api_source: string
+          created_at?: string | null
+          credits_used?: number | null
+          endpoint?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          request_params?: Json | null
+          response_status?: number | null
+        }
+        Update: {
+          api_source?: string
+          created_at?: string | null
+          credits_used?: number | null
+          endpoint?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          request_params?: Json | null
+          response_status?: number | null
+        }
+        Relationships: []
+      }
+      property_listings: {
+        Row: {
+          agent_name: string | null
+          agent_phone: string | null
+          amenities: string[] | null
+          area_sqft: number | null
+          bathrooms: number | null
+          bedrooms: number | null
+          completion_status: string | null
+          created_at: string | null
+          description: string | null
+          external_id: string
+          id: string
+          images: string[] | null
+          is_furnished: boolean | null
+          last_verified: string | null
+          location_area: string | null
+          location_city: string | null
+          location_coords: unknown | null
+          price: number
+          price_currency: string | null
+          property_type: string
+          purpose: string
+          raw_data: Json | null
+          source: string
+          title: string
+          title_ar: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          agent_name?: string | null
+          agent_phone?: string | null
+          amenities?: string[] | null
+          area_sqft?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          completion_status?: string | null
+          created_at?: string | null
+          description?: string | null
+          external_id: string
+          id?: string
+          images?: string[] | null
+          is_furnished?: boolean | null
+          last_verified?: string | null
+          location_area?: string | null
+          location_city?: string | null
+          location_coords?: unknown | null
+          price: number
+          price_currency?: string | null
+          property_type: string
+          purpose: string
+          raw_data?: Json | null
+          source: string
+          title: string
+          title_ar?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          agent_name?: string | null
+          agent_phone?: string | null
+          amenities?: string[] | null
+          area_sqft?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          completion_status?: string | null
+          created_at?: string | null
+          description?: string | null
+          external_id?: string
+          id?: string
+          images?: string[] | null
+          is_furnished?: boolean | null
+          last_verified?: string | null
+          location_area?: string | null
+          location_city?: string | null
+          location_coords?: unknown | null
+          price?: number
+          price_currency?: string | null
+          property_type?: string
+          purpose?: string
+          raw_data?: Json | null
+          source?: string
+          title?: string
+          title_ar?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      property_valuations: {
+        Row: {
+          comparable_properties: string[] | null
+          confidence_score: number | null
+          created_at: string | null
+          estimated_value: number
+          id: string
+          market_trends: Json | null
+          property_listing_id: string | null
+          valuation_factors: Json | null
+        }
+        Insert: {
+          comparable_properties?: string[] | null
+          confidence_score?: number | null
+          created_at?: string | null
+          estimated_value: number
+          id?: string
+          market_trends?: Json | null
+          property_listing_id?: string | null
+          valuation_factors?: Json | null
+        }
+        Update: {
+          comparable_properties?: string[] | null
+          confidence_score?: number | null
+          created_at?: string | null
+          estimated_value?: number
+          id?: string
+          market_trends?: Json | null
+          property_listing_id?: string | null
+          valuation_factors?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_valuations_property_listing_id_fkey"
+            columns: ["property_listing_id"]
+            isOneToOne: false
+            referencedRelation: "property_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      search_history: {
+        Row: {
+          created_at: string | null
+          id: string
+          results_count: number | null
+          search_filters: Json | null
+          search_query: string
+          telegram_user_id: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          results_count?: number | null
+          search_filters?: Json | null
+          search_query: string
+          telegram_user_id: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          results_count?: number | null
+          search_filters?: Json | null
+          search_query?: string
+          telegram_user_id?: number
+        }
+        Relationships: []
+      }
+      user_preferences: {
+        Row: {
+          created_at: string | null
+          id: string
+          max_area_sqft: number | null
+          max_bedrooms: number | null
+          max_price: number | null
+          min_area_sqft: number | null
+          min_bedrooms: number | null
+          min_price: number | null
+          notifications_enabled: boolean | null
+          preferred_areas: string[] | null
+          property_types: string[] | null
+          purpose: string | null
+          telegram_user_id: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          max_area_sqft?: number | null
+          max_bedrooms?: number | null
+          max_price?: number | null
+          min_area_sqft?: number | null
+          min_bedrooms?: number | null
+          min_price?: number | null
+          notifications_enabled?: boolean | null
+          preferred_areas?: string[] | null
+          property_types?: string[] | null
+          purpose?: string | null
+          telegram_user_id: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          max_area_sqft?: number | null
+          max_bedrooms?: number | null
+          max_price?: number | null
+          min_area_sqft?: number | null
+          min_bedrooms?: number | null
+          min_price?: number | null
+          notifications_enabled?: boolean | null
+          preferred_areas?: string[] | null
+          property_types?: string[] | null
+          purpose?: string | null
+          telegram_user_id?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      search_properties: {
+        Args: {
+          limit_param?: number
+          location_param?: string
+          max_bedrooms_param?: number
+          max_price_param?: number
+          min_bedrooms_param?: number
+          min_price_param?: number
+          property_type_param?: string
+          search_purpose?: string
+        }
+        Returns: {
+          agent_name: string
+          agent_phone: string
+          area_sqft: number
+          bathrooms: number
+          bedrooms: number
+          external_id: string
+          id: string
+          images: string[]
+          location_area: string
+          price: number
+          property_type: string
+          purpose: string
+          title: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
