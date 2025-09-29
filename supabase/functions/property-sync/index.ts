@@ -54,33 +54,45 @@ async function fetchBayutProperties(params: {
   limit?: number;
 }): Promise<{ success: boolean; data?: BayutProperty[]; error?: string }> {
   try {
-    const searchParams = new URLSearchParams();
-    if (params.purpose) searchParams.append('purpose', params.purpose);
-    if (params.location) searchParams.append('location', params.location);
-    if (params.property_type) searchParams.append('property_type', params.property_type);
-    if (params.page) searchParams.append('page', params.page.toString());
-    if (params.limit) searchParams.append('limit', params.limit.toString());
-
-    console.log('Fetching from Bayut API with params:', params);
+    // Build request body according to Bayut API docs
+    const requestBody: any = {
+      page: (params.page || 1) - 1 // Bayut API uses 0-based pagination
+    };
     
-    const response = await fetch(`https://bayut-com1.p.rapidapi.com/properties/list?${searchParams}`, {
-      method: 'GET',
+    if (params.purpose) {
+      requestBody.purpose = params.purpose;
+    }
+    
+    if (params.property_type) {
+      requestBody.category = params.property_type;
+    }
+    
+    // For location search, we'll need to handle this differently
+    // For now, let's search without location filter if not specified
+    
+    console.log('Fetching from Bayut API with body:', requestBody);
+    
+    const response = await fetch('https://bayut-api1.p.rapidapi.com/properties_search?page=' + requestBody.page, {
+      method: 'POST',
       headers: {
         'X-RapidAPI-Key': BAYUT_API_KEY!,
-        'X-RapidAPI-Host': 'bayut-com1.p.rapidapi.com'
-      }
+        'X-RapidAPI-Host': 'bayut-api1.p.rapidapi.com',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {
-      throw new Error(`Bayut API error: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      throw new Error(`Bayut API error: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
     const data = await response.json();
-    console.log('Bayut API response received, properties count:', data?.hits?.length || 0);
+    console.log('Bayut API response received, properties count:', data?.result?.length || 0);
     
     return {
       success: true,
-      data: data.hits || []
+      data: data.result || []
     };
   } catch (error) {
     console.error('Error fetching from Bayut API:', error);
@@ -200,7 +212,7 @@ serve(async (req) => {
       });
 
       const executionTime = Date.now() - startTime;
-      await logAPIUsage('bayut', '/properties/list', { purpose, location, property_type, page }, 
+      await logAPIUsage('bayut', '/properties_search', { purpose, location, property_type, page }, 
                       apiResult.success ? 200 : 500, executionTime);
 
       if (!apiResult.success) {
@@ -244,7 +256,7 @@ serve(async (req) => {
     console.error('Error in property sync:', error);
     
     const executionTime = Date.now() - startTime;
-    await logAPIUsage('bayut', '/properties/list', {}, 500, executionTime);
+    await logAPIUsage('bayut', '/properties_search', {}, 500, executionTime);
     
     return new Response(JSON.stringify({
       success: false,
