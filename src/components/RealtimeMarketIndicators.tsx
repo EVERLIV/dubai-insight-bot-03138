@@ -112,14 +112,14 @@ export default function RealtimeMarketIndicators() {
       const mockNews: NewsAlert[] = [
         {
           id: '1',
-          title: 'Новые визовые правила ОАЭ стимулируют рынок недвижимости',
+          title: 'New UAE visa rules boost real estate market',
           impact: 'high',
           timestamp: '15:30',
           source: 'Emirates Business'
         },
         {
           id: '2',
-          title: 'Запуск нового проекта в Business Bay',
+          title: 'New project launch in Business Bay',
           impact: 'medium',
           timestamp: '14:45',
           source: 'Property Week'
@@ -353,10 +353,10 @@ export default function RealtimeMarketIndicators() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-orange-600" />
-              Новости рынка
+              Market News
             </CardTitle>
             <CardDescription>
-              Последние события, влияющие на рынок недвижимости
+              Latest events affecting the real estate market
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -398,10 +398,10 @@ export default function RealtimeMarketIndicators() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5 text-blue-600" />
-              Активность рынка
+              Market Activity
             </CardTitle>
             <CardDescription>
-              Ключевые метрики активности за последний час
+              Key activity metrics for the last hour
             </CardDescription>
           </CardHeader>
           <CardContent>

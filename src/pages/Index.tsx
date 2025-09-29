@@ -113,7 +113,7 @@ export default function Index() {
     <div className="min-h-screen bg-background">
       <Header />
       
-      {/* Hero Section */}
+      {/* Hero Section - Reduced padding */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
           <img
@@ -125,24 +125,24 @@ export default function Index() {
         </div>
         
         <div className="relative z-10 container mx-auto px-4 text-center text-white">
-          <Badge className="mb-4 bg-white/15 text-white border-white/20 backdrop-blur-sm text-xs px-3 py-1">
+          <Badge className="mb-3 bg-white/15 text-white border-white/20 backdrop-blur-sm text-xs px-3 py-1">
             <Crown className="w-3 h-3 mr-1.5" />
             Premium Real Estate Intelligence
           </Badge>
           
-          <h1 className="text-4xl md:text-6xl font-display font-bold mb-4 leading-tight">
+          <h1 className="text-3xl md:text-5xl font-display font-bold mb-3 leading-tight">
             Discover Dubai's
             <span className="block bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
               Hidden Gems
             </span>
           </h1>
           
-          <p className="text-lg md:text-xl mb-6 max-w-2xl mx-auto leading-relaxed opacity-90">
+          <p className="text-base md:text-lg mb-4 max-w-2xl mx-auto leading-relaxed opacity-90">
             AI-powered real estate analysis with 3,000+ properties added monthly. 
             Make smarter investment decisions with professional-grade market intelligence.
           </p>
           
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-4">
             <div className="flex items-center bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/20">
               <input
                 type="email"
@@ -154,7 +154,7 @@ export default function Index() {
             </div>
             <Button 
               onClick={handleRegister}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2 text-sm font-medium"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-5 py-2 text-sm font-medium"
             >
               Register for Free
               <ArrowRight className="w-4 h-4 ml-1.5" />
@@ -182,16 +182,16 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-12 bg-gradient-to-r from-blue-50 to-purple-50">
+      {/* Stats Section - Compact padding */}
+      <section className="py-6 bg-gradient-to-r from-blue-50 to-purple-50">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mb-3">
-                  <stat.icon className="w-6 h-6 text-white" />
+                <div className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mb-2">
+                  <stat.icon className="w-5 h-5 text-white" />
                 </div>
-                <div className="text-2xl font-bold text-gray-900 mb-1">{stat.number}</div>
+                <div className="text-xl font-bold text-gray-900 mb-1">{stat.number}</div>
                 <div className="text-sm text-gray-600">{stat.label}</div>
               </div>
             ))}
@@ -199,32 +199,32 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-16">
+      {/* Features Section - Compact spacing */}
+      <section className="py-8">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl md:text-3xl font-display font-bold mb-3">
               Powerful Features for
               <span className="block text-primary">Smart Investors</span>
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-base text-muted-foreground max-w-2xl mx-auto">
               Everything you need to make informed real estate investment decisions, 
               powered by cutting-edge AI and comprehensive market data.
             </p>
           </div>
 
-          <div className="space-y-16">
+          <div className="space-y-8">
             {features.map((feature, index) => (
-              <div key={index} className={`flex flex-col lg:flex-row items-center gap-8 ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
+              <div key={index} className={`flex flex-col lg:flex-row items-center gap-6 ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
                 <div className="flex-1">
-                  <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mb-4">
-                    <feature.icon className="w-6 h-6 text-white" />
+                  <div className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mb-3">
+                    <feature.icon className="w-5 h-5 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-3">{feature.title}</h3>
-                  <p className="text-base text-muted-foreground mb-4 leading-relaxed">
+                  <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
+                  <p className="text-sm text-muted-foreground mb-3 leading-relaxed">
                     {feature.description}
                   </p>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="h-8 px-4 text-xs">
                     Learn More
                     <ArrowRight className="w-3 h-3 ml-1.5" />
                   </Button>
@@ -234,9 +234,9 @@ export default function Index() {
                     <img
                       src={feature.image}
                       alt={feature.title}
-                      className="w-full h-64 object-cover rounded-xl shadow-xl"
+                      className="w-full h-48 object-cover rounded-lg shadow-lg"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent rounded-xl"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent rounded-lg"></div>
                   </div>
                 </div>
               </div>
@@ -245,26 +245,26 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Benefits Grid */}
-      <section className="py-16 bg-gradient-to-r from-gray-50 to-blue-50">
+      {/* Benefits Grid - Compact */}
+      <section className="py-6 bg-gradient-to-r from-gray-50 to-blue-50">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl md:text-3xl font-display font-bold mb-3">
               Why Choose Our Platform?
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-base text-muted-foreground max-w-2xl mx-auto">
               Get the competitive edge with features designed for serious real estate professionals and investors.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {benefits.map((benefit, index) => (
-              <Card key={index} className="p-5 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-0 bg-white/80 backdrop-blur-sm">
+              <Card key={index} className="p-4 hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-0 bg-white/80 backdrop-blur-sm">
                 <CardContent className="p-0">
-                  <div className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg mb-3">
-                    <benefit.icon className="w-5 h-5 text-white" />
+                  <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg mb-2">
+                    <benefit.icon className="w-4 h-4 text-white" />
                   </div>
-                  <h3 className="text-lg font-semibold mb-2">{benefit.title}</h3>
+                  <h3 className="text-base font-semibold mb-1">{benefit.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">{benefit.description}</p>
                 </CardContent>
               </Card>
@@ -276,14 +276,14 @@ export default function Index() {
       {/* Live Market Analytics Section */}
       <MarketAnalytics />
 
-      {/* Advanced Analytics Demo */}
-      <section className="py-12 bg-gradient-to-r from-gray-50 to-blue-50">
+      {/* Advanced Analytics Demo - Compact */}
+      <section className="py-6 bg-gradient-to-r from-gray-50 to-blue-50">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl md:text-3xl font-display font-bold mb-3">
+          <div className="text-center mb-4">
+            <h2 className="text-xl md:text-2xl font-display font-bold mb-2">
               Real-Time Market Intelligence
             </h2>
-            <p className="text-base text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
               Comprehensive analytics dashboard with detailed market insights and forecasting.
             </p>
           </div>
@@ -291,14 +291,14 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Real-time Indicators */}
-      <section className="py-12">
+      {/* Real-time Indicators - Compact */}
+      <section className="py-6">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl md:text-3xl font-display font-bold mb-3">
+          <div className="text-center mb-4">
+            <h2 className="text-xl md:text-2xl font-display font-bold mb-2">
               Live Market Indicators
             </h2>
-            <p className="text-base text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
               Real-time tracking of key market metrics and performance indicators.
             </p>
           </div>
@@ -306,28 +306,28 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-16">
+      {/* Testimonials - Compact */}
+      <section className="py-6 bg-gradient-to-r from-gray-50 to-blue-50">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl md:text-3xl font-display font-bold mb-3">
               Trusted by Real Estate Professionals
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-base text-muted-foreground max-w-2xl mx-auto">
               Join thousands of investors who are making smarter decisions with our platform.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {testimonials.map((testimonial, index) => (
-              <Card key={index} className="p-5 hover:shadow-lg transition-all duration-300">
+              <Card key={index} className="p-4 hover:shadow-md transition-all duration-300">
                 <CardContent className="p-0">
-                  <div className="flex items-center mb-3">
+                  <div className="flex items-center mb-2">
                     {[...Array(testimonial.rating)].map((_, i) => (
                       <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
                     ))}
                   </div>
-                  <p className="text-sm text-muted-foreground mb-3 italic">"{testimonial.content}"</p>
+                  <p className="text-sm text-muted-foreground mb-2 italic">"{testimonial.content}"</p>
                   <div>
                     <div className="font-semibold text-sm">{testimonial.name}</div>
                     <div className="text-xs text-muted-foreground">{testimonial.role}</div>
@@ -339,30 +339,30 @@ export default function Index() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white relative overflow-hidden">
+      {/* CTA Section - Compact */}
+      <section className="py-8 bg-gradient-to-r from-blue-600 to-purple-600 text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-black/10"></div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center">
-            <h2 className="text-3xl md:text-5xl font-display font-bold mb-4">
+            <h2 className="text-2xl md:text-3xl font-display font-bold mb-3">
               Ready to Start Investing Smarter?
             </h2>
-            <p className="text-lg mb-6 max-w-2xl mx-auto opacity-90">
+            <p className="text-base mb-4 max-w-2xl mx-auto opacity-90">
               Join thousands of successful investors who trust our AI-powered platform 
               to find the best real estate opportunities in Dubai.
             </p>
             
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-4">
               <Button 
                 onClick={handleRegister}
-                className="bg-white text-blue-600 hover:bg-gray-100 px-6 py-2 text-sm font-medium"
+                className="bg-white text-blue-600 hover:bg-gray-100 px-5 py-2 text-sm font-medium h-10"
               >
                 <Crown className="w-4 h-4 mr-1.5" />
                 Register for Free
               </Button>
               <Button 
                 variant="outline" 
-                className="border-white text-white hover:bg-white hover:text-blue-600 px-6 py-2 text-sm"
+                className="border-white text-white hover:bg-white hover:text-blue-600 px-5 py-2 text-sm h-10"
               >
                 <Play className="w-4 h-4 mr-1.5" />
                 Watch Demo
