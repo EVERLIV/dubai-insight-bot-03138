@@ -55,6 +55,12 @@ const userContexts = new Map<number, {
     area?: string;
     propertyType?: string;
   };
+  lastSearch?: {
+    query: string;
+    telegram_user_id: number;
+    offset: number;
+    totalCount: number;
+  };
 }>();
 
 async function cleanupPreviousMessages(chatId: number) {
@@ -355,8 +361,8 @@ async function callMultiPlatformSearch(searchParams: any): Promise<any> {
     
     // Search both regular API properties and scraped properties in parallel
     const [bayutResult, scrapedResult] = await Promise.all([
-      callPropertySearchAPI(searchParams),
-      searchScrapedProperties(searchParams)
+      callPropertySearchAPI({ ...searchParams, limit: searchParams.limit || 50 }),
+      searchScrapedProperties({ ...searchParams, limit: searchParams.limit || 50 })
     ]);
     
     let allProperties: any[] = [];
@@ -445,18 +451,22 @@ async function callMultiPlatformSearch(searchParams: any): Promise<any> {
         }
     }
     
-    // Sort by most recent and limit results
+    // Sort by most recent and apply offset/limit
     allProperties = allProperties
       .sort((a: any, b: any) => {
         const aDate = new Date(a.scraped_at || a.updated_at || a.created_at || 0);
         const bDate = new Date(b.scraped_at || b.updated_at || b.created_at || 0);
         return bDate.getTime() - aDate.getTime();
-      })
-      .slice(0, 20);
+      });
+    
+    // Apply offset and limit for pagination
+    const offset = searchParams.offset || 0;
+    const limit = searchParams.limit || 10;
+    const paginatedProperties = allProperties.slice(offset, offset + limit);
     
     return {
       success: true,
-      properties: allProperties,
+      properties: paginatedProperties,
       count: totalCount,
       platforms: sources,
       has_scraped_data: scrapedResult.success && (scrapedResult.data?.length || 0) > 0
@@ -1295,6 +1305,10 @@ async function handleCallbackQuery(callbackQuery: any) {
       userContexts.set(chatId, context);
     }
     
+    else if (data === 'search_more') {
+      await handleSearchMore(chatId, messageId, userId);
+    }
+    
     else if (data === 'roi_calculator') {
       await editTelegramMessage(chatId, messageId,
         `🎯 <b>ROI Калькулятор</b>\n\n` +
@@ -1980,6 +1994,72 @@ async function generateMarketReports(chatId: number, messageId: number) {
   }
 }
 
+async function handleSearchMore(chatId: number, messageId: number, userId: number) {
+  try {
+    const context = userContexts.get(chatId);
+    if (!context || !context.lastSearch) {
+      await editTelegramMessage(chatId, messageId,
+        `❌ <b>Ошибка</b>\n\nПоиск не найден. Выполните новый поиск.`, {
+        reply_markup: getMainMenuKeyboard()
+      });
+      return;
+    }
+    
+    const newOffset = context.lastSearch.offset + 10;
+    const searchResult = await callMultiPlatformSearch({
+      telegram_user_id: context.lastSearch.telegram_user_id,
+      query: context.lastSearch.query,
+      limit: 10,
+      offset: newOffset
+    });
+    
+    if (searchResult.success && searchResult.properties && searchResult.properties.length > 0) {
+      // Update search context
+      context.lastSearch.offset = newOffset;
+      userContexts.set(chatId, context);
+      
+      let response = `🔍 <b>Результаты поиска (продолжение)</b>\n\n📋 Показано ${newOffset + searchResult.properties.length} из ${context.lastSearch.totalCount} объектов:\n\n`;
+      
+      searchResult.properties.forEach((property: any, index: number) => {
+        response += `${newOffset + index + 1}. <b>${property.title}</b>\n`;
+        response += `💰 ${property.price?.toLocaleString() || 'Цена не указана'} AED\n`;
+        response += `📍 ${property.location_area || 'Район не указан'}\n`;
+        response += `🏠 ${property.property_type} • ${property.bedrooms || 0}BR\n\n`;
+      });
+      
+      response += '\n💡 <i>Поиск по актуальной базе недвижимости Дубая</i>';
+      
+      // Check if there are more results
+      const hasMore = (newOffset + searchResult.properties.length) < context.lastSearch.totalCount;
+      const keyboard = hasMore ? {
+        inline_keyboard: [
+          [
+            { text: `📋 Показать ещё (${context.lastSearch.totalCount - newOffset - searchResult.properties.length})`, callback_data: "search_more" }
+          ],
+          [
+            { text: "🏠 Главное меню", callback_data: "main_menu" }
+          ]
+        ]
+      } : getMainMenuKeyboard();
+      
+      await editTelegramMessage(chatId, messageId, response, {
+        reply_markup: keyboard
+      });
+    } else {
+      await editTelegramMessage(chatId, messageId,
+        `❌ <b>Больше результатов нет</b>\n\nВсе найденные объекты уже показаны.`, {
+        reply_markup: getMainMenuKeyboard()
+      });
+    }
+  } catch (error) {
+    console.error('Error in search more:', error);
+    await editTelegramMessage(chatId, messageId,
+      `❌ <b>Ошибка загрузки</b>\n\n${error}`, {
+      reply_markup: getMainMenuKeyboard()
+    });
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -2235,10 +2315,20 @@ serve(async (req) => {
       const searchResult = await callMultiPlatformSearch({
         telegram_user_id: userId,
         query: text,
-        limit: 5
+        limit: 10
       });
       
       if (searchResult.success && searchResult.properties && searchResult.properties.length > 0) {
+        // Save search context for pagination
+        const context = userContexts.get(chatId) || {};
+        context.lastSearch = {
+          query: text,
+          telegram_user_id: userId,
+          offset: 0,
+          totalCount: searchResult.count
+        };
+        userContexts.set(chatId, context);
+        
         let response = `🔍 <b>Результаты поиска</b>\n\n📋 Найдено ${searchResult.count} объектов:\n\n`;
         
         searchResult.properties.forEach((property: any, index: number) => {
@@ -2250,8 +2340,20 @@ serve(async (req) => {
         
         response += '\n💡 <i>Поиск по актуальной базе недвижимости Дубая</i>';
         
+        // Add "Show more" button if there are more results
+        const keyboard = searchResult.count > searchResult.properties.length ? {
+          inline_keyboard: [
+            [
+              { text: `📋 Показать ещё (${searchResult.count - searchResult.properties.length})`, callback_data: "search_more" }
+            ],
+            [
+              { text: "🏠 Главное меню", callback_data: "main_menu" }
+            ]
+          ]
+        } : getMainMenuKeyboard();
+        
         await sendTelegramMessageWithTracking(chatId, response, {
-          reply_markup: getMainMenuKeyboard()
+          reply_markup: keyboard
         });
       } else {
         await sendTelegramMessageWithTracking(chatId,
