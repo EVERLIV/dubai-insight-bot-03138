@@ -267,11 +267,7 @@ function getSearchMenuKeyboard() {
         { text: "💎 Новостройки", callback_data: "search_new" }
       ],
       [
-        { text: "🔄 Обновить данные", callback_data: "refresh_scraping" },
-        { text: "🧪 Тест Bayut API", callback_data: "test_bayut_api" }
-      ],
-      [
-        { text: "📊 Источники данных", callback_data: "sources_stats" }
+        { text: "🔄 Обновить данные", callback_data: "refresh_scraping" }
       ],
       [
         { text: "⬅️ Назад", callback_data: "main_menu" }
@@ -365,7 +361,6 @@ async function callMultiPlatformSearch(searchParams: any): Promise<any> {
     
     let allProperties: any[] = [];
     let totalCount = 0;
-    let sources = ['Bayut'];
     
     // Add API properties
     if (bayutResult.success && bayutResult.properties) {
@@ -412,15 +407,14 @@ async function callMultiPlatformSearch(searchParams: any): Promise<any> {
         totalCount += expandedBayut.count || 0;
       }
       
-      if (expandedScraped.success && expandedScraped.data) {
-        const scrapedProps = expandedScraped.data.slice(0, 3).map((prop: any) => ({
-          ...prop,
-          source_type: 'scraped',
-          source_name: prop.source_name || 'External Source'
-        }));
-        allProperties = [...allProperties, ...scrapedProps];
-        totalCount += expandedScraped.data.length;
-      }
+        if (expandedScraped.success && expandedScraped.data) {
+          const scrapedProps = expandedScraped.data.slice(0, 3).map((prop: any) => ({
+            ...prop,
+            source_type: 'scraped'
+          }));
+          allProperties = [...allProperties, ...scrapedProps];
+          totalCount += expandedScraped.data.length;
+        }
     }
     
     // Final fallback - get some general properties
@@ -440,15 +434,14 @@ async function callMultiPlatformSearch(searchParams: any): Promise<any> {
         totalCount += generalBayut.count || 0;
       }
       
-      if (generalScraped.success && generalScraped.data) {
-        const scrapedProps = generalScraped.data.slice(0, 2).map((prop: any) => ({
-          ...prop,
-          source_type: 'scraped',
-          source_name: prop.source_name || 'External Source'
-        }));
-        allProperties = [...allProperties, ...scrapedProps];
-        totalCount += generalScraped.data.length;
-      }
+        if (generalScraped.success && generalScraped.data) {
+          const scrapedProps = generalScraped.data.slice(0, 2).map((prop: any) => ({
+            ...prop,
+            source_type: 'scraped'
+          }));
+          allProperties = [...allProperties, ...scrapedProps];
+          totalCount += generalScraped.data.length;
+        }
     }
     
     // Sort by most recent and limit results
@@ -1142,7 +1135,7 @@ async function handleCallbackQuery(callbackQuery: any) {
     
     else if (data === 'search_menu') {
       await editTelegramMessage(chatId, messageId,
-        `🔍 <b>Поиск недвижимости</b>\n\n📊 В базе данных: более 10,000 объектов\n🌐 Источники: Telegram каналы, веб-сайты, Bayut API\n\n📱 <b>Telegram каналы:</b> 10 активных\n🌐 <b>Веб-сайты:</b> PropertyFinder, Dubizzle\n🔌 <b>API источники:</b> Bayut.com\n\nВыберите тип поиска:`, {
+        `🔍 <b>Поиск недвижимости</b>\n\n📊 В базе данных: более 800 объектов недвижимости в Дубае\n\nВыберите тип поиска:`, {
         reply_markup: getSearchMenuKeyboard()
       });
     }
@@ -1554,11 +1547,6 @@ async function handleCallbackQuery(callbackQuery: any) {
         `• Топ районы по активности\n` +
         `• Анализ новостей и их влияние на цены\n` +
         `• Инвестиционные рекомендации\n\n` +
-        `🌐 <b>Источники данных:</b>\n` +
-        `• Bayut.com (API интеграция)\n` +
-        `• PropertyFinder.ae (веб-скрапинг)\n` +
-        `• Dubizzle.com (веб-скрапинг)\n` +
-        `• Новостные источники для аналитики\n\n` +
         `💡 <b>Советы:</b>\n` +
         `• Задавайте вопросы на русском языке\n` +
         `• Используйте конкретные параметры в запросах`, {
@@ -1569,7 +1557,7 @@ async function handleCallbackQuery(callbackQuery: any) {
     }
 
     else if (data === 'refresh_scraping') {
-      await editTelegramMessage(chatId, messageId, '🔄 <b>Обновление данных из источников...</b>\n\n⏳ Пожалуйста, подождите');
+      await editTelegramMessage(chatId, messageId, '🔄 <b>Обновление данных...</b>\n\n⏳ Пожалуйста, подождите');
       
       try {
         // Trigger property scraping
@@ -1589,8 +1577,7 @@ async function handleCallbackQuery(callbackQuery: any) {
               reply_markup: {
                 inline_keyboard: [
                   [
-                    { text: "🔍 Поиск объектов", callback_data: "search_menu" },
-                    { text: "📊 Статистика", callback_data: "sources_stats" }
+                    { text: "🔍 Поиск объектов", callback_data: "search_menu" }
                   ],
                   [
                     { text: "🏠 Главное меню", callback_data: "main_menu" }
@@ -1621,166 +1608,6 @@ async function handleCallbackQuery(callbackQuery: any) {
             reply_markup: {
               inline_keyboard: [
                 [{ text: "🔄 Повторить", callback_data: "refresh_scraping" }],
-                [{ text: "⬅️ Назад", callback_data: "search_menu" }]
-              ]
-            }
-          }
-        );
-      }
-    }
-
-    else if (data === 'test_bayut_api') {
-      await editTelegramMessage(chatId, messageId, '🧪 <b>Тестирование Bayut API...</b>\n\n⏳ Проверяем подключение и получаем тестовые данные');
-      
-      try {
-        // Test Bayut API integration
-        const bayutResponse = await supabase.functions.invoke('property-sync', {
-          body: { purpose: 'for-sale', pages: 1 }
-        });
-
-        if (bayutResponse.data?.success) {
-          const result = bayutResponse.data;
-          await editTelegramMessage(chatId, messageId, 
-            `✅ <b>Bayut API работает успешно!</b>\n\n` +
-            `📊 <b>Результаты теста:</b>\n` +
-            `• Получено объектов: ${result.totalFetched || 0}\n` +
-            `• Сохранено в базу: ${result.totalSynced || 0}\n` +
-            `• Время выполнения: ${result.executionTime || 0}ms\n\n` +
-            `💡 API ключ настроен правильно и работает!`,
-            {
-              reply_markup: {
-                inline_keyboard: [
-                  [{ text: "🔄 Повторить тест", callback_data: "test_bayut_api" }],
-                  [{ text: "🔍 Поиск объектов", callback_data: "search_menu" }],
-                  [{ text: "⬅️ Назад", callback_data: "search_menu" }]
-                ]
-              }
-            }
-          );
-        } else {
-          await editTelegramMessage(chatId, messageId, 
-            `❌ <b>Bayut API тест неуспешен</b>\n\n` +
-            `🔍 <b>Ошибка:</b> ${bayutResponse.data?.error || 'Неизвестная ошибка'}\n\n` +
-            `💡 Возможные причины:\n` +
-            `• Неверный API ключ\n` +
-            `• Превышен лимит запросов\n` +
-            `• Проблемы с сервисом Bayut`,
-            {
-              reply_markup: {
-                inline_keyboard: [
-                  [{ text: "🔄 Повторить тест", callback_data: "test_bayut_api" }],
-                  [{ text: "📊 Статистика источников", callback_data: "sources_stats" }],
-                  [{ text: "⬅️ Назад", callback_data: "search_menu" }]
-                ]
-              }
-            }
-          );
-        }
-      } catch (error) {
-        await editTelegramMessage(chatId, messageId, 
-          `❌ <b>Ошибка при тестировании Bayut API</b>\n\n` +
-          `🔍 <b>Детали:</b> ${error instanceof Error ? error.message : 'Неизвестная ошибка'}\n\n` +
-          `💡 Обратитесь к администратору для решения проблемы.`,
-          {
-            reply_markup: {
-              inline_keyboard: [
-                [{ text: "🔄 Повторить тест", callback_data: "test_bayut_api" }],
-                [{ text: "⬅️ Назад", callback_data: "search_menu" }]
-              ]
-            }
-          }
-        );
-      }
-    }
-
-    else if (data === 'sources_stats') {
-      await editTelegramMessage(chatId, messageId, '📊 <b>Загрузка статистики источников...</b>\n\n⏳ Анализируем данные');
-      
-      try {
-        const [sourcesResponse, jobsResponse] = await Promise.all([
-          supabase.functions.invoke('property-scraper', { body: { action: 'get_sources' } }),
-          supabase.functions.invoke('property-scraper', { body: { action: 'get_jobs' } })
-        ]);
-
-        let statsMessage = '📊 <b>Статистика источников данных</b>\n\n';
-        
-        if (sourcesResponse.data?.success && sourcesResponse.data.data) {
-          const sources = sourcesResponse.data.data;
-          const telegramSources = sources.filter((s: any) => s.source_type === 'telegram');
-          const websiteSources = sources.filter((s: any) => s.source_type === 'website');
-          
-          statsMessage += `📱 <b>Telegram каналы:</b> ${telegramSources.length}\n`;
-          statsMessage += `🌐 <b>Веб-сайты:</b> ${websiteSources.length}\n`;
-          statsMessage += `🔌 <b>API источники:</b> 1 (Bayut)\n\n`;
-          
-          // Show active Telegram channels
-          if (telegramSources.length > 0) {
-            statsMessage += '📱 <b>Активные Telegram каналы:</b>\n';
-            telegramSources.slice(0, 5).forEach((source: any, index: number) => {
-              const lastUpdate = source.last_scraped_at 
-                ? new Date(source.last_scraped_at).toLocaleDateString('ru-RU')
-                : 'Никогда';
-              statsMessage += `${index + 1}. ${source.name}\n   └ Обновлено: ${lastUpdate}\n`;
-            });
-            if (telegramSources.length > 5) {
-              statsMessage += `   ... и еще ${telegramSources.length - 5}\n`;
-            }
-            statsMessage += '\n';
-          }
-          
-          // Recent scraping jobs
-          if (jobsResponse.data?.success && jobsResponse.data.data) {
-            const recentJobs = jobsResponse.data.data.slice(0, 5);
-            statsMessage += '📈 <b>Последние обновления:</b>\n';
-            
-            for (const job of recentJobs) {
-              const date = new Date(job.created_at).toLocaleDateString('ru-RU');
-              const time = new Date(job.created_at).toLocaleTimeString('ru-RU', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-              });
-              const status = job.status === 'completed' ? '✅' : 
-                           job.status === 'failed' ? '❌' : 
-                           job.status === 'running' ? '⏳' : '🟡';
-              
-              const sourceName = job.data_sources?.name || 'Источник';
-              statsMessage += `${status} ${sourceName}\n`;
-              statsMessage += `   └ ${date} в ${time}\n`;
-              
-              if (job.properties_processed > 0) {
-                statsMessage += `   └ Обработано: ${job.properties_processed} объектов\n`;
-              }
-            }
-          }
-          
-          statsMessage += '\n💡 <i>Данные автоматически обновляются каждый час</i>';
-          
-        } else {
-          statsMessage += '❌ Не удалось загрузить статистику источников';
-        }
-        
-        await editTelegramMessage(chatId, messageId, statsMessage, {
-          reply_markup: {
-            inline_keyboard: [
-              [
-                { text: "🔄 Обновить сейчас", callback_data: "refresh_scraping" }
-              ],
-              [
-                { text: "🔍 Поиск объектов", callback_data: "search_menu" },
-                { text: "🏠 Главное меню", callback_data: "main_menu" }
-              ]
-            ]
-          }
-        });
-        
-      } catch (error) {
-        await editTelegramMessage(chatId, messageId, 
-          '❌ <b>Ошибка при загрузке статистики</b>\n\n' +
-          'Не удалось получить данные о источниках.',
-          {
-            reply_markup: {
-              inline_keyboard: [
-                [{ text: "🔄 Повторить", callback_data: "sources_stats" }],
                 [{ text: "⬅️ Назад", callback_data: "search_menu" }]
               ]
             }
@@ -1823,14 +1650,11 @@ async function handleSearchResults(chatId: number, messageId: number, searchResu
       if (property.images && property.images.length > 0) {
         response += `📸 ${property.images.length} фото доступно\n`;
       }
-      if (property.source_name) {
-        response += `🔗 Источник: ${property.source_name}\n`;
-      }
       
       response += `🆔 <code>${property.external_id || 'ID не указан'}</code>\n\n`;
     });
 
-    response += `🌐 <i>Источники: ${getUniqueSources(searchResult.properties).join(', ')}</i>`;
+    response += '\n💡 <i>Актуальные данные по недвижимости Дубая</i>';
     
     await editTelegramMessage(chatId, messageId, response, {
       reply_markup: {
@@ -1869,22 +1693,6 @@ function formatPriceRange(min: number, max: number): string {
   if (min === 0) return `до ${(max/1000).toFixed(0)}K AED`;
   if (max === 0) return `от ${(min/1000).toFixed(0)}K AED`;
   return `${(min/1000).toFixed(0)}K - ${(max/1000).toFixed(0)}K AED`;
-}
-
-function getUniqueSources(properties: any[]): string[] {
-  const sources = new Set<string>();
-  
-  properties.forEach(property => {
-    if (property.source_name) {
-      sources.add(property.source_name);
-    } else if (property.source) {
-      sources.add(property.source);
-    } else {
-      sources.add('Bayut');
-    }
-  });
-  
-  return Array.from(sources);
 }
 
 function getAreaROIData(area: string) {
@@ -2205,15 +2013,6 @@ serve(async (req) => {
         `• 💡 Советы по инвестициям\n` +
         `• 📍 Информация о районах Дубая\n` +
         `• 🏗️ Топ застройщиков и их проекты\n\n` +
-        `🌐 <b>Источники данных:</b>\n` +
-        `• 📱 Telegram каналы (10+ активных)\n` +
-        `• 🌐 PropertyFinder.ae, Dubizzle.com\n` +
-        `• 🔌 Bayut.com API интеграция\n` +
-        `• 📰 Новостные ленты для аналитики\n\n` +
-        `⚡ <b>Новое!</b> Данные из популярных Telegram каналов недвижимости:\n` +
-        `• Dubai Real Estate Investment\n` +
-        `• THE CAPITAL Real Estate\n` +
-        `• Colife Invest и другие...\n\n` +
         `🎯 Используйте кнопки меню для быстрого доступа!\n\n` +
         `✨ <b>Или просто опишите что ищете текстом!</b>`, {
         reply_markup: getMainMenuKeyboard()
@@ -2448,7 +2247,7 @@ serve(async (req) => {
           response += `🏠 ${property.property_type} • ${property.bedrooms || 0}BR\n\n`;
         });
         
-        response += `🌐 <i>Источники: ${searchResult.platforms?.join(', ') || 'База данных'}</i>`;
+        response += '\n💡 <i>Поиск по актуальной базе недвижимости Дубая</i>';
         
         await sendTelegramMessageWithTracking(chatId, response, {
           reply_markup: getMainMenuKeyboard()
