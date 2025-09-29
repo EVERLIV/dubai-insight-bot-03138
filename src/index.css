@@ -173,6 +173,49 @@
     @apply bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-200;
   }
 
+  /* Ant Design customizations */
+  .ant-select-selector {
+    @apply rounded-lg border-border;
+  }
+
+  .ant-select-selector:hover {
+    @apply border-primary/60;
+  }
+
+  .ant-select-focused .ant-select-selector {
+    @apply border-primary shadow-none;
+    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.1) !important;
+  }
+
+  .ant-slider-track {
+    @apply bg-primary;
+  }
+
+  .ant-slider-handle {
+    @apply border-primary;
+  }
+
+  .ant-slider-handle:hover {
+    @apply border-primary;
+  }
+
+  .ant-slider-handle:focus {
+    @apply border-primary;
+    box-shadow: 0 0 0 5px hsl(var(--primary) / 0.1);
+  }
+
+  .ant-modal-content {
+    @apply rounded-2xl overflow-hidden;
+  }
+
+  .custom-dots .slick-dots li button {
+    @apply bg-white/60 rounded-full;
+  }
+
+  .custom-dots .slick-dots li.slick-active button {
+    @apply bg-white;
+  }
+
   .transition-smooth {
     transition: var(--transition-smooth);
   }

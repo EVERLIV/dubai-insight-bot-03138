@@ -22,10 +22,15 @@ interface PropertyCardProps {
     source_type?: string;
     source_name?: string;
     scraped_at?: string;
+    description?: string;
+    amenities?: string[];
+    completion_status?: string;
+    is_furnished?: boolean;
   };
+  onViewDetails?: (property: any) => void;
 }
 
-export default function PropertyCard({ property }: PropertyCardProps) {
+export default function PropertyCard({ property, onViewDetails }: PropertyCardProps) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [imageError, setImageError] = useState(false);
 
@@ -58,7 +63,10 @@ export default function PropertyCard({ property }: PropertyCardProps) {
   };
 
   return (
-    <Card className="property-card group cursor-pointer relative overflow-hidden">
+    <Card 
+      className="property-card group cursor-pointer relative overflow-hidden"
+      onClick={() => onViewDetails?.(property)}
+    >
       {/* Property Image */}
       <div className="relative aspect-[4/3] overflow-hidden">
         <img
@@ -179,8 +187,14 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         )}
 
         {/* Contact Button */}
-        <Button className="w-full btn-primary">
-          Связаться с агентом
+        <Button 
+          className="w-full btn-primary"
+          onClick={(e) => {
+            e.stopPropagation();
+            onViewDetails?.(property);
+          }}
+        >
+          Подробнее
         </Button>
       </CardContent>
     </Card>

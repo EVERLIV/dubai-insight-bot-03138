@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SearchFilters from "./SearchFilters";
 import PropertyCard from "./PropertyCard";
+import PropertyDetailModal from "./PropertyDetailModal";
 import { BarChart3, TrendingUp, MapPin, Building2 } from "lucide-react";
 
 export default function ModernPropertySearch() {
@@ -24,6 +25,8 @@ export default function ModernPropertySearch() {
   const [searchPerformed, setSearchPerformed] = useState(false);
   const [totalResults, setTotalResults] = useState(0);
   const [sources, setSources] = useState<string[]>([]);
+  const [selectedProperty, setSelectedProperty] = useState<any>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   const handleSearch = async () => {
     setIsLoading(true);
@@ -95,6 +98,16 @@ export default function ModernPropertySearch() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleViewDetails = (property: any) => {
+    setSelectedProperty(property);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleCloseDetailModal = () => {
+    setIsDetailModalOpen(false);
+    setSelectedProperty(null);
   };
 
   const handleRefresh = async () => {
@@ -202,7 +215,11 @@ export default function ModernPropertySearch() {
               searchResults.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                   {searchResults.slice(0, 12).map((property, index) => (
-                    <PropertyCard key={index} property={property} />
+                    <PropertyCard 
+                      key={index} 
+                      property={property} 
+                      onViewDetails={handleViewDetails}
+                    />
                   ))}
                 </div>
               ) : (
@@ -240,7 +257,11 @@ export default function ModernPropertySearch() {
                       purpose: "for-sale",
                       housing_status: "secondary",
                       source_name: "Premium Properties",
-                      source_type: "api"
+                      source_type: "api",
+                      description: "Роскошная квартира с потрясающим видом на марину и залив. Полностью меблирована и готова к заселению.",
+                      amenities: ["Бассейн", "Спортзал", "Парковка", "Консьерж", "Вид на марину"],
+                      completion_status: "ready",
+                      is_furnished: true
                     },
                     {
                       title: "Downtown Penthouse",
@@ -253,7 +274,11 @@ export default function ModernPropertySearch() {
                       purpose: "for-sale",
                       housing_status: "primary",
                       source_name: "Elite Realty",
-                      source_type: "website"
+                      source_type: "website",
+                      description: "Эксклюзивный пентхаус в самом сердце Дубая с панорамным видом на Бурдж Халифа.",
+                      amenities: ["Частная терраса", "Лифт", "Smart Home", "Паркинг", "24/7 охрана"],
+                      completion_status: "under-construction",
+                      is_furnished: false
                     },
                     {
                       title: "Business Bay Studio",
@@ -266,10 +291,18 @@ export default function ModernPropertySearch() {
                       purpose: "for-rent",
                       housing_status: "secondary",
                       source_name: "Rent Dubai",
-                      source_type: "telegram"
+                      source_type: "telegram",
+                      description: "Современная студия в новом комплексе с отличной транспортной доступностью.",
+                      amenities: ["Бассейн", "Спортзал", "Балкон", "Кондиционер"],
+                      completion_status: "ready",
+                      is_furnished: true
                     }
                   ].map((property, index) => (
-                    <PropertyCard key={index} property={property} />
+                    <PropertyCard 
+                      key={index} 
+                      property={property} 
+                      onViewDetails={handleViewDetails}
+                    />
                   ))}
                 </div>
 
