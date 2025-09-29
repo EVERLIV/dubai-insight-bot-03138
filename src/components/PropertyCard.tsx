@@ -2,8 +2,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
-  Heart, Share2, MapPin, Home, Maximize2, Bath, Car, MessageCircle, Globe, Zap,
-  Bed, Calendar, User, Phone, Clock
+  Heart, Share2, MapPin, Home, Maximize2, Bath,
+  Bed, User, Clock
 } from "lucide-react";
 import { useState } from "react";
 
@@ -39,19 +39,6 @@ export default function PropertyCard({ property, onViewDetails }: PropertyCardPr
 
   const defaultImage = "/placeholder.svg";
   const displayImage = property.images?.[0] && !imageError ? property.images[0] : defaultImage;
-
-  const getSourceIcon = () => {
-    switch (property.source_type) {
-      case 'telegram':
-        return <MessageCircle className="w-3 h-3 text-blue-500" />;
-      case 'website':
-        return <Globe className="w-3 h-3 text-green-500" />;
-      case 'api':
-        return <Zap className="w-3 h-3 text-primary" />;
-      default:
-        return null;
-    }
-  };
 
   const getPurposeBadge = () => {
     if (property.purpose === 'for-sale') return 'For Sale';
@@ -125,12 +112,6 @@ export default function PropertyCard({ property, onViewDetails }: PropertyCardPr
           <div className="text-2xl font-bold text-primary">
             {property.price ? `${property.price.toLocaleString()} AED` : 'Price on request'}
           </div>
-          <div className="flex items-center gap-1">
-            {getSourceIcon()}
-            <span className="text-xs text-muted-foreground">
-              {property.source_name || 'API'}
-            </span>
-          </div>
         </div>
 
         {/* Title */}
@@ -198,21 +179,14 @@ export default function PropertyCard({ property, onViewDetails }: PropertyCardPr
         </div>
 
         {/* Agent Info */}
-        {(property.agent_name || property.agent_phone) && (
+        {property.agent_name && (
           <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg mb-3">
             <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
               <User className="w-3 h-3 text-blue-600" />
             </div>
             <div className="flex flex-col">
-              {property.agent_name && (
-                <span className="text-sm font-medium text-blue-900">{property.agent_name}</span>
-              )}
-              {property.agent_phone && (
-                <div className="flex items-center gap-1">
-                  <Phone className="w-3 h-3 text-blue-600" />
-                  <span className="text-xs text-blue-700">{property.agent_phone}</span>
-                </div>
-              )}
+              <span className="text-sm font-medium text-blue-900">{property.agent_name}</span>
+              <span className="text-xs text-blue-700">Real Estate Agent</span>
             </div>
           </div>
         )}
