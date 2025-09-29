@@ -329,6 +329,13 @@ export default function ModernPropertySearch() {
           </div>
         </div>
       </div>
+      
+      {/* Property Detail Modal */}
+      <PropertyDetailModal
+        property={selectedProperty}
+        isOpen={isDetailModalOpen}
+        onClose={handleCloseDetailModal}
+      />
     </div>
   );
 }
