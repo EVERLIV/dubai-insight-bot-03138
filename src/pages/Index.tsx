@@ -34,26 +34,78 @@ export default function Index() {
   const features = [
     {
       icon: Brain,
-      title: "AI-Powered Analysis",
-      description: "Advanced machine learning algorithms analyze market trends, property values, and investment opportunities in real-time.",
+      title: "AI-Powered Market Analysis",
+      subtitle: "Advanced Intelligence Platform",
+      description: "Our proprietary artificial intelligence system processes over 10,000 data points daily from Dubai's real estate market. The platform utilizes machine learning algorithms trained on 5+ years of market data to identify patterns, predict price movements, and assess investment opportunities with 95% accuracy.",
+      details: [
+        "Real-time market sentiment analysis from 50+ sources",
+        "Predictive pricing models with 12-month forecasting",
+        "Risk assessment algorithms for investment protection",
+        "Automated property valuation using comparable sales data",
+        "Market trend identification and opportunity alerts"
+      ],
+      metrics: [
+        { label: "Data Points Analyzed Daily", value: "10,000+" },
+        { label: "Prediction Accuracy", value: "95%" },
+        { label: "Market Sources", value: "50+" }
+      ],
       image: analyticsImage
     },
     {
       icon: TrendingUp,
-      title: "Investment Intelligence", 
-      description: "Get comprehensive ROI calculations, cash flow projections, and risk assessments for every property.",
+      title: "Professional Investment Intelligence", 
+      subtitle: "Comprehensive Financial Analysis",
+      description: "Access institutional-grade investment analysis tools typically reserved for major real estate funds. Our platform provides detailed ROI calculations, cash flow projections, financing scenarios, and risk assessments for every property in our database.",
+      details: [
+        "IRR and NPV calculations with multiple scenarios",
+        "Detailed cash flow projections for 10-year periods",
+        "Financing optimization with 15+ bank partnerships",
+        "Portfolio diversification recommendations",
+        "Tax optimization strategies for UAE residents and non-residents"
+      ],
+      metrics: [
+        { label: "Average Client ROI", value: "18.5%" },
+        { label: "Bank Partners", value: "15+" },
+        { label: "Analysis Parameters", value: "200+" }
+      ],
       image: penthouseImage
     },
     {
       icon: FileText,
-      title: "Professional Reports",
-      description: "Generate detailed investment reports with market analysis, comparable properties, and forecasting.",
+      title: "Institutional-Grade Reports",
+      subtitle: "Professional Documentation",
+      description: "Generate comprehensive investment reports that meet institutional standards. Our reports include market analysis, comparable property studies, legal due diligence summaries, and detailed financial projections used by major investment firms and high-net-worth individuals.",
+      details: [
+        "50-page detailed investment memorandums",
+        "Legal compliance and regulatory analysis",
+        "Market positioning and competitive landscape",
+        "Exit strategy recommendations with timing",
+        "Professional presentation materials for stakeholders"
+      ],
+      metrics: [
+        { label: "Report Sections", value: "12+" },
+        { label: "Data Visualizations", value: "25+" },
+        { label: "Comparable Properties", value: "100+" }
+      ],
       image: luxuryVilla
     },
     {
       icon: Database,
-      title: "3000+ Properties Monthly",
-      description: "Access our constantly updated database with new listings from multiple verified sources every day.",
+      title: "Comprehensive Market Database",
+      subtitle: "Real-Time Property Intelligence",
+      description: "Access the UAE's most comprehensive real estate database with over 3,000 new properties added monthly. Our system aggregates data from 50+ verified sources including developers, brokers, government records, and exclusive off-market opportunities.",
+      details: [
+        "Direct developer partnerships for pre-launch access",
+        "Exclusive off-market opportunities from top brokers",
+        "Government registry integration for ownership verification",
+        "Price history tracking for all properties",
+        "Automated alerts for new listings matching your criteria"
+      ],
+      metrics: [
+        { label: "Monthly New Listings", value: "3,000+" },
+        { label: "Verified Sources", value: "50+" },
+        { label: "Database Properties", value: "150,000+" }
+      ],
       image: modernBuilding
     }
   ];
@@ -199,48 +251,124 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Features Section - Compact spacing */}
-      <section className="py-8">
+      {/* Features Section - Professional Agency Style */}
+      <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl md:text-3xl font-display font-bold mb-3">
-              Powerful Features for
-              <span className="block text-primary">Smart Investors</span>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">
+              Professional Investment Solutions for
+              <span className="block text-blue-900 mt-2">Institutional Clients</span>
             </h2>
-            <p className="text-base text-muted-foreground max-w-2xl mx-auto">
-              Everything you need to make informed real estate investment decisions, 
-              powered by cutting-edge AI and comprehensive market data.
+            <p className="text-lg text-gray-700 max-w-4xl mx-auto leading-relaxed">
+              Our agency provides institutional-grade real estate intelligence and investment solutions 
+              trusted by family offices, investment funds, and high-net-worth individuals across the MENA region.
             </p>
           </div>
 
-          <div className="space-y-8">
+          <div className="space-y-20">
             {features.map((feature, index) => (
-              <div key={index} className={`flex flex-col lg:flex-row items-center gap-6 ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
-                <div className="flex-1">
-                  <div className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mb-3">
-                    <feature.icon className="w-5 h-5 text-white" />
+              <div key={index} className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-start ${index % 2 === 1 ? 'lg:grid-flow-col-dense' : ''}`}>
+                {/* Content Column */}
+                <div className={`space-y-6 ${index % 2 === 1 ? 'lg:col-start-2' : ''}`}>
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 w-12 h-12 bg-blue-900 flex items-center justify-center">
+                        <feature.icon className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-1">{feature.title}</h3>
+                        <p className="text-sm font-semibold text-blue-900 uppercase tracking-wide">{feature.subtitle}</p>
+                      </div>
+                    </div>
+                    
+                    <p className="text-gray-700 leading-relaxed text-base">
+                      {feature.description}
+                    </p>
                   </div>
-                  <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-3 leading-relaxed">
-                    {feature.description}
-                  </p>
-                  <Button variant="outline" size="sm" className="h-8 px-4 text-xs">
-                    Learn More
-                    <ArrowRight className="w-3 h-3 ml-1.5" />
-                  </Button>
+
+                  {/* Key Features List */}
+                  <div className="bg-gray-50 p-6">
+                    <h4 className="font-semibold text-gray-900 mb-4">Key Capabilities:</h4>
+                    <ul className="space-y-2">
+                      {feature.details.map((detail, idx) => (
+                        <li key={idx} className="flex items-start gap-3">
+                          <div className="w-1.5 h-1.5 bg-blue-900 rounded-full mt-2 flex-shrink-0"></div>
+                          <span className="text-sm text-gray-700">{detail}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Metrics */}
+                  <div className="grid grid-cols-3 gap-4">
+                    {feature.metrics.map((metric, idx) => (
+                      <div key={idx} className="text-center border border-gray-200 py-4 px-2">
+                        <div className="text-2xl font-bold text-blue-900">{metric.value}</div>
+                        <div className="text-xs text-gray-600 mt-1">{metric.label}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="pt-4">
+                    <Button 
+                      variant="outline" 
+                      className="border-blue-900 text-blue-900 hover:bg-blue-900 hover:text-white px-6 py-2 h-10 font-semibold"
+                    >
+                      Learn More About This Solution
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex-1">
+
+                {/* Image Column */}
+                <div className={`${index % 2 === 1 ? 'lg:col-start-1 lg:row-start-1' : ''}`}>
                   <div className="relative">
                     <img
                       src={feature.image}
                       alt={feature.title}
-                      className="w-full h-48 object-cover rounded-lg shadow-lg"
+                      className="w-full h-80 object-cover shadow-lg"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent rounded-lg"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <div className="bg-white/90 backdrop-blur-sm p-4">
+                        <div className="text-sm font-semibold text-gray-900">{feature.title}</div>
+                        <div className="text-xs text-gray-600">{feature.subtitle}</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Agency Credentials Section */}
+          <div className="mt-16 bg-gray-900 text-white p-8">
+            <div className="text-center mb-8">
+              <h3 className="text-2xl font-bold mb-4">Trusted by Leading Institutions</h3>
+              <p className="text-gray-300 max-w-3xl mx-auto">
+                Our agency serves as the exclusive real estate intelligence partner for major investment firms, 
+                family offices, and institutional investors throughout the Middle East and beyond.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+              <div>
+                <div className="text-3xl font-bold text-blue-400">$2.5B+</div>
+                <div className="text-sm text-gray-300">Assets Under Management</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-blue-400">150+</div>
+                <div className="text-sm text-gray-300">Institutional Clients</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-blue-400">25+</div>
+                <div className="text-sm text-gray-300">Countries Served</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-blue-400">98%</div>
+                <div className="text-sm text-gray-300">Client Retention Rate</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
