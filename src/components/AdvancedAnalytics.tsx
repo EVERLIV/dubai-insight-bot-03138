@@ -217,7 +217,7 @@ export default function AdvancedAnalytics() {
                 </p>
                 <p className="text-xs text-green-600 flex items-center gap-1 mt-1">
                   <TrendingUp className="h-3 w-3" />
-                  +{avgGrowth.toFixed(1)}% за год
+                  +{avgGrowth.toFixed(1)}% yearly
                 </p>
               </div>
               <DollarSign className="h-12 w-12 text-blue-500 opacity-80" />
@@ -229,11 +229,11 @@ export default function AdvancedAnalytics() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Транзакций/месяц</p>
+                <p className="text-sm font-medium text-muted-foreground">Transactions/month</p>
                 <p className="text-2xl font-bold">{totalTransactions.toLocaleString()}</p>
                 <p className="text-xs text-green-600 flex items-center gap-1 mt-1">
                   <TrendingUp className="h-3 w-3" />
-                  +12.5% за месяц
+                  +12.5% monthly
                 </p>
               </div>
               <BarChart3 className="h-12 w-12 text-green-500 opacity-80" />
@@ -245,11 +245,11 @@ export default function AdvancedAnalytics() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Средняя доходность</p>
+                <p className="text-sm font-medium text-muted-foreground">Average Yield</p>
                 <p className="text-2xl font-bold">7.2%</p>
                 <p className="text-xs text-blue-600 flex items-center gap-1 mt-1">
                   <Activity className="h-3 w-3" />
-                  Стабильно
+                  Stable
                 </p>
               </div>
               <TrendingUp className="h-12 w-12 text-purple-500 opacity-80" />
@@ -261,11 +261,11 @@ export default function AdvancedAnalytics() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Активных объектов</p>
+                <p className="text-sm font-medium text-muted-foreground">Active Properties</p>
                 <p className="text-2xl font-bold">{propertyTypes.reduce((sum, type) => sum + type.count, 0).toLocaleString()}</p>
                 <p className="text-xs text-orange-600 flex items-center gap-1 mt-1">
                   <Building className="h-3 w-3" />
-                  На рынке
+                  On Market
                 </p>
               </div>
               <Building className="h-12 w-12 text-orange-500 opacity-80" />
@@ -288,10 +288,10 @@ export default function AdvancedAnalytics() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="h-5 w-5" />
-                  Динамика средних цен
+                  Average Price Dynamics
                 </CardTitle>
                 <CardDescription>
-                  Изменение цен на недвижимость за последний год
+                  Real estate price changes over the last year
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -301,7 +301,7 @@ export default function AdvancedAnalytics() {
                     <XAxis dataKey="timestamp" />
                     <YAxis />
                     <Tooltip 
-                      formatter={(value: number) => [`$${value.toLocaleString()}`, 'Средняя цена']}
+                      formatter={(value: number) => [`$${value.toLocaleString()}`, 'Average Price']}
                     />
                     <Area 
                       type="monotone" 
@@ -319,10 +319,10 @@ export default function AdvancedAnalytics() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Activity className="h-5 w-5" />
-                  Объем транзакций
+                  Transaction Volume
                 </CardTitle>
                 <CardDescription>
-                  Количество сделок по месяцам
+                  Number of deals by month
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -345,10 +345,10 @@ export default function AdvancedAnalytics() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MapPin className="h-5 w-5" />
-                Рейтинг районов по росту цен
+                District Rating by Price Growth
               </CardTitle>
               <CardDescription>
-                Сравнительный анализ ключевых районов Дубая
+                Comparative analysis of key Dubai districts
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -364,9 +364,9 @@ export default function AdvancedAnalytics() {
                       <div>
                         <h4 className="font-semibold">{district.name}</h4>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>Средняя цена: ${district.avgPrice.toLocaleString()}</span>
-                          <span>Доходность: {district.rentYield}%</span>
-                          <span>Транзакций: {district.transactions}</span>
+                          <span>Average Price: ${district.avgPrice.toLocaleString()}</span>
+                          <span>Yield: {district.rentYield}%</span>
+                          <span>Transactions: {district.transactions}</span>
                         </div>
                       </div>
                     </div>
@@ -382,7 +382,7 @@ export default function AdvancedAnalytics() {
                         )}
                         <span className="font-semibold">+{district.priceGrowth}%</span>
                       </div>
-                      <p className="text-xs text-muted-foreground">за год</p>
+                      <p className="text-xs text-muted-foreground">yearly</p>
                     </div>
                   </div>
                 ))}
@@ -395,9 +395,9 @@ export default function AdvancedAnalytics() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Распределение по типам</CardTitle>
+                <CardTitle>Distribution by Type</CardTitle>
                 <CardDescription>
-                  Доля различных типов недвижимости на рынке
+                  Share of different property types in the market
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -425,9 +425,9 @@ export default function AdvancedAnalytics() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Средние цены по типам</CardTitle>
+                <CardTitle>Average Prices by Type</CardTitle>
                 <CardDescription>
-                  Сравнение стоимости различных типов недвижимости
+                  Comparison of costs for different property types
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -445,7 +445,7 @@ export default function AdvancedAnalytics() {
                       </div>
                       <div className="text-right">
                         <div className="font-semibold">${type.avgPrice.toLocaleString()}</div>
-                        <div className="text-xs text-muted-foreground">{type.count} объектов</div>
+                        <div className="text-xs text-muted-foreground">{type.count} properties</div>
                       </div>
                     </div>
                   ))}
@@ -470,33 +470,33 @@ export default function AdvancedAnalytics() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="text-center p-6 border rounded-lg">
                   <TrendingUp className="h-12 w-12 text-green-500 mx-auto mb-4" />
-                  <h4 className="font-semibold text-lg mb-2">Рост цен</h4>
+                  <h4 className="font-semibold text-lg mb-2">Price Growth</h4>
                   <p className="text-3xl font-bold text-green-600">+8.5%</p>
-                  <p className="text-sm text-muted-foreground mt-2">Ожидаемый рост до конца 2025</p>
+                  <p className="text-sm text-muted-foreground mt-2">Expected growth by end of 2025</p>
                 </div>
                 
                 <div className="text-center p-6 border rounded-lg">
                   <BarChart3 className="h-12 w-12 text-blue-500 mx-auto mb-4" />
-                  <h4 className="font-semibold text-lg mb-2">Объем сделок</h4>
+                  <h4 className="font-semibold text-lg mb-2">Transaction Volume</h4>
                   <p className="text-3xl font-bold text-blue-600">+15%</p>
-                  <p className="text-sm text-muted-foreground mt-2">Увеличение активности</p>
+                  <p className="text-sm text-muted-foreground mt-2">Activity increase</p>
                 </div>
                 
                 <div className="text-center p-6 border rounded-lg">
                   <DollarSign className="h-12 w-12 text-purple-500 mx-auto mb-4" />
-                  <h4 className="font-semibold text-lg mb-2">Доходность</h4>
+                  <h4 className="font-semibold text-lg mb-2">Yield</h4>
                   <p className="text-3xl font-bold text-purple-600">7.8%</p>
-                  <p className="text-sm text-muted-foreground mt-2">Средняя по рынку</p>
+                  <p className="text-sm text-muted-foreground mt-2">Market average</p>
                 </div>
               </div>
               
               <div className="mt-6 p-4 bg-muted/30 rounded-lg">
-                <h5 className="font-semibold mb-2">Ключевые факторы роста:</h5>
+                <h5 className="font-semibold mb-2">Key Growth Factors:</h5>
                 <ul className="space-y-1 text-sm">
-                  <li>• Экспо 2030 и инфраструктурные проекты</li>
-                  <li>• Привлечение иностранных инвестиций</li>
-                  <li>• Развитие новых районов и проектов</li>
-                  <li>• Стабильная экономическая политика ОАЭ</li>
+                  <li>• Expo 2030 and infrastructure projects</li>
+                  <li>• Attracting foreign investment</li>
+                  <li>• Development of new districts and projects</li>
+                  <li>• Stable economic policy of the UAE</li>
                 </ul>
               </div>
             </CardContent>

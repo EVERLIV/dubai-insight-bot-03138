@@ -69,7 +69,7 @@ export default function RealtimeMarketIndicators() {
         },
         {
           id: '3',
-          title: 'Средняя доходность',
+          title: 'Average Yield',
           value: '7.2%',
           change: 0.3,
           changePercent: 4.35,
@@ -79,7 +79,7 @@ export default function RealtimeMarketIndicators() {
         },
         {
           id: '4',
-          title: 'Время на рынке (дни)',
+          title: 'Time on Market (days)',
           value: '32',
           change: -2,
           changePercent: -5.88,
@@ -89,7 +89,7 @@ export default function RealtimeMarketIndicators() {
         },
         {
           id: '5',
-          title: 'Новые листинги',
+          title: 'New Listings',
           value: '189',
           change: 23,
           changePercent: 13.86,
@@ -99,7 +99,7 @@ export default function RealtimeMarketIndicators() {
         },
         {
           id: '6',
-          title: 'Активность инвесторов',
+          title: 'Investor Activity',
           value: '84%',
           change: 12,
           changePercent: 16.67,

@@ -160,13 +160,13 @@ const PropertySearch = () => {
             {/* Location & Type */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-3">
-                <label className="text-lg font-semibold text-foreground">Район Дубая</label>
+                <label className="text-lg font-semibold text-foreground">Dubai District</label>
                 <Select value={location} onValueChange={setLocation}>
                   <SelectTrigger className="bg-dubai-blue-lighter border-dubai-gold/20">
-                    <SelectValue placeholder="Выберите район" />
+                    <SelectValue placeholder="Select district" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Любой район</SelectItem>
+                    <SelectItem value="all">Any District</SelectItem>
                     <SelectItem value="Downtown Dubai">Downtown Dubai</SelectItem>
                     <SelectItem value="Dubai Marina">Dubai Marina</SelectItem>
                     <SelectItem value="JBR">Jumeirah Beach Residence</SelectItem>
@@ -325,10 +325,10 @@ const PropertySearch = () => {
                         </div>
                       </div>
                       <div className="text-2xl font-bold text-dubai-gold">
-                        {property.price ? `${property.price.toLocaleString()} AED` : 'Цена по запросу'}
+                        {property.price ? `${property.price.toLocaleString()} AED` : 'Price on request'}
                       </div>
                       <Badge variant="outline" className="text-xs w-fit">
-                        {property.source_name || 'Неизвестный источник'}
+                        {property.source_name || 'Unknown source'}
                       </Badge>
                     </CardHeader>
                     <CardContent>
@@ -436,7 +436,7 @@ const PropertySearch = () => {
                       {property.location}
                     </div>
                     <div className="flex justify-between items-center pt-2">
-                      <span className="text-sm text-muted-foreground">Прогноз ROI</span>
+                      <span className="text-sm text-muted-foreground">ROI Forecast</span>
                       <span className="text-lg font-bold text-green-400">{property.roi}</span>
                     </div>
                   </div>
