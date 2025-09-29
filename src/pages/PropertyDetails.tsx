@@ -164,67 +164,76 @@ export default function PropertyDetails() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-4">
-              {/* Images */}
-              <div className="grid grid-cols-2 gap-2 h-80">
-                <div className="relative">
-                  <img
-                    src={property.images?.[0] || "/placeholder.svg"}
-                    alt={property.title}
-                    className="w-full h-full object-cover rounded-lg"
-                  />
-                  <div className="absolute top-3 left-3 flex gap-2">
-                    <Badge className="bg-green-100 text-green-800 text-xs">
-                      {property.purpose === 'for-sale' ? 'For Sale' : 'For Rent'}
-                    </Badge>
-                    {property.housing_status && (
-                      <Badge variant="secondary" className="text-xs">
-                        {property.housing_status === 'primary' ? 'Off-plan' : 'Ready'}
-                      </Badge>
-                    )}
+              {/* Photos and Features Layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                {/* Photo Gallery - Takes 2 columns */}
+                <div className="lg:col-span-2">
+                  <div className="grid grid-cols-2 gap-2 h-80">
+                    <div className="relative">
+                      <img
+                        src={property.images?.[0] || "/placeholder.svg"}
+                        alt={property.title}
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                      <div className="absolute top-3 left-3 flex gap-2">
+                        <Badge className="bg-green-100 text-green-800 text-xs">
+                          {property.purpose === 'for-sale' ? 'For Sale' : 'For Rent'}
+                        </Badge>
+                        {property.housing_status && (
+                          <Badge variant="secondary" className="text-xs">
+                            {property.housing_status === 'primary' ? 'Off-plan' : 'Ready'}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[1,2,3,4].map((i) => (
+                        <img
+                          key={i}
+                          src="/placeholder.svg"
+                          alt={`Property ${i}`}
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                      ))}
+                    </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {[1,2,3,4].map((i) => (
-                    <img
-                      key={i}
-                      src="/placeholder.svg"
-                      alt={`Property ${i}`}
-                      className="w-full h-full object-cover rounded-lg"
-                    />
-                  ))}
+
+                {/* Features - Takes 1 column beside photos */}
+                <div className="lg:col-span-1">
+                  <Card className="h-full">
+                    <CardContent className="p-4 h-full flex flex-col">
+                      <h3 className="text-sm font-semibold mb-3">Key Features</h3>
+                      <div className="grid grid-cols-1 gap-3 flex-1">
+                        {features.map((feature, index) => (
+                          <div key={index} className="flex items-center gap-3 p-2 bg-slate-50 rounded">
+                            <feature.icon className="w-5 h-5 text-primary flex-shrink-0" />
+                            <div>
+                              <div className="text-sm font-medium">{feature.value}</div>
+                              <div className="text-xs text-muted-foreground">{feature.label}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
 
-              {/* Property Info - Updated without title */}
+              {/* Amenities Section */}
               <Card>
                 <CardContent className="p-4">
-                  <div className="space-y-3">
-                    {/* Features - Compact Grid */}
-                    <div className="grid grid-cols-6 gap-2">
-                      {features.map((feature, index) => (
-                        <div key={index} className="text-center p-2 bg-slate-50 rounded">
-                          <feature.icon className="w-4 h-4 mx-auto mb-1 text-primary" />
-                          <div className="text-xs font-medium">{feature.value}</div>
-                          <div className="text-xs text-muted-foreground">{feature.label}</div>
+                  <h3 className="text-sm font-semibold mb-3">Amenities</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {property.amenities?.slice(0, 8).map((amenity: string, index: number) => {
+                      const IconComponent = amenityIcons[amenity] || Home;
+                      return (
+                        <div key={index} className="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded text-sm">
+                          <IconComponent className="w-4 h-4 text-primary" />
+                          {amenity}
                         </div>
-                      ))}
-                    </div>
-
-                    {/* Amenities - Compact */}
-                    <div className="border-t pt-3">
-                      <h3 className="text-sm font-semibold mb-2">Amenities</h3>
-                      <div className="flex flex-wrap gap-1">
-                        {property.amenities?.slice(0, 8).map((amenity: string, index: number) => {
-                          const IconComponent = amenityIcons[amenity] || Home;
-                          return (
-                            <div key={index} className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded text-xs">
-                              <IconComponent className="w-3 h-3 text-primary" />
-                              {amenity}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
