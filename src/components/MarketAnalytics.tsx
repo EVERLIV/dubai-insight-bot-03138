@@ -1,8 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, Activity, DollarSign, BarChart3, Target } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 
 const MarketAnalytics = () => {
-  const marketData = [
+  const [marketData, setMarketData] = useState([
     {
       title: "Средняя цена за кв.м",
       value: "15,240 AED",
@@ -31,14 +33,97 @@ const MarketAnalytics = () => {
       trend: "up", 
       icon: BarChart3
     }
-  ];
+  ]);
 
-  const topLocations = [
+  const [topLocations, setTopLocations] = useState([
     { name: "Downtown Dubai", growth: "+18.5%", avgPrice: "18,500 AED/кв.м" },
     { name: "Dubai Marina", growth: "+12.3%", avgPrice: "14,200 AED/кв.м" },
     { name: "Palm Jumeirah", growth: "+22.1%", avgPrice: "25,800 AED/кв.м" },
     { name: "Business Bay", growth: "+9.8%", avgPrice: "12,900 AED/кв.м" }
-  ];
+  ]);
+
+  const [forecast, setForecast] = useState({
+    priceGrowth: "+12-15%",
+    marketActivity: "Высокая",
+    roi: "14-18%",
+    recommendation: "Оптимальное время для инвестиций в элитную недвижимость Downtown Dubai и Palm Jumeirah"
+  });
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    fetchMarketData();
+  }, []);
+
+  const fetchMarketData = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('deepseek-market-analysis', {
+        body: { 
+          type: 'market_analysis',
+          region: 'dubai'
+        }
+      });
+      
+      if (error) throw error;
+      
+      if (data?.data) {
+        const analysis = data.data;
+        
+        // Update market metrics
+        setMarketData([
+          {
+            title: "Средняя цена за кв.м",
+            value: `${Math.round(analysis.keyMetrics.avgPricePerSqm).toLocaleString()} AED`,
+            change: `+${analysis.keyMetrics.priceGrowth.toFixed(1)}%`,
+            trend: analysis.keyMetrics.priceGrowth > 0 ? "up" : "down",
+            icon: DollarSign
+          },
+          {
+            title: "Объем транзакций",
+            value: `${Math.round(analysis.keyMetrics.transactionVolume).toLocaleString()}`,
+            change: "+15.2%", 
+            trend: "up",
+            icon: Activity
+          },
+          {
+            title: "Время продажи",
+            value: `${Math.round(analysis.keyMetrics.timeOnMarket)} дней`,
+            change: "-12%",
+            trend: "down",
+            icon: Target
+          },
+          {
+            title: "ROI годовой",
+            value: `${analysis.keyMetrics.roi.toFixed(1)}%`,
+            change: "+2.1%",
+            trend: "up", 
+            icon: BarChart3
+          }
+        ]);
+
+        // Update top locations
+        setTopLocations(analysis.districts.map(district => ({
+          name: district.name,
+          growth: `+${district.growth.toFixed(1)}%`,
+          avgPrice: `${Math.round(district.avgPrice).toLocaleString()} AED/кв.м`
+        })));
+
+        // Update forecast
+        setForecast({
+          priceGrowth: `+${analysis.forecast.priceGrowthForecast.toFixed(0)}-${(analysis.forecast.priceGrowthForecast + 3).toFixed(0)}%`,
+          marketActivity: analysis.forecast.marketActivity === "высокая" ? "Высокая" : 
+                          analysis.forecast.marketActivity === "средняя" ? "Средняя" : "Низкая",
+          roi: `${(analysis.forecast.roi - 2).toFixed(0)}-${analysis.forecast.roi.toFixed(0)}%`,
+          recommendation: analysis.forecast.recommendation
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching market data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <section className="py-20 px-6">
@@ -120,7 +205,7 @@ const MarketAnalytics = () => {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-foreground">Рост цен</span>
-                  <span className="text-xl font-bold text-green-400">+12-15%</span>
+                  <span className="text-xl font-bold text-green-400">{forecast.priceGrowth}</span>
                 </div>
                 <div className="w-full bg-dubai-blue-lighter rounded-full h-2">
                   <div className="bg-gradient-to-r from-dubai-gold to-dubai-gold-light h-2 rounded-full" style={{ width: '75%' }}></div>
@@ -130,7 +215,7 @@ const MarketAnalytics = () => {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-foreground">Активность рынка</span>
-                  <span className="text-xl font-bold text-dubai-gold">Высокая</span>
+                  <span className="text-xl font-bold text-dubai-gold">{forecast.marketActivity}</span>
                 </div>
                 <div className="w-full bg-dubai-blue-lighter rounded-full h-2">
                   <div className="bg-gradient-to-r from-dubai-gold to-dubai-gold-light h-2 rounded-full" style={{ width: '85%' }}></div>
@@ -140,7 +225,7 @@ const MarketAnalytics = () => {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-foreground">Доходность</span>
-                  <span className="text-xl font-bold text-green-400">14-18%</span>
+                  <span className="text-xl font-bold text-green-400">{forecast.roi}</span>
                 </div>
                 <div className="w-full bg-dubai-blue-lighter rounded-full h-2">
                   <div className="bg-gradient-to-r from-green-400 to-green-300 h-2 rounded-full" style={{ width: '80%' }}></div>
@@ -150,7 +235,7 @@ const MarketAnalytics = () => {
               <div className="mt-6 p-4 rounded-xl bg-dubai-gold/10 border border-dubai-gold/20">
                 <div className="text-sm text-muted-foreground mb-2">💡 AI Рекомендация</div>
                 <div className="text-foreground font-semibold">
-                  Оптимальное время для инвестиций в элитную недвижимость Downtown Dubai и Palm Jumeirah
+                  {isLoading ? "Загрузка рекомендаций..." : forecast.recommendation}
                 </div>
               </div>
             </CardContent>
