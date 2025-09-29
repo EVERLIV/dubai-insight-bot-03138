@@ -268,6 +268,9 @@ function getSearchMenuKeyboard() {
       ],
       [
         { text: "🔄 Обновить данные", callback_data: "refresh_scraping" },
+        { text: "🧪 Тест Bayut API", callback_data: "test_bayut_api" }
+      ],
+      [
         { text: "📊 Источники данных", callback_data: "sources_stats" }
       ],
       [
@@ -1618,6 +1621,70 @@ async function handleCallbackQuery(callbackQuery: any) {
             reply_markup: {
               inline_keyboard: [
                 [{ text: "🔄 Повторить", callback_data: "refresh_scraping" }],
+                [{ text: "⬅️ Назад", callback_data: "search_menu" }]
+              ]
+            }
+          }
+        );
+      }
+    }
+
+    else if (data === 'test_bayut_api') {
+      await editTelegramMessage(chatId, messageId, '🧪 <b>Тестирование Bayut API...</b>\n\n⏳ Проверяем подключение и получаем тестовые данные');
+      
+      try {
+        // Test Bayut API integration
+        const bayutResponse = await supabase.functions.invoke('property-sync', {
+          body: { purpose: 'for-sale', pages: 1 }
+        });
+
+        if (bayutResponse.data?.success) {
+          const result = bayutResponse.data;
+          await editTelegramMessage(chatId, messageId, 
+            `✅ <b>Bayut API работает успешно!</b>\n\n` +
+            `📊 <b>Результаты теста:</b>\n` +
+            `• Получено объектов: ${result.totalFetched || 0}\n` +
+            `• Сохранено в базу: ${result.totalSynced || 0}\n` +
+            `• Время выполнения: ${result.executionTime || 0}ms\n\n` +
+            `💡 API ключ настроен правильно и работает!`,
+            {
+              reply_markup: {
+                inline_keyboard: [
+                  [{ text: "🔄 Повторить тест", callback_data: "test_bayut_api" }],
+                  [{ text: "🔍 Поиск объектов", callback_data: "search_menu" }],
+                  [{ text: "⬅️ Назад", callback_data: "search_menu" }]
+                ]
+              }
+            }
+          );
+        } else {
+          await editTelegramMessage(chatId, messageId, 
+            `❌ <b>Bayut API тест неуспешен</b>\n\n` +
+            `🔍 <b>Ошибка:</b> ${bayutResponse.data?.error || 'Неизвестная ошибка'}\n\n` +
+            `💡 Возможные причины:\n` +
+            `• Неверный API ключ\n` +
+            `• Превышен лимит запросов\n` +
+            `• Проблемы с сервисом Bayut`,
+            {
+              reply_markup: {
+                inline_keyboard: [
+                  [{ text: "🔄 Повторить тест", callback_data: "test_bayut_api" }],
+                  [{ text: "📊 Статистика источников", callback_data: "sources_stats" }],
+                  [{ text: "⬅️ Назад", callback_data: "search_menu" }]
+                ]
+              }
+            }
+          );
+        }
+      } catch (error) {
+        await editTelegramMessage(chatId, messageId, 
+          `❌ <b>Ошибка при тестировании Bayut API</b>\n\n` +
+          `🔍 <b>Детали:</b> ${error instanceof Error ? error.message : 'Неизвестная ошибка'}\n\n` +
+          `💡 Обратитесь к администратору для решения проблемы.`,
+          {
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: "🔄 Повторить тест", callback_data: "test_bayut_api" }],
                 [{ text: "⬅️ Назад", callback_data: "search_menu" }]
               ]
             }
