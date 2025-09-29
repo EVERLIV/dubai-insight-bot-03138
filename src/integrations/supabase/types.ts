@@ -167,6 +167,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           external_id: string
+          housing_status: string | null
           id: string
           images: string[] | null
           is_furnished: boolean | null
@@ -195,6 +196,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           external_id: string
+          housing_status?: string | null
           id?: string
           images?: string[] | null
           is_furnished?: boolean | null
@@ -223,6 +225,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           external_id?: string
+          housing_status?: string | null
           id?: string
           images?: string[] | null
           is_furnished?: boolean | null
@@ -293,6 +296,7 @@ export type Database = {
           created_at: string
           description: string | null
           external_id: string | null
+          housing_status: string | null
           id: string
           images: string[] | null
           location_area: string | null
@@ -316,6 +320,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           external_id?: string | null
+          housing_status?: string | null
           id?: string
           images?: string[] | null
           location_area?: string | null
@@ -339,6 +344,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           external_id?: string | null
+          housing_status?: string | null
           id?: string
           images?: string[] | null
           location_area?: string | null
