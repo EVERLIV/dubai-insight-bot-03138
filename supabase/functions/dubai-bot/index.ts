@@ -257,26 +257,51 @@ function getSearchMenuKeyboard() {
   return {
     inline_keyboard: [
       [
-        { text: "💰 Продажа", callback_data: "search_sale" },
-        { text: "🏠 Аренда", callback_data: "search_rent" }
-      ],
-      [
-        { text: "🏢 Квартиры", callback_data: "search_apartment" },
-        { text: "🏘️ Виллы", callback_data: "search_villa" }
-      ],
-      [
-        { text: "🏠 Таунхаусы", callback_data: "search_townhouse" },
-        { text: "🏬 Коммерческая", callback_data: "search_commercial" }
-      ],
-      [
-        { text: "🆕 Первичное жилье", callback_data: "search_primary" },
-        { text: "🏗️ Вторичное жилье", callback_data: "search_secondary" }
-      ],
-      [
-        { text: "💎 Премиум", callback_data: "search_premium" }
+        { text: "🏠 Аренда", callback_data: "search_rent" },
+        { text: "💰 Покупка", callback_data: "search_buy" }
       ],
       [
         { text: "⬅️ Назад", callback_data: "main_menu" }
+      ]
+    ]
+  };
+}
+
+function getBuySearchMenuKeyboard() {
+  return {
+    inline_keyboard: [
+      [
+        { text: "🆕 Первичка (Off-Plan)", callback_data: "search_buy_primary" },
+        { text: "🏗️ Вторичка (Ready)", callback_data: "search_buy_secondary" }
+      ],
+      [
+        { text: "🔍 Любое", callback_data: "search_buy_any" }
+      ],
+      [
+        { text: "⬅️ Назад", callback_data: "search_menu" }
+      ]
+    ]
+  };
+}
+
+function getPropertyTypeKeyboard(purpose: string, market?: string) {
+  const baseData = market ? `${purpose}_${market}` : purpose;
+  return {
+    inline_keyboard: [
+      [
+        { text: "🏢 Квартира", callback_data: `${baseData}_apartment` },
+        { text: "🏘️ Вилла", callback_data: `${baseData}_villa` }
+      ],
+      [
+        { text: "🏠 Таунхаус", callback_data: `${baseData}_townhouse` },
+        { text: "🏬 Коммерческая", callback_data: `${baseData}_commercial` }
+      ],
+      [
+        { text: "🏗️ Дом", callback_data: `${baseData}_house` },
+        { text: "🔍 Любое", callback_data: `${baseData}_any` }
+      ],
+      [
+        { text: "⬅️ Назад", callback_data: purpose === "rent" ? "search_menu" : "search_buy" }
       ]
     ]
   };
@@ -1487,90 +1512,71 @@ async function handleCallbackQuery(callbackQuery: any) {
       }
     }
     
-    else if (data.startsWith('search_')) {
-      const searchType = data.replace('search_', '');
+    // New structured search menu handlers
+    else if (data === 'search_rent') {
+      await editTelegramMessage(chatId, messageId,
+        `🏠 <b>Аренда недвижимости</b>\n\nВыберите тип объекта:`, {
+        reply_markup: getPropertyTypeKeyboard('rent')
+      });
+    }
+    
+    else if (data === 'search_buy') {
+      await editTelegramMessage(chatId, messageId,
+        `💰 <b>Покупка недвижимости</b>\n\nВыберите тип рынка:`, {
+        reply_markup: getBuySearchMenuKeyboard()
+      });
+    }
+    
+    else if (data === 'search_buy_primary') {
+      await editTelegramMessage(chatId, messageId,
+        `🆕 <b>Первичка (Off-Plan)</b>\n\nВыберите тип объекта:`, {
+        reply_markup: getPropertyTypeKeyboard('buy', 'primary')
+      });
+    }
+    
+    else if (data === 'search_buy_secondary') {
+      await editTelegramMessage(chatId, messageId,
+        `🏗️ <b>Вторичка (Ready)</b>\n\nВыберите тип объекта:`, {
+        reply_markup: getPropertyTypeKeyboard('buy', 'secondary')
+      });
+    }
+    
+    else if (data === 'search_buy_any') {
+      await editTelegramMessage(chatId, messageId,
+        `🔍 <b>Любое на покупку</b>\n\nВыберите тип объекта:`, {
+        reply_markup: getPropertyTypeKeyboard('buy', 'any')
+      });
+    }
+    
+    // Property type handlers for rent
+    else if (data.startsWith('rent_')) {
+      const propertyType = data.split('_')[1];
+      await handleUniversalSearch(chatId, messageId, userId, {
+        purpose: 'for-rent',
+        property_type: propertyType === 'any' ? null : propertyType,
+        title: `Аренда ${getPropertyTypeTitle(propertyType)}`
+      });
+    }
+    
+    // Property type handlers for buy with market type
+    else if (data.startsWith('buy_')) {
+      const parts = data.split('_');
+      const market = parts[1]; // primary, secondary, any
+      const propertyType = parts[2];
       
-      if (searchType === 'premium') {
-        const searchResult = await callMultiPlatformSearch({
-          telegram_user_id: userId,
-          query: 'premium properties',
-          location: 'emirates hills,palm jumeirah,downtown',
-          min_price: 2000000,
-          limit: 10
-        });
-        
-        await handleSearchResults(chatId, messageId, searchResult, 'Премиум недвижимость');
-      } else if (searchType === 'primary') {
-        const searchResult = await callMultiPlatformSearch({
-          telegram_user_id: userId,
-          housing_status: 'primary',
-          limit: 10
-        });
-        
-        await handleSearchResults(chatId, messageId, searchResult, 'Первичное жилье');
-      } else if (searchType === 'secondary') {
-        const searchResult = await callMultiPlatformSearch({
-          telegram_user_id: userId,
-          housing_status: 'secondary',
-          limit: 10
-        });
-        
-        await handleSearchResults(chatId, messageId, searchResult, 'Вторичное жилье');
-      } else if (searchType === 'rent') {
-        const searchResult = await callMultiPlatformSearch({
-          telegram_user_id: userId,
-          purpose: 'for-rent',
-          limit: 10
-        });
-        
-        await handleSearchResults(chatId, messageId, searchResult, 'Недвижимость в аренду');
-      } else if (searchType === 'sale') {
-        const searchResult = await callMultiPlatformSearch({
-          telegram_user_id: userId,
-          purpose: 'for-sale',
-          limit: 10
-        });
-        
-        await handleSearchResults(chatId, messageId, searchResult, 'Недвижимость на продажу');
-      } else if (searchType === 'apartment') {
-        const searchResult = await callMultiPlatformSearch({
-          telegram_user_id: userId,
-          property_type: 'Apartment',
-          limit: 10
-        });
-        
-        await handleSearchResults(chatId, messageId, searchResult, 'Квартиры');
-      } else if (searchType === 'villa') {
-        const searchResult = await callMultiPlatformSearch({
-          telegram_user_id: userId,
-          property_type: 'Villa',
-          limit: 10
-        });
-        
-        await handleSearchResults(chatId, messageId, searchResult, 'Виллы');
-      } else if (searchType === 'townhouse') {
-        const searchResult = await callMultiPlatformSearch({
-          telegram_user_id: userId,
-          property_type: 'Townhouse',
-          limit: 10
-        });
-        
-        await handleSearchResults(chatId, messageId, searchResult, 'Таунхаусы');
-      } else if (searchType === 'commercial') {
-        const searchResult = await callMultiPlatformSearch({
-          telegram_user_id: userId,
-          property_type: 'Commercial',
-          limit: 10
-        });
-        
-        await handleSearchResults(chatId, messageId, searchResult, 'Коммерческая недвижимость');
-      } else {
-        // Fallback for any other search types
-        await editTelegramMessage(chatId, messageId,
-          `🔍 <b>Поиск: ${searchType}</b>\n\nВыберите ценовой диапазон:`, {
-          reply_markup: getPriceRangeKeyboard(`${searchType}_sale`)
-        });
+      const searchParams: any = {
+        purpose: 'for-sale',
+        property_type: propertyType === 'any' ? null : propertyType,
+        title: `Покупка ${getPropertyTypeTitle(propertyType)} (${getMarketTypeTitle(market)})`
+      };
+      
+      if (market === 'primary') {
+        searchParams.housing_status = 'primary';
+      } else if (market === 'secondary') {
+        searchParams.housing_status = 'secondary';
       }
+      
+      await handleUniversalSearch(chatId, messageId, userId, searchParams);
     }
     
     else if (data.startsWith('price_')) {
@@ -2082,6 +2088,45 @@ async function generateMarketReports(chatId: number, messageId: number) {
       }
     });
   }
+}
+
+// Helper functions for property type and market type titles
+function getPropertyTypeTitle(type: string): string {
+  const titles: { [key: string]: string } = {
+    'apartment': 'квартир',
+    'villa': 'вилл',
+    'townhouse': 'таунхаусов',
+    'commercial': 'коммерческой недвижимости',
+    'house': 'домов',
+    'any': 'любой недвижимости'
+  };
+  return titles[type] || 'недвижимости';
+}
+
+function getMarketTypeTitle(market: string): string {
+  const titles: { [key: string]: string } = {
+    'primary': 'Первичка',
+    'secondary': 'Вторичка',
+    'any': 'Любой рынок'
+  };
+  return titles[market] || market;
+}
+
+// Universal search handler
+async function handleUniversalSearch(chatId: number, messageId: number, userId: number, params: any) {
+  const searchResult = await callMultiPlatformSearch({
+    telegram_user_id: userId,
+    purpose: params.purpose,
+    property_type: params.property_type === 'apartment' ? 'Apartment' : 
+                   params.property_type === 'villa' ? 'Villa' :
+                   params.property_type === 'townhouse' ? 'Townhouse' :
+                   params.property_type === 'commercial' ? 'Commercial' :
+                   params.property_type === 'house' ? 'House' : null,
+    housing_status: params.housing_status,
+    limit: 10
+  });
+  
+  await handleSearchResults(chatId, messageId, searchResult, params.title);
 }
 
 async function handleSearchMore(chatId: number, messageId: number, userId: number) {
