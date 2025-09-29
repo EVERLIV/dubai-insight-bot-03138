@@ -87,7 +87,82 @@ async function sendTelegramMessage(chatId: number, text: string, replyMarkup?: a
   return response.json();
 }
 
-// Search properties in database
+// Universal search function for different property types and purposes
+async function performPropertySearch(
+  chatId: number, 
+  purpose: string, 
+  propertyType?: string, 
+  housingStatus?: string,
+  limit: number = 10,
+  headerText?: string
+): Promise<void> {
+  console.log(`Searching for: purpose=${purpose}, type=${propertyType}, status=${housingStatus}`);
+  
+  const { data: searchResponse, error: searchError } = await supabase.functions.invoke('property-search', {
+    body: {
+      telegram_user_id: chatId,
+      purpose: purpose,
+      property_type: propertyType,
+      housing_status: housingStatus,
+      limit: limit
+    }
+  });
+
+  if (searchError) {
+    console.error('Property search API error:', searchError);
+    await sendTelegramMessage(chatId, 
+      '❌ Ошибка поиска. Попробуйте позже.',
+      {
+        inline_keyboard: [
+          [{ text: '🔍 Новый поиск', callback_data: 'search_menu' }],
+          [{ text: '🏠 Главное меню', callback_data: 'main_menu' }]
+        ]
+      }
+    );
+    return;
+  }
+
+  const properties = searchResponse?.properties || [];
+  if (properties.length > 0) {
+    const propertiesWithIds = properties.map((property: any) => {
+      const uniqueId = generatePropertyID();
+      const propertyWithId = { ...property, unique_id: uniqueId };
+      propertyIdMapping.set(uniqueId, propertyWithId);
+      return propertyWithId;
+    });
+
+    let responseText = `${headerText || '🏠 <b>Результаты поиска</b>'}\n\n📋 Найдено ${propertiesWithIds.length} объектов:\n\n`;
+    propertiesWithIds.forEach((property: Property, index: number) => {
+      responseText += `${index + 1}. ${formatPropertyDisplay(property)}\n\n`;
+    });
+    responseText += '\n💡 Данные с Bayut API';
+    
+    await sendTelegramMessage(chatId, responseText, {
+      inline_keyboard: [
+        [
+          { text: '📊 Аналитика', callback_data: 'analytics_menu' },
+          { text: '🔍 Новый поиск', callback_data: 'search_menu' }
+        ],
+        [
+          { text: '🏠 Главное меню', callback_data: 'main_menu' }
+        ]
+      ]
+    });
+  } else {
+    await sendTelegramMessage(chatId, 
+      '❌ По вашим критериям недвижимость не найдена.\n\n💡 Попробуйте изменить параметры поиска.',
+      {
+        inline_keyboard: [
+          [
+            { text: '🔍 Новый поиск', callback_data: 'search_menu' },
+            { text: '🏠 Главное меню', callback_data: 'main_menu' }
+          ]
+        ]
+      }
+    );
+  }
+}
+
 async function searchProperties(query: string): Promise<Property[]> {
   try {
     console.log('Searching properties with query:', query);
@@ -528,31 +603,138 @@ async function handleCallbackQuery(update: TelegramUpdate) {
       }
     );
   } else if (data === 'search_menu') {
-    await sendTelegramMessage(chatId, 
+    await sendTelegramMessage(chatId,
       '🔍 <b>Поиск недвижимости</b>\n\n' +
-      '💬 <b>Просто напишите что ищете!</b>\n\n' +
-      '📝 Примеры запросов:\n' +
-      '• "2 комнаты в Marina для аренды"\n' +
-      '• "квартира в Downtown до 2 млн AED"\n' +
-      '• "студия в JBR для покупки"\n' +
-      '• "вилла в Palm Jumeirah"\n' +
-      '• "пентхаус в Business Bay"\n\n' +
-      '🔍 Или выберите готовый фильтр:',
+      '📊 В базе данных: более 800 объектов недвижимости в Дубае\n\n' +
+      'Выберите тип операции:',
       {
         inline_keyboard: [
           [
-            { text: '🏠 Квартиры для аренды', callback_data: 'quick_search_rent_apt' },
-            { text: '🏢 Квартиры для покупки', callback_data: 'quick_search_buy_apt' }
+            { text: '🏠 Аренда', callback_data: 'step1_rent' },
+            { text: '💰 Покупка', callback_data: 'step1_buy' }
           ],
           [
-            { text: '🏖️ Недвижимость у моря', callback_data: 'quick_search_waterfront' },
-            { text: '🏙️ В центре города', callback_data: 'quick_search_downtown' }
+            { text: '💬 Поиск текстом', callback_data: 'enable_search_chat' }
           ],
           [
-            { text: '💬 Включить чат поиск', callback_data: 'enable_search_chat' }
+            { text: '⬅️ Назад', callback_data: 'main_menu' }
+          ]
+        ]
+      }
+    );
+  } else if (data === 'step1_rent') {
+    // Уровень 2: Выбор типа недвижимости для аренды
+    await sendTelegramMessage(chatId,
+      '🏠 <b>Аренда недвижимости</b>\n\n' +
+      'Выберите тип недвижимости:',
+      {
+        inline_keyboard: [
+          [
+            { text: '🏢 Квартира', callback_data: 'rent_apartment' },
+            { text: '🏘️ Вилла', callback_data: 'rent_villa' }
           ],
           [
-            { text: '🔙 Назад', callback_data: 'main_menu' }
+            { text: '🏠 Таунхаус', callback_data: 'rent_townhouse' },
+            { text: '🏬 Коммерческая', callback_data: 'rent_commercial' }
+          ],
+          [
+            { text: '🏙️ Студия', callback_data: 'rent_studio' },
+            { text: '🏨 Пентхаус', callback_data: 'rent_penthouse' }
+          ],
+          [
+            { text: '⬅️ Назад', callback_data: 'search_menu' }
+          ]
+        ]
+      }
+    );
+  } else if (data === 'step1_buy') {
+    // Уровень 2: Выбор рынка для покупки
+    await sendTelegramMessage(chatId,
+      '💰 <b>Покупка недвижимости</b>\n\n' +
+      'Выберите тип рынка:',
+      {
+        inline_keyboard: [
+          [
+            { text: '🆕 Первичный рынок (Off-plan)', callback_data: 'step2_buy_primary' },
+            { text: '🏗️ Вторичный рынок', callback_data: 'step2_buy_secondary' }
+          ],
+          [
+            { text: '🔄 Любой рынок', callback_data: 'step2_buy_any' }
+          ],
+          [
+            { text: '⬅️ Назад', callback_data: 'search_menu' }
+          ]
+        ]
+      }
+    );
+  } else if (data === 'step2_buy_primary') {
+    // Уровень 3: Тип недвижимости для первичного рынка
+    await sendTelegramMessage(chatId,
+      '🆕 <b>Первичный рынок (Off-plan)</b>\n\n' +
+      'Выберите тип недвижимости:',
+      {
+        inline_keyboard: [
+          [
+            { text: '🏢 Квартира', callback_data: 'buy_primary_apartment' },
+            { text: '🏘️ Вилла', callback_data: 'buy_primary_villa' }
+          ],
+          [
+            { text: '🏠 Таунхаус', callback_data: 'buy_primary_townhouse' },
+            { text: '🏨 Пентхаус', callback_data: 'buy_primary_penthouse' }
+          ],
+          [
+            { text: '🏙️ Студия', callback_data: 'buy_primary_studio' }
+          ],
+          [
+            { text: '⬅️ Назад', callback_data: 'step1_buy' }
+          ]
+        ]
+      }
+    );
+  } else if (data === 'step2_buy_secondary') {
+    // Уровень 3: Тип недвижимости для вторичного рынка
+    await sendTelegramMessage(chatId,
+      '🏗️ <b>Вторичный рынок</b>\n\n' +
+      'Выберите тип недвижимости:',
+      {
+        inline_keyboard: [
+          [
+            { text: '🏢 Квартира', callback_data: 'buy_secondary_apartment' },
+            { text: '🏘️ Вилла', callback_data: 'buy_secondary_villa' }
+          ],
+          [
+            { text: '🏠 Таунхаус', callback_data: 'buy_secondary_townhouse' },
+            { text: '🏨 Пентхаус', callback_data: 'buy_secondary_penthouse' }
+          ],
+          [
+            { text: '🏙️ Студия', callback_data: 'buy_secondary_studio' }
+          ],
+          [
+            { text: '⬅️ Назад', callback_data: 'step1_buy' }
+          ]
+        ]
+      }
+    );
+  } else if (data === 'step2_buy_any') {
+    // Уровень 3: Тип недвижимости для любого рынка
+    await sendTelegramMessage(chatId,
+      '🔄 <b>Любой рынок</b>\n\n' +
+      'Выберите тип недвижимости:',
+      {
+        inline_keyboard: [
+          [
+            { text: '🏢 Квартира', callback_data: 'buy_any_apartment' },
+            { text: '🏘️ Вилла', callback_data: 'buy_any_villa' }
+          ],
+          [
+            { text: '🏠 Таунхаус', callback_data: 'buy_any_townhouse' },
+            { text: '🏨 Пентхаус', callback_data: 'buy_any_penthouse' }
+          ],
+          [
+            { text: '🏙️ Студия', callback_data: 'buy_any_studio' }
+          ],
+          [
+            { text: '⬅️ Назад', callback_data: 'step1_buy' }
           ]
         ]
       }
@@ -578,134 +760,56 @@ async function handleCallbackQuery(update: TelegramUpdate) {
         ]
       }
     );
-  } else if (data === 'search_sale') {
-    console.log('Searching for properties for sale');
-    // Call property-search for sale properties
-    const { data: searchResponse, error: searchError } = await supabase.functions.invoke('property-search', {
-      body: {
-        telegram_user_id: update.callback_query.from.id,
-        purpose: 'for-sale',
-        limit: 10
-      }
-    });
-
-    console.log('Search response received:', searchResponse?.properties?.length, 'properties');
-
-    if (searchError) {
-      console.error('Property search API error:', searchError);
-      await sendTelegramMessage(chatId, 
-        '❌ Ошибка поиска. Попробуйте позже.',
-        {
-          inline_keyboard: [
-            [{ text: '🏠 Главное меню', callback_data: 'main_menu' }]
-          ]
-        }
-      );
-      return;
-    }
-
-    const properties = searchResponse?.properties || [];
-    if (properties.length > 0) {
-      const propertiesWithIds = properties.map((property: any) => {
-        const uniqueId = generatePropertyID();
-        const propertyWithId = { ...property, unique_id: uniqueId };
-        propertyIdMapping.set(uniqueId, propertyWithId);
-        return propertyWithId;
-      });
-
-      let responseText = `🏠 <b>Недвижимость на продажу</b>\n\n📋 Найдено ${propertiesWithIds.length} объектов:\n\n`;
-      propertiesWithIds.forEach((property: Property, index: number) => {
-        responseText += `${index + 1}. ${formatPropertyDisplay(property)}\n\n`;
-      });
-      responseText += '\n💡 Данные с Bayut API';
-      
-      await sendTelegramMessage(chatId, responseText, {
-        inline_keyboard: [
-          [
-            { text: '📊 Аналитика', callback_data: 'analytics_menu' },
-            { text: '🔍 Новый поиск', callback_data: 'search_menu' }
-          ],
-          [
-            { text: '🏠 Главное меню', callback_data: 'main_menu' }
-          ]
-        ]
-      });
-    } else {
-      await sendTelegramMessage(chatId, 
-        '❌ Недвижимость для продажи не найдена.',
-        {
-          inline_keyboard: [
-            [
-              { text: '🔍 Попробовать еще', callback_data: 'search_menu' },
-              { text: '🏠 Главное меню', callback_data: 'main_menu' }
-            ]
-          ]
-        }
-      );
-    }
-  } else if (data === 'search_rent') {
-    console.log('Searching for properties for rent');
-    // Call property-search for rent properties
-    const { data: searchResponse, error: searchError } = await supabase.functions.invoke('property-search', {
-      body: {
-        telegram_user_id: update.callback_query.from.id,
-        purpose: 'for-rent',
-        limit: 10
-      }
-    });
-
-    if (searchError) {
-      console.error('Property search API error:', searchError);
-      await sendTelegramMessage(chatId, 
-        '❌ Ошибка поиска. Попробуйте позже.',
-        {
-          inline_keyboard: [
-            [{ text: '🏠 Главное меню', callback_data: 'main_menu' }]
-          ]
-        }
-      );
-      return;
-    }
-
-    const properties = searchResponse?.properties || [];
-    if (properties.length > 0) {
-      const propertiesWithIds = properties.map((property: any) => {
-        const uniqueId = generatePropertyID();
-        const propertyWithId = { ...property, unique_id: uniqueId };
-        propertyIdMapping.set(uniqueId, propertyWithId);
-        return propertyWithId;
-      });
-
-      let responseText = `🏠 <b>Недвижимость в аренду</b>\n\n📋 Найдено ${propertiesWithIds.length} объектов:\n\n`;
-      propertiesWithIds.forEach((property: Property, index: number) => {
-        responseText += `${index + 1}. ${formatPropertyDisplay(property)}\n\n`;
-      });
-      responseText += '\n💡 Данные с Bayut API';
-      
-      await sendTelegramMessage(chatId, responseText, {
-        inline_keyboard: [
-          [
-            { text: '📊 Аналитика', callback_data: 'analytics_menu' },
-            { text: '🔍 Новый поиск', callback_data: 'search_menu' }
-          ],
-          [
-            { text: '🏠 Главное меню', callback_data: 'main_menu' }
-          ]
-        ]
-      });
-    } else {
-      await sendTelegramMessage(chatId, 
-        '❌ Недвижимость для аренды не найдена.',
-        {
-          inline_keyboard: [
-            [
-              { text: '🔍 Попробовать еще', callback_data: 'search_menu' },
-              { text: '🏠 Главное меню', callback_data: 'main_menu' }
-            ]
-          ]
-        }
-      );
-    }
+  
+  // =============== АРЕНДА НЕДВИЖИМОСТИ ===============
+  } else if (data === 'rent_apartment') {
+    await performPropertySearch(chatId, 'for-rent', 'Apartment', undefined, 10, '🏢 <b>Квартиры в аренду</b>');
+  } else if (data === 'rent_villa') {
+    await performPropertySearch(chatId, 'for-rent', 'Villa', undefined, 10, '🏘️ <b>Виллы в аренду</b>');
+  } else if (data === 'rent_townhouse') {
+    await performPropertySearch(chatId, 'for-rent', 'Townhouse', undefined, 10, '🏠 <b>Таунхаусы в аренду</b>');
+  } else if (data === 'rent_commercial') {
+    await performPropertySearch(chatId, 'for-rent', 'Office', undefined, 10, '🏬 <b>Коммерческая недвижимость в аренду</b>');
+  } else if (data === 'rent_studio') {
+    await performPropertySearch(chatId, 'for-rent', 'Studio', undefined, 10, '🏙️ <b>Студии в аренду</b>');
+  } else if (data === 'rent_penthouse') {
+    await performPropertySearch(chatId, 'for-rent', 'Penthouse', undefined, 10, '🏨 <b>Пентхаусы в аренду</b>');
+    
+  // =============== ПОКУПКА - ПЕРВИЧНЫЙ РЫНОК ===============
+  } else if (data === 'buy_primary_apartment') {
+    await performPropertySearch(chatId, 'for-sale', 'Apartment', 'primary', 10, '🆕 <b>Квартиры первичный рынок</b>');
+  } else if (data === 'buy_primary_villa') {
+    await performPropertySearch(chatId, 'for-sale', 'Villa', 'primary', 10, '🆕 <b>Виллы первичный рынок</b>');
+  } else if (data === 'buy_primary_townhouse') {
+    await performPropertySearch(chatId, 'for-sale', 'Townhouse', 'primary', 10, '🆕 <b>Таунхаусы первичный рынок</b>');
+  } else if (data === 'buy_primary_penthouse') {
+    await performPropertySearch(chatId, 'for-sale', 'Penthouse', 'primary', 10, '🆕 <b>Пентхаусы первичный рынок</b>');
+  } else if (data === 'buy_primary_studio') {
+    await performPropertySearch(chatId, 'for-sale', 'Studio', 'primary', 10, '🆕 <b>Студии первичный рынок</b>');
+    
+  // =============== ПОКУПКА - ВТОРИЧНЫЙ РЫНОК ===============
+  } else if (data === 'buy_secondary_apartment') {
+    await performPropertySearch(chatId, 'for-sale', 'Apartment', 'secondary', 10, '🏗️ <b>Квартиры вторичный рынок</b>');
+  } else if (data === 'buy_secondary_villa') {
+    await performPropertySearch(chatId, 'for-sale', 'Villa', 'secondary', 10, '🏗️ <b>Виллы вторичный рынок</b>');
+  } else if (data === 'buy_secondary_townhouse') {
+    await performPropertySearch(chatId, 'for-sale', 'Townhouse', 'secondary', 10, '🏗️ <b>Таунхаусы вторичный рынок</b>');
+  } else if (data === 'buy_secondary_penthouse') {
+    await performPropertySearch(chatId, 'for-sale', 'Penthouse', 'secondary', 10, '🏗️ <b>Пентхаусы вторичный рынок</b>');
+  } else if (data === 'buy_secondary_studio') {
+    await performPropertySearch(chatId, 'for-sale', 'Studio', 'secondary', 10, '🏗️ <b>Студии вторичный рынок</b>');
+    
+  // =============== ПОКУПКА - ЛЮБОЙ РЫНОК ===============
+  } else if (data === 'buy_any_apartment') {
+    await performPropertySearch(chatId, 'for-sale', 'Apartment', undefined, 10, '🔄 <b>Квартиры любой рынок</b>');
+  } else if (data === 'buy_any_villa') {
+    await performPropertySearch(chatId, 'for-sale', 'Villa', undefined, 10, '🔄 <b>Виллы любой рынок</b>');
+  } else if (data === 'buy_any_townhouse') {
+    await performPropertySearch(chatId, 'for-sale', 'Townhouse', undefined, 10, '🔄 <b>Таунхаусы любой рынок</b>');
+  } else if (data === 'buy_any_penthouse') {
+    await performPropertySearch(chatId, 'for-sale', 'Penthouse', undefined, 10, '🔄 <b>Пентхаусы любой рынок</b>');
+  } else if (data === 'buy_any_studio') {
+    await performPropertySearch(chatId, 'for-sale', 'Studio', undefined, 10, '🔄 <b>Студии любой рынок</b>');
   } else if (data === 'quick_search_rent_apt') {
     // Call property-search for rent apartments
     const { data: searchResponse } = await supabase.functions.invoke('property-search', {
