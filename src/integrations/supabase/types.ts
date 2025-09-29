@@ -500,16 +500,28 @@ export type Database = {
     }
     Functions: {
       search_properties: {
-        Args: {
-          limit_param?: number
-          location_param?: string
-          max_bedrooms_param?: number
-          max_price_param?: number
-          min_bedrooms_param?: number
-          min_price_param?: number
-          property_type_param?: string
-          search_purpose?: string
-        }
+        Args:
+          | {
+              housing_status_param?: string
+              limit_param?: number
+              location_param?: string
+              max_bedrooms_param?: number
+              max_price_param?: number
+              min_bedrooms_param?: number
+              min_price_param?: number
+              property_type_param?: string
+              search_purpose?: string
+            }
+          | {
+              limit_param?: number
+              location_param?: string
+              max_bedrooms_param?: number
+              max_price_param?: number
+              min_bedrooms_param?: number
+              min_price_param?: number
+              property_type_param?: string
+              search_purpose?: string
+            }
         Returns: {
           agent_name: string
           agent_phone: string
@@ -517,6 +529,7 @@ export type Database = {
           bathrooms: number
           bedrooms: number
           external_id: string
+          housing_status: string
           id: string
           images: string[]
           location_area: string
@@ -527,23 +540,37 @@ export type Database = {
         }[]
       }
       search_scraped_properties: {
-        Args: {
-          limit_param?: number
-          location_param?: string
-          max_bedrooms_param?: number
-          max_price_param?: number
-          min_bedrooms_param?: number
-          min_price_param?: number
-          property_type_param?: string
-          search_purpose?: string
-          source_type_param?: string
-        }
+        Args:
+          | {
+              housing_status_param?: string
+              limit_param?: number
+              location_param?: string
+              max_bedrooms_param?: number
+              max_price_param?: number
+              min_bedrooms_param?: number
+              min_price_param?: number
+              property_type_param?: string
+              search_purpose?: string
+              source_type_param?: string
+            }
+          | {
+              limit_param?: number
+              location_param?: string
+              max_bedrooms_param?: number
+              max_price_param?: number
+              min_bedrooms_param?: number
+              min_price_param?: number
+              property_type_param?: string
+              search_purpose?: string
+              source_type_param?: string
+            }
         Returns: {
           agent_name: string
           agent_phone: string
           area_sqft: number
           bathrooms: number
           bedrooms: number
+          housing_status: string
           id: string
           images: string[]
           location_area: string

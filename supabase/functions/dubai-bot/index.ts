@@ -257,6 +257,10 @@ function getSearchMenuKeyboard() {
   return {
     inline_keyboard: [
       [
+        { text: "💰 Продажа", callback_data: "search_sale" },
+        { text: "🏠 Аренда", callback_data: "search_rent" }
+      ],
+      [
         { text: "🏢 Квартиры", callback_data: "search_apartment" },
         { text: "🏘️ Виллы", callback_data: "search_villa" }
       ],
@@ -265,15 +269,11 @@ function getSearchMenuKeyboard() {
         { text: "🏬 Коммерческая", callback_data: "search_commercial" }
       ],
       [
-        { text: "💸 Продажа", callback_data: "search_sale" },
-        { text: "🏠 Аренда", callback_data: "search_rent" }
+        { text: "🆕 Первичное жилье", callback_data: "search_primary" },
+        { text: "🏗️ Вторичное жилье", callback_data: "search_secondary" }
       ],
       [
-        { text: "🎯 Премиум районы", callback_data: "search_premium" },
-        { text: "💎 Новостройки", callback_data: "search_new" }
-      ],
-      [
-        { text: "🔄 Обновить данные", callback_data: "refresh_scraping" }
+        { text: "💎 Премиум", callback_data: "search_premium" }
       ],
       [
         { text: "⬅️ Назад", callback_data: "main_menu" }
@@ -490,6 +490,7 @@ async function searchScrapedProperties(searchParams: any): Promise<any> {
       min_bedrooms_param: searchParams.bedrooms_min || null,
       max_bedrooms_param: searchParams.bedrooms_max || null,
       source_type_param: searchParams.source_type || null,
+      housing_status_param: searchParams.housing_status || null,
       limit_param: searchParams.limit || 50
     });
 
@@ -1499,18 +1500,72 @@ async function handleCallbackQuery(callbackQuery: any) {
         });
         
         await handleSearchResults(chatId, messageId, searchResult, 'Премиум недвижимость');
+      } else if (searchType === 'primary') {
+        const searchResult = await callMultiPlatformSearch({
+          telegram_user_id: userId,
+          housing_status: 'primary',
+          limit: 10
+        });
+        
+        await handleSearchResults(chatId, messageId, searchResult, 'Первичное жилье');
+      } else if (searchType === 'secondary') {
+        const searchResult = await callMultiPlatformSearch({
+          telegram_user_id: userId,
+          housing_status: 'secondary',
+          limit: 10
+        });
+        
+        await handleSearchResults(chatId, messageId, searchResult, 'Вторичное жилье');
       } else if (searchType === 'rent') {
-        await editTelegramMessage(chatId, messageId,
-          `🔍 <b>Поиск: rent</b>\n\nВыберите ценовой диапазон:`, {
-          reply_markup: getPriceRangeKeyboard('rent_rent')
+        const searchResult = await callMultiPlatformSearch({
+          telegram_user_id: userId,
+          purpose: 'for-rent',
+          limit: 10
         });
+        
+        await handleSearchResults(chatId, messageId, searchResult, 'Недвижимость в аренду');
       } else if (searchType === 'sale') {
-        await editTelegramMessage(chatId, messageId,
-          `🔍 <b>Поиск: sale</b>\n\nВыберите ценовой диапазон:`, {
-          reply_markup: getPriceRangeKeyboard('sale_sale')
+        const searchResult = await callMultiPlatformSearch({
+          telegram_user_id: userId,
+          purpose: 'for-sale',
+          limit: 10
         });
+        
+        await handleSearchResults(chatId, messageId, searchResult, 'Недвижимость на продажу');
+      } else if (searchType === 'apartment') {
+        const searchResult = await callMultiPlatformSearch({
+          telegram_user_id: userId,
+          property_type: 'Apartment',
+          limit: 10
+        });
+        
+        await handleSearchResults(chatId, messageId, searchResult, 'Квартиры');
+      } else if (searchType === 'villa') {
+        const searchResult = await callMultiPlatformSearch({
+          telegram_user_id: userId,
+          property_type: 'Villa',
+          limit: 10
+        });
+        
+        await handleSearchResults(chatId, messageId, searchResult, 'Виллы');
+      } else if (searchType === 'townhouse') {
+        const searchResult = await callMultiPlatformSearch({
+          telegram_user_id: userId,
+          property_type: 'Townhouse',
+          limit: 10
+        });
+        
+        await handleSearchResults(chatId, messageId, searchResult, 'Таунхаусы');
+      } else if (searchType === 'commercial') {
+        const searchResult = await callMultiPlatformSearch({
+          telegram_user_id: userId,
+          property_type: 'Commercial',
+          limit: 10
+        });
+        
+        await handleSearchResults(chatId, messageId, searchResult, 'Коммерческая недвижимость');
       } else {
-        // For apartment, villa, townhouse, commercial, new
+        // Fallback for any other search types
         await editTelegramMessage(chatId, messageId,
           `🔍 <b>Поиск: ${searchType}</b>\n\nВыберите ценовой диапазон:`, {
           reply_markup: getPriceRangeKeyboard(`${searchType}_sale`)
@@ -1658,6 +1713,10 @@ async function handleSearchResults(chatId: number, messageId: number, searchResu
                      property.purpose === 'for-rent' ? 'Аренда' : 
                      property.purpose || 'Не указано';
       
+      const housingStatus = property.housing_status === 'primary' ? '🆕 Первичное' :
+                           property.housing_status === 'secondary' ? '🏗️ Вторичное' :
+                           property.housing_status === 'off-plan' ? '📋 Off-plan' : '';
+      
       response += `${index + 1}. 🏢 <b>${property.title}</b>\n`;
       response += `💰 <b>${property.price?.toLocaleString() || 'Цена не указана'} AED</b>\n`;
       response += `📍 ${property.location_area || 'Район не указан'}\n`;
@@ -1670,7 +1729,11 @@ async function handleSearchResults(chatId: number, messageId: number, searchResu
         response += ` • ${property.area_sqft} кв.ft`;
       }
       
-      response += `\n🎯 <b>Назначение:</b> ${purpose}\n`;
+      response += `\n🎯 <b>Назначение:</b> ${purpose}`;
+      if (housingStatus) {
+        response += ` • ${housingStatus}`;
+      }
+      response += `\n`;
       
       if (property.images && property.images.length > 0) {
         response += `📸 ${property.images.length} фото доступно\n`;
