@@ -61,6 +61,7 @@ const userContexts = new Map<number, {
     telegram_user_id: number;
     offset: number;
     totalCount: number;
+    searchParams?: any;
   };
 }>();
 
@@ -1703,13 +1704,14 @@ async function handleCallbackQuery(callbackQuery: any) {
 
 async function handleSearchResults(chatId: number, messageId: number, searchResult: any, title: string) {
   if (searchResult.success && searchResult.properties && searchResult.properties.length > 0) {
-    // Save search context for pagination
+    // Save search context for pagination - сохраняем полные параметры поиска
     const context = userContexts.get(chatId) || {};
     context.lastSearch = {
       query: title,
-      telegram_user_id: 0, // Will be set by caller if needed
+      telegram_user_id: searchResult.telegram_user_id || 0,
       offset: 0,
-      totalCount: searchResult.count || searchResult.properties.length
+      totalCount: searchResult.count || searchResult.properties.length,
+      searchParams: searchResult.search_params || {} // Сохраняем параметры поиска
     };
     userContexts.set(chatId, context);
     
@@ -1742,11 +1744,19 @@ async function handleSearchResults(chatId: number, messageId: number, searchResu
       }
       response += `\n`;
       
+      // Показываем количество изображений и источник данных
       if (property.images && property.images.length > 0) {
-        response += `📸 ${property.images.length} фото доступно\n`;
+        response += `📸 ${property.images.length} фото доступно`;
+        // Показываем источник данных
+        if (property.source_category === 'api') {
+          response += ` (Bayut API)`;
+        } else if (property.source_name) {
+          response += ` (${property.source_name})`;
+        }
+        response += `\n`;
       }
       
-      response += `🆔 <code>${property.external_id || 'ID не указан'}</code>\n\n`;
+      response += `🆔 <code>${property.external_id || property.id || 'ID не указан'}</code>\n\n`;
     });
 
     response += '\n💡 <i>Актуальные данные по недвижимости Дубая</i>';
@@ -2115,7 +2125,7 @@ function getMarketTypeTitle(market: string): string {
 
 // Universal search handler
 async function handleUniversalSearch(chatId: number, messageId: number, userId: number, params: any) {
-  const searchResult = await callMultiPlatformSearch({
+  const searchParams = {
     telegram_user_id: userId,
     purpose: params.purpose,
     property_type: params.property_type === 'apartment' ? 'Apartment' : 
@@ -2125,7 +2135,15 @@ async function handleUniversalSearch(chatId: number, messageId: number, userId: 
                    params.property_type === 'house' ? 'House' : null,
     housing_status: params.housing_status,
     limit: 10
-  });
+  };
+  
+  const searchResult = await callMultiPlatformSearch(searchParams);
+  
+  // Добавляем параметры поиска в результат для сохранения контекста
+  if (searchResult.success) {
+    searchResult.search_params = searchParams;
+    searchResult.telegram_user_id = userId;
+  }
   
   await handleSearchResults(chatId, messageId, searchResult, params.title);
 }
@@ -2142,12 +2160,16 @@ async function handleSearchMore(chatId: number, messageId: number, userId: numbe
     }
     
     const newOffset = context.lastSearch.offset + 10;
-    const searchResult = await callMultiPlatformSearch({
-      telegram_user_id: context.lastSearch.telegram_user_id,
-      query: context.lastSearch.query,
+    
+    // Используем сохраненные параметры поиска
+    const searchParams = {
+      ...context.lastSearch.searchParams,
+      telegram_user_id: userId,
       limit: 10,
       offset: newOffset
-    });
+    };
+    
+    const searchResult = await callMultiPlatformSearch(searchParams);
     
     if (searchResult.success && searchResult.properties && searchResult.properties.length > 0) {
       // Update search context
