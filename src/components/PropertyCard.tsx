@@ -47,176 +47,170 @@ export default function PropertyCard({ property, onViewDetails }: PropertyCardPr
   };
 
   const getPurposeColor = () => {
-    if (property.purpose === 'for-sale') return 'bg-green-600 text-white border-green-600';
-    if (property.purpose === 'for-rent') return 'bg-blue-600 text-white border-blue-600';
-    return 'bg-gray-600 text-white border-gray-600';
+    if (property.purpose === 'for-sale') return 'bg-green-700 text-white border-green-700';
+    if (property.purpose === 'for-rent') return 'bg-blue-900 text-white border-blue-900';
+    return 'bg-gray-700 text-white border-gray-700';
   };
 
   return (
-    <Card 
-      className="property-card group cursor-pointer relative overflow-hidden"
+    <div 
+      className="bg-white border border-gray-200 cursor-pointer relative overflow-hidden hover:shadow-lg transition-shadow"
       onClick={() => onViewDetails?.(property)}
     >
-      {/* Property Image */}
+      {/* Professional Property Image */}
       <div className="relative aspect-[4/3] overflow-hidden">
         <img
           src={displayImage}
           alt={property.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
           onError={() => setImageError(true)}
         />
         
-        {/* Status Badge */}
+        {/* Professional Status Badges */}
         <div className="absolute top-3 left-3 z-10">
-          <Badge className={`${getPurposeColor()} font-medium text-xs`}>
+          <div className={`${getPurposeColor()} px-3 py-1 text-xs font-semibold uppercase tracking-wide`}>
             {getPurposeBadge()}
-          </Badge>
+          </div>
         </div>
 
         {/* Housing Status Badge */}
         {property.housing_status && (
-          <div className="absolute top-3 right-14 z-10">
-            <Badge variant="secondary" className="bg-white/90 text-gray-700 text-xs">
-              {property.housing_status === 'primary' ? 'Off-plan' : 'Ready'}
-            </Badge>
+          <div className="absolute top-3 right-3 z-10">
+            <div className="bg-white/90 text-gray-700 px-3 py-1 text-xs font-semibold border border-gray-300">
+              {property.housing_status === 'primary' ? 'OFF-PLAN' : 'READY'}
+            </div>
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="absolute top-3 right-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col gap-2">
-          <Button
-            size="sm"
-            variant="secondary"
-            className="w-8 h-8 p-0 bg-white/90 hover:bg-white shadow-soft rounded-full"
+        {/* Professional Action Buttons */}
+        <div className="absolute bottom-3 right-3 z-20 opacity-0 hover:opacity-100 transition-opacity duration-200 flex gap-2">
+          <button
+            className="w-8 h-8 bg-white/90 hover:bg-white border border-gray-300 flex items-center justify-center transition-colors"
             onClick={(e) => {
               e.stopPropagation();
               setIsFavorite(!isFavorite);
             }}
           >
-            <Heart className={`w-4 h-4 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
-          </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            className="w-8 h-8 p-0 bg-white/90 hover:bg-white shadow-soft rounded-full"
+            <Heart className={`w-4 h-4 ${isFavorite ? 'fill-red-600 text-red-600' : 'text-gray-600'}`} />
+          </button>
+          <button
+            className="w-8 h-8 bg-white/90 hover:bg-white border border-gray-300 flex items-center justify-center transition-colors"
             onClick={(e) => e.stopPropagation()}
           >
             <Share2 className="w-4 h-4 text-gray-600" />
-          </Button>
+          </button>
         </div>
       </div>
 
-      <CardContent className="p-4 space-y-3">
-        {/* Price */}
-        <div className="flex items-center justify-between mb-2">
-          <div className="text-2xl font-bold text-primary">
+      <div className="p-4">
+        {/* Professional Price Display */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-2xl font-bold text-gray-900">
             {property.price ? `${property.price.toLocaleString()} AED` : 'Price on request'}
           </div>
         </div>
 
-        {/* Title */}
-        <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+        {/* Professional Title */}
+        <h3 className="font-bold text-lg mb-2 text-gray-900 leading-tight">
           {property.title}
         </h3>
 
-        {/* Location */}
+        {/* Professional Location */}
         {property.location_area && (
-          <div className="flex items-center text-muted-foreground mb-3">
-            <MapPin className="w-4 h-4 mr-1" />
-            <span className="text-sm">{property.location_area}</span>
+          <div className="flex items-center text-gray-600 mb-4">
+            <MapPin className="w-4 h-4 mr-2" />
+            <span className="text-sm font-medium">{property.location_area}</span>
           </div>
         )}
 
-        {/* Property Details Grid */}
+        {/* Professional Property Details Grid */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           {property.property_type && (
-            <div className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
-              <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
-                <Home className="w-3 h-3 text-primary" />
+            <div className="flex items-center gap-2 p-3 bg-gray-50 border border-gray-200">
+              <div className="w-6 h-6 bg-blue-900 flex items-center justify-center">
+                <Home className="w-3 h-3 text-white" />
               </div>
-              <div className="flex flex-col">
-                <span className="text-xs text-muted-foreground">Type</span>
-                <span className="text-sm font-medium">{property.property_type}</span>
+              <div>
+                <div className="text-xs text-gray-600 font-medium uppercase tracking-wide">Type</div>
+                <div className="text-sm font-bold text-gray-900">{property.property_type}</div>
               </div>
             </div>
           )}
           
           {property.bedrooms !== undefined && (
-            <div className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
-              <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
-                <Bed className="w-3 h-3 text-primary" />
+            <div className="flex items-center gap-2 p-3 bg-gray-50 border border-gray-200">
+              <div className="w-6 h-6 bg-blue-900 flex items-center justify-center">
+                <Bed className="w-3 h-3 text-white" />
               </div>
-              <div className="flex flex-col">
-                <span className="text-xs text-muted-foreground">Bedrooms</span>
-                <span className="text-sm font-medium">{property.bedrooms || 'Studio'}</span>
+              <div>
+                <div className="text-xs text-gray-600 font-medium uppercase tracking-wide">Bedrooms</div>
+                <div className="text-sm font-bold text-gray-900">{property.bedrooms || 'Studio'}</div>
               </div>
             </div>
           )}
           
           {property.bathrooms && (
-            <div className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
-              <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
-                <Bath className="w-3 h-3 text-primary" />
+            <div className="flex items-center gap-2 p-3 bg-gray-50 border border-gray-200">
+              <div className="w-6 h-6 bg-blue-900 flex items-center justify-center">
+                <Bath className="w-3 h-3 text-white" />
               </div>
-              <div className="flex flex-col">
-                <span className="text-xs text-muted-foreground">Bathrooms</span>
-                <span className="text-sm font-medium">{property.bathrooms}</span>
+              <div>
+                <div className="text-xs text-gray-600 font-medium uppercase tracking-wide">Bathrooms</div>
+                <div className="text-sm font-bold text-gray-900">{property.bathrooms}</div>
               </div>
             </div>
           )}
           
           {property.area_sqft && (
-            <div className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
-              <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
-                <Maximize2 className="w-3 h-3 text-primary" />
+            <div className="flex items-center gap-2 p-3 bg-gray-50 border border-gray-200">
+              <div className="w-6 h-6 bg-blue-900 flex items-center justify-center">
+                <Maximize2 className="w-3 h-3 text-white" />
               </div>
-              <div className="flex flex-col">
-                <span className="text-xs text-muted-foreground">Area</span>
-                <span className="text-sm font-medium">{property.area_sqft} sq.ft</span>
+              <div>
+                <div className="text-xs text-gray-600 font-medium uppercase tracking-wide">Area</div>
+                <div className="text-sm font-bold text-gray-900">{property.area_sqft} sq.ft</div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Agent Info */}
+        {/* Professional Agent Info */}
         {property.agent_name && (
-          <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg mb-3">
-            <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-              <User className="w-3 h-3 text-blue-600" />
+          <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 mb-3">
+            <div className="w-6 h-6 bg-blue-900 flex items-center justify-center">
+              <User className="w-3 h-3 text-white" />
             </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-medium text-blue-900">{property.agent_name}</span>
-              <span className="text-xs text-blue-700">Real Estate Agent</span>
-            </div>
-          </div>
-        )}
-
-        {/* Last Updated */}
-        {property.scraped_at && (
-          <div className="flex items-center gap-2 p-2 bg-green-50 rounded-lg mb-3">
-            <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-              <Clock className="w-3 h-3 text-green-600" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xs text-green-600">Last Updated</span>
-              <span className="text-sm font-medium text-green-900">
-                {new Date(property.scraped_at).toLocaleDateString('en-US')}
-              </span>
+            <div>
+              <div className="text-sm font-bold text-blue-900">{property.agent_name}</div>
+              <div className="text-xs text-blue-700 font-medium">Licensed Agent</div>
             </div>
           </div>
         )}
 
-        {/* Contact Button */}
+        {/* Professional Source Info */}
+        {property.source_name && (
+          <div className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 mb-4">
+            <div className="w-6 h-6 bg-gray-700 flex items-center justify-center">
+              <Clock className="w-3 h-3 text-white" />
+            </div>
+            <div>
+              <div className="text-xs text-gray-600 font-medium uppercase tracking-wide">Source</div>
+              <div className="text-sm font-bold text-gray-900">{property.source_name}</div>
+            </div>
+          </div>
+        )}
+
+        {/* Professional Action Button */}
         <Button 
-          className="w-full btn-primary h-9 text-sm font-medium"
+          className="w-full bg-blue-900 hover:bg-blue-800 text-white h-10 text-sm font-semibold uppercase tracking-wide"
           onClick={(e) => {
             e.stopPropagation();
             onViewDetails?.(property);
           }}
         >
-          View Details
+          View Property Details
         </Button>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import SearchFilters from "./SearchFilters";
 import PropertyCard from "./PropertyCard";
 import PropertyDetailModal from "./PropertyDetailModal";
-import { BarChart3, TrendingUp, MapPin, Building2 } from "lucide-react";
+import { BarChart3, TrendingUp, MapPin, Building2, Database, Clock, Target } from "lucide-react";
 
 export default function ModernPropertySearch() {
   const navigate = useNavigate();
@@ -125,7 +125,7 @@ export default function ModernPropertySearch() {
           handleSearch();
         }
       } else {
-        throw new Error(data?.error || 'Ошибка обновления данных');
+        throw new Error(data?.error || 'Error updating data');
       }
     } catch (error) {
       console.error('Refresh error:', error);
@@ -136,33 +136,55 @@ export default function ModernPropertySearch() {
   };
 
   return (
-    <div className="bg-background">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-br from-primary/5 to-background py-16">
+    <div className="bg-white">
+      {/* Professional Hero Section */}
+      <div className="bg-gray-900 text-white py-16 border-b border-gray-200">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h1 className="text-3xl md:text-5xl font-bold mb-4">
-              Find Your Perfect
-              <span className="block text-primary">Dubai Property</span>
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-3xl mx-auto mb-6">
-              Over 800+ verified properties from trusted sources. 
-              Telegram channels, websites, and API integrations.
+          <div className="max-w-4xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-1 h-12 bg-blue-500"></div>
+              <h1 className="text-3xl md:text-4xl font-bold">
+                Professional Property Search Platform
+              </h1>
+            </div>
+            <p className="text-lg text-gray-300 mb-6 max-w-3xl">
+              Access our comprehensive database of verified properties from institutional sources. 
+              Advanced search capabilities with real-time market intelligence for professional investors.
             </p>
             
-            {/* Stats */}
-            <div className="flex justify-center items-center gap-6 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-primary rounded-full"></div>
-                <span>800+ Properties</span>
+            {/* Professional Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-white/10 border border-white/20 p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Database className="w-4 h-4 text-blue-400" />
+                  <span className="text-xs font-medium text-gray-300 uppercase tracking-wide">Database Size</span>
+                </div>
+                <div className="text-xl font-bold">800+</div>
+                <div className="text-xs text-gray-400">Verified Properties</div>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span>Real-time Updates</span>
+              <div className="bg-white/10 border border-white/20 p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Clock className="w-4 h-4 text-green-400" />
+                  <span className="text-xs font-medium text-gray-300 uppercase tracking-wide">Updates</span>
+                </div>
+                <div className="text-xl font-bold">Real-time</div>
+                <div className="text-xs text-gray-400">Data Synchronization</div>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                <span>Multiple Sources</span>
+              <div className="bg-white/10 border border-white/20 p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Target className="w-4 h-4 text-blue-400" />
+                  <span className="text-xs font-medium text-gray-300 uppercase tracking-wide">Sources</span>
+                </div>
+                <div className="text-xl font-bold">Multiple</div>
+                <div className="text-xs text-gray-400">Verified Channels</div>
+              </div>
+              <div className="bg-white/10 border border-white/20 p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <MapPin className="w-4 h-4 text-green-400" />
+                  <span className="text-xs font-medium text-gray-300 uppercase tracking-wide">Coverage</span>
+                </div>
+                <div className="text-xl font-bold">25+</div>
+                <div className="text-xs text-gray-400">Dubai Districts</div>
               </div>
             </div>
           </div>
@@ -185,26 +207,29 @@ export default function ModernPropertySearch() {
 
           {/* Main Content */}
           <div className="lg:col-span-3">
-            {/* Search Results Header */}
+            {/* Professional Search Results Header */}
             {searchPerformed && (
-              <div className="mb-8">
-                <div className="flex justify-between items-center mb-4">
+              <div className="mb-8 bg-white border border-gray-200 p-6">
+                <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h2 className="text-xl font-bold">Search Results</h2>
-                    <p className="text-sm text-muted-foreground">
-                      Found {totalResults} properties from {sources.length} sources
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-1 h-6 bg-blue-900"></div>
+                      <h2 className="text-xl font-bold text-gray-900">Search Results</h2>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      {totalResults} properties identified from {sources.length} verified sources
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {sources.slice(0, 3).map((source, index) => (
-                      <Badge key={index} variant="outline">
+                      <div key={index} className="bg-gray-100 border border-gray-300 px-3 py-1 text-xs font-medium text-gray-700">
                         {source}
-                      </Badge>
+                      </div>
                     ))}
                     {sources.length > 3 && (
-                      <Badge variant="outline">
-                        +{sources.length - 3} more
-                      </Badge>
+                      <div className="bg-blue-100 border border-blue-300 px-3 py-1 text-xs font-medium text-blue-700">
+                        +{sources.length - 3} more sources
+                      </div>
                     )}
                   </div>
                 </div>
@@ -224,28 +249,42 @@ export default function ModernPropertySearch() {
                   ))}
                 </div>
               ) : (
-                <Card className="p-12 text-center">
-                  <div className="text-muted-foreground mb-4">
-                    <Building2 className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                    <h3 className="text-lg font-semibold mb-2">No Properties Found</h3>
-                    <p className="text-sm">No properties match your search criteria.</p>
+                <div className="bg-white border border-gray-200 p-12 text-center">
+                  <div className="text-gray-600 mb-4">
+                    <Building2 className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">No Properties Found</h3>
+                    <p className="text-sm text-gray-600">No properties match your current search criteria.</p>
                   </div>
-                  <Button onClick={handleRefresh} disabled={isRefreshing} size="sm">
-                    Refresh Data
+                  <Button 
+                    onClick={handleRefresh} 
+                    disabled={isRefreshing} 
+                    className="bg-blue-900 hover:bg-blue-800 text-white px-6 py-2"
+                  >
+                    Refresh Database
                   </Button>
-                </Card>
+                </div>
               )
             ) : (
-              /* Default Featured Properties */
+              /* Professional Featured Properties */
               <div>
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold">Featured Properties</h2>
-                  <Button variant="outline" size="sm" onClick={handleSearch}>
-                    View All
+                <div className="flex items-center justify-between mb-6 bg-white border border-gray-200 p-6">
+                  <div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-1 h-6 bg-blue-900"></div>
+                      <h2 className="text-xl font-bold text-gray-900">Featured Investment Opportunities</h2>
+                    </div>
+                    <p className="text-sm text-gray-600">Premium properties selected by our investment team</p>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleSearch}
+                    className="border-blue-900 text-blue-900 hover:bg-blue-900 hover:text-white"
+                  >
+                    View All Properties
                   </Button>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
                   {[
                     {
                       title: "Luxury Marina Apartment",
@@ -307,23 +346,29 @@ export default function ModernPropertySearch() {
                   ))}
                 </div>
 
-                {/* Market Stats */}
+                {/* Professional Market Statistics */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <Card className="p-4 text-center">
-                      <BarChart3 className="w-6 h-6 text-primary mx-auto mb-2" />
-                      <div className="text-xl font-bold mb-1">800+</div>
-                      <div className="text-xs text-muted-foreground">Active Properties</div>
-                    </Card>
-                    <Card className="p-4 text-center">
-                      <TrendingUp className="w-6 h-6 text-green-500 mx-auto mb-2" />
-                      <div className="text-xl font-bold mb-1">+12%</div>
-                      <div className="text-xs text-muted-foreground">Price Growth</div>
-                    </Card>
-                    <Card className="p-4 text-center">
-                      <MapPin className="w-6 h-6 text-blue-500 mx-auto mb-2" />
-                      <div className="text-xl font-bold mb-1">25+</div>
-                      <div className="text-xs text-muted-foreground">City Areas</div>
-                    </Card>
+                  <div className="bg-white border border-gray-200 p-6 text-center">
+                    <div className="w-8 h-8 bg-blue-900 flex items-center justify-center mx-auto mb-3">
+                      <BarChart3 className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="text-2xl font-bold text-gray-900 mb-1">800+</div>
+                    <div className="text-xs text-gray-600 font-medium uppercase tracking-wide">Active Properties</div>
+                  </div>
+                  <div className="bg-white border border-gray-200 p-6 text-center">
+                    <div className="w-8 h-8 bg-green-700 flex items-center justify-center mx-auto mb-3">
+                      <TrendingUp className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="text-2xl font-bold text-gray-900 mb-1">+12%</div>
+                    <div className="text-xs text-gray-600 font-medium uppercase tracking-wide">Annual Growth</div>
+                  </div>
+                  <div className="bg-white border border-gray-200 p-6 text-center">
+                    <div className="w-8 h-8 bg-blue-900 flex items-center justify-center mx-auto mb-3">
+                      <MapPin className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="text-2xl font-bold text-gray-900 mb-1">25+</div>
+                    <div className="text-xs text-gray-600 font-medium uppercase tracking-wide">Dubai Districts</div>
+                  </div>
                 </div>
               </div>
             )}

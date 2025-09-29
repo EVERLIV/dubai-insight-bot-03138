@@ -4,7 +4,7 @@ import ModernPropertySearch from "@/components/ModernPropertySearch";
 
 const Properties = () => {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-white">
       <Header />
       <main className="flex-1">
         <ModernPropertySearch />
