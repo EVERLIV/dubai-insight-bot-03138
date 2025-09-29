@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import MarketAnalytics from "@/components/MarketAnalytics";
-import AdvancedAnalytics from "@/components/AdvancedAnalytics";
+import CompactAnalytics from "@/components/CompactAnalytics";
 import RealtimeMarketIndicators from "@/components/RealtimeMarketIndicators";
 import { 
   ArrowRight, TrendingUp, BarChart3, FileText, Building2, 
@@ -277,24 +277,31 @@ export default function Index() {
       <MarketAnalytics />
 
       {/* Advanced Analytics Demo */}
-      <section className="py-16">
+      <section className="py-12 bg-gradient-to-r from-gray-50 to-blue-50">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-display font-bold mb-3">
               Real-Time Market Intelligence
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              See our advanced analytics in action. Get instant insights on market trends, 
-              property valuations, and investment opportunities.
+            <p className="text-base text-muted-foreground max-w-2xl mx-auto">
+              Comprehensive analytics dashboard with detailed market insights and forecasting.
             </p>
           </div>
-          <AdvancedAnalytics />
+          <CompactAnalytics />
         </div>
       </section>
 
       {/* Real-time Indicators */}
-      <section className="py-16 bg-gradient-to-r from-blue-50 to-purple-50">
+      <section className="py-12">
         <div className="container mx-auto px-4">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl md:text-3xl font-display font-bold mb-3">
+              Live Market Indicators
+            </h2>
+            <p className="text-base text-muted-foreground max-w-2xl mx-auto">
+              Real-time tracking of key market metrics and performance indicators.
+            </p>
+          </div>
           <RealtimeMarketIndicators />
         </div>
       </section>

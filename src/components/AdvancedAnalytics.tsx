@@ -94,11 +94,11 @@ export default function AdvancedAnalytics() {
       ];
 
       const mockPropertyTypes: PropertyTypeData[] = [
-        { type: 'Квартиры', count: 1250, avgPrice: 980000, color: '#3b82f6' },
-        { type: 'Пентхаусы', count: 180, avgPrice: 2850000, color: '#ef4444' },
-        { type: 'Виллы', count: 320, avgPrice: 2200000, color: '#10b981' },
-        { type: 'Студии', count: 890, avgPrice: 650000, color: '#f59e0b' },
-        { type: 'Таунхаусы', count: 260, avgPrice: 1750000, color: '#8b5cf6' }
+        { type: 'Apartments', count: 1250, avgPrice: 980000, color: '#3b82f6' },
+        { type: 'Penthouses', count: 180, avgPrice: 2850000, color: '#ef4444' },
+        { type: 'Villas', count: 320, avgPrice: 2200000, color: '#10b981' },
+        { type: 'Studios', count: 890, avgPrice: 650000, color: '#f59e0b' },
+        { type: 'Townhouses', count: 260, avgPrice: 1750000, color: '#8b5cf6' }
       ];
 
       setMarketData(mockMarketData);

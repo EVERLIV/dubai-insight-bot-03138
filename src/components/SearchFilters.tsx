@@ -31,14 +31,14 @@ const propertyTypes = [
 ];
 
 const purposes = [
-  { value: "all", label: "Все типы" },
-  { value: "for-sale", label: "Продажа" },
-  { value: "for-rent", label: "Аренда" }
+  { value: "all", label: "All Types" },
+  { value: "for-sale", label: "For Sale" },
+  { value: "for-rent", label: "For Rent" }
 ];
 
 const bedroomOptions = [
-  { value: "all", label: "Любое" },
-  { value: "0", label: "Студия" },
+  { value: "all", label: "Any" },
+  { value: "0", label: "Studio" },
   { value: "1", label: "1" },
   { value: "2", label: "2" },
   { value: "3", label: "3" },

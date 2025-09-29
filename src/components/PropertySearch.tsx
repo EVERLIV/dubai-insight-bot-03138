@@ -180,24 +180,24 @@ const PropertySearch = () => {
               </div>
 
               <div className="space-y-3">
-                <label className="text-lg font-semibold text-foreground">Тип недвижимости</label>
+                <label className="text-lg font-semibold text-foreground">Property Type</label>
                 <Select value={propertyType} onValueChange={setPropertyType}>
                   <SelectTrigger className="bg-dubai-blue-lighter border-dubai-gold/20">
-                    <SelectValue placeholder="Выберите тип" />
+                    <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Любой тип</SelectItem>
-                    <SelectItem value="Apartment">Квартира</SelectItem>
-                    <SelectItem value="Villa">Вилла</SelectItem>
-                    <SelectItem value="Penthouse">Пентхаус</SelectItem>
-                    <SelectItem value="Townhouse">Таунхаус</SelectItem>
-                    <SelectItem value="Studio">Студия</SelectItem>
+                    <SelectItem value="all">Any Type</SelectItem>
+                    <SelectItem value="Apartment">Apartment</SelectItem>
+                    <SelectItem value="Villa">Villa</SelectItem>
+                    <SelectItem value="Penthouse">Penthouse</SelectItem>
+                    <SelectItem value="Townhouse">Townhouse</SelectItem>
+                    <SelectItem value="Studio">Studio</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-3">
-                <label className="text-lg font-semibold text-foreground">Источник данных</label>
+                <label className="text-lg font-semibold text-foreground">Data Source</label>
                 <Select value={sourceType} onValueChange={setSourceType}>
                   <SelectTrigger className="bg-dubai-blue-lighter border-dubai-gold/20">
                     <SelectValue placeholder="Выберите источник" />

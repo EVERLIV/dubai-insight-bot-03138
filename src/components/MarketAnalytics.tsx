@@ -126,66 +126,66 @@ const MarketAnalytics = () => {
   };
 
   return (
-    <section className="py-20 px-6">
+    <section className="py-12 px-6">
       <div className="max-w-7xl mx-auto">
         {/* Section Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-display font-bold text-foreground mb-6">
+        <div className="text-center mb-10">
+          <h2 className="text-2xl md:text-3xl font-display font-bold text-foreground mb-4">
             Market
             <span className="block bg-gradient-to-r from-dubai-gold to-dubai-gold-light bg-clip-text text-transparent">
               Analytics
             </span>
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-base text-muted-foreground max-w-2xl mx-auto">
             Real-time data and insights for making informed investment decisions
           </p>
         </div>
 
-        {/* Market Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+        {/* Market Metrics - Compact Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
           {marketData.map((metric, index) => {
             const Icon = metric.icon;
             return (
               <Card key={index} className="gradient-card border-dubai-gold/20 hover:shadow-card transition-all duration-300 hover:scale-105">
                 <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center justify-between">
-                    <Icon className="w-6 h-6 text-dubai-gold" />
-                    <div className={`flex items-center text-sm ${
+                  <CardTitle className="flex items-center justify-between text-sm">
+                    <Icon className="w-5 h-5 text-dubai-gold" />
+                    <div className={`flex items-center text-xs ${
                       metric.trend === 'up' ? 'text-green-400' : 'text-red-400'
                     }`}>
-                      {metric.trend === 'up' ? <TrendingUp className="w-4 h-4 mr-1" /> : <TrendingDown className="w-4 h-4 mr-1" />}
+                      {metric.trend === 'up' ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
                       {metric.change}
                     </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-foreground mb-1">{metric.value}</div>
-                  <div className="text-sm text-muted-foreground">{metric.title}</div>
+                  <div className="text-xl font-bold text-foreground mb-1">{metric.value}</div>
+                  <div className="text-xs text-muted-foreground">{metric.title}</div>
                 </CardContent>
               </Card>
             );
           })}
         </div>
 
-        {/* Market Insights */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Market Insights - Compact Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Top Locations */}
           <Card className="glass-dark border-dubai-gold/20">
-            <CardHeader>
-              <CardTitle className="text-2xl font-display flex items-center">
-                <TrendingUp className="w-6 h-6 text-dubai-gold mr-3" />
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-display flex items-center">
+                <TrendingUp className="w-5 h-5 text-dubai-gold mr-2" />
                 Top Growing Districts
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3">
               {topLocations.map((location, index) => (
-                <div key={index} className="flex items-center justify-between p-4 rounded-xl bg-dubai-blue-lighter/50 hover:bg-dubai-blue-lighter transition-colors">
+                <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-dubai-blue-lighter/50 hover:bg-dubai-blue-lighter transition-colors">
                   <div>
-                    <div className="font-semibold text-foreground">{location.name}</div>
-                    <div className="text-sm text-muted-foreground">{location.avgPrice}</div>
+                    <div className="font-semibold text-foreground text-sm">{location.name}</div>
+                    <div className="text-xs text-muted-foreground">{location.avgPrice}</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-lg font-bold text-green-400">{location.growth}</div>
+                    <div className="text-base font-bold text-green-400">{location.growth}</div>
                     <div className="text-xs text-muted-foreground">yearly</div>
                   </div>
                 </div>
@@ -195,47 +195,47 @@ const MarketAnalytics = () => {
 
           {/* Market Forecast */}
           <Card className="glass-dark border-dubai-gold/20">
-            <CardHeader>
-              <CardTitle className="text-2xl font-display flex items-center">
-                <Activity className="w-6 h-6 text-dubai-gold mr-3" />
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-display flex items-center">
+                <Activity className="w-5 h-5 text-dubai-gold mr-2" />
                 2024 Forecast
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-foreground">Рост цен</span>
-                  <span className="text-xl font-bold text-green-400">{forecast.priceGrowth}</span>
+                  <span className="text-foreground text-sm">Price Growth</span>
+                  <span className="text-lg font-bold text-green-400">{forecast.priceGrowth}</span>
                 </div>
                 <div className="w-full bg-dubai-blue-lighter rounded-full h-2">
                   <div className="bg-gradient-to-r from-dubai-gold to-dubai-gold-light h-2 rounded-full" style={{ width: '75%' }}></div>
                 </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-foreground">Активность рынка</span>
-                  <span className="text-xl font-bold text-dubai-gold">{forecast.marketActivity}</span>
+                  <span className="text-foreground text-sm">Market Activity</span>
+                  <span className="text-lg font-bold text-dubai-gold">{forecast.marketActivity}</span>
                 </div>
                 <div className="w-full bg-dubai-blue-lighter rounded-full h-2">
                   <div className="bg-gradient-to-r from-dubai-gold to-dubai-gold-light h-2 rounded-full" style={{ width: '85%' }}></div>
                 </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-foreground">Доходность</span>
-                  <span className="text-xl font-bold text-green-400">{forecast.roi}</span>
+                  <span className="text-foreground text-sm">ROI</span>
+                  <span className="text-lg font-bold text-green-400">{forecast.roi}</span>
                 </div>
                 <div className="w-full bg-dubai-blue-lighter rounded-full h-2">
                   <div className="bg-gradient-to-r from-green-400 to-green-300 h-2 rounded-full" style={{ width: '80%' }}></div>
                 </div>
               </div>
 
-              <div className="mt-6 p-4 rounded-xl bg-dubai-gold/10 border border-dubai-gold/20">
-                <div className="text-sm text-muted-foreground mb-2">💡 AI Рекомендация</div>
-                <div className="text-foreground font-semibold">
-                  {isLoading ? "Загрузка рекомендаций..." : forecast.recommendation}
+              <div className="mt-4 p-3 rounded-lg bg-dubai-gold/10 border border-dubai-gold/20">
+                <div className="text-xs text-muted-foreground mb-1">💡 AI Recommendation</div>
+                <div className="text-foreground font-semibold text-sm">
+                  {isLoading ? "Loading recommendations..." : forecast.recommendation}
                 </div>
               </div>
             </CardContent>
