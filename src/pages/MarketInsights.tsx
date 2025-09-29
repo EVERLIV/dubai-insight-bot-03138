@@ -20,7 +20,11 @@ import {
   Calendar,
   Users,
   Target,
-  Zap
+  Zap,
+  Database,
+  Landmark,
+  FileText,
+  Search
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 
@@ -77,12 +81,12 @@ const MarketInsights = () => {
   ];
 
   const partners = [
-    { name: "Dubai Statistics Center", type: "Data Partner", logo: "📊" },
-    { name: "Property Monitor", type: "Analytics Partner", logo: "📈" },
-    { name: "Reidin", type: "Market Intelligence", logo: "🏢" },
-    { name: "Dubai Land Department", type: "Official Data", logo: "🏛️" },
-    { name: "CBRE", type: "Research Partner", logo: "🔍" },
-    { name: "JLL", type: "Market Research", logo: "📋" }
+    { name: "Dubai Statistics Center", type: "Data Partner", icon: Database },
+    { name: "Property Monitor", type: "Analytics Partner", icon: TrendingUp },
+    { name: "Reidin", type: "Market Intelligence", icon: Building2 },
+    { name: "Dubai Land Department", type: "Official Data", icon: Landmark },
+    { name: "CBRE", type: "Research Partner", icon: Search },
+    { name: "JLL", type: "Market Research", icon: FileText }
   ];
 
   const marketMetrics = [
@@ -369,7 +373,7 @@ const MarketInsights = () => {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 {partners.map((partner, index) => (
                   <div key={index} className="border border-gray-200 p-4 text-center hover:border-purple-600 transition-colors">
-                    <div className="text-2xl mb-2">{partner.logo}</div>
+                    <partner.icon className="w-8 h-8 text-purple-600 mx-auto mb-2" />
                     <h4 className="font-semibold text-sm text-gray-900 mb-1">{partner.name}</h4>
                     <Badge variant="outline" className="text-xs">
                       {partner.type}

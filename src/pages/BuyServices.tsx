@@ -15,7 +15,11 @@ import {
   CheckCircle,
   Phone,
   Mail,
-  Star
+  Star,
+  Landmark,
+  CreditCard,
+  Hammer,
+  Award
 } from "lucide-react";
 
 const BuyServices = () => {
@@ -69,12 +73,12 @@ const BuyServices = () => {
   ];
 
   const partners = [
-    { name: "Emirates NBD", type: "Banking Partner", logo: "🏦" },
-    { name: "ADCB", type: "Mortgage Provider", logo: "🏛️" },
-    { name: "Damac Properties", type: "Developer Partner", logo: "🏗️" },
-    { name: "Emaar", type: "Premium Developer", logo: "🌟" },
-    { name: "Dubai Land Department", type: "Government Partner", logo: "🏛️" },
-    { name: "RERA", type: "Regulatory Authority", logo: "⚖️" }
+    { name: "Emirates NBD", type: "Banking Partner", icon: Landmark },
+    { name: "ADCB", type: "Mortgage Provider", icon: CreditCard },
+    { name: "Damac Properties", type: "Developer Partner", icon: Hammer },
+    { name: "Emaar", type: "Premium Developer", icon: Building2 },
+    { name: "Dubai Land Department", type: "Government Partner", icon: Landmark },
+    { name: "RERA", type: "Regulatory Authority", icon: Shield }
   ];
 
   return (
@@ -242,7 +246,7 @@ const BuyServices = () => {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 {partners.map((partner, index) => (
                   <div key={index} className="border border-gray-200 p-4 text-center hover:border-blue-900 transition-colors">
-                    <div className="text-2xl mb-2">{partner.logo}</div>
+                    <partner.icon className="w-8 h-8 text-blue-900 mx-auto mb-2" />
                     <h4 className="font-semibold text-sm text-gray-900 mb-1">{partner.name}</h4>
                     <Badge variant="outline" className="text-xs">
                       {partner.type}
