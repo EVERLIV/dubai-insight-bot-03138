@@ -163,7 +163,7 @@ export default function AdvancedAnalytics() {
     return (
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Продвинутая Аналитика</h2>
+          <h2 className="text-2xl font-bold">Advanced Analytics</h2>
           <div className="animate-pulse">
             <div className="h-4 bg-muted rounded w-20"></div>
           </div>
@@ -188,9 +188,9 @@ export default function AdvancedAnalytics() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold">Продвинутая Аналитика</h2>
+          <h2 className="text-3xl font-bold">Advanced Analytics</h2>
           <p className="text-muted-foreground mt-2">
-            Комплексный анализ рынка недвижимости Дубая
+            Comprehensive analysis of Dubai real estate market
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -276,10 +276,10 @@ export default function AdvancedAnalytics() {
 
       <Tabs defaultValue="market-trends" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="market-trends">Рыночные тренды</TabsTrigger>
-          <TabsTrigger value="districts">Анализ районов</TabsTrigger>
-          <TabsTrigger value="property-types">Типы недвижимости</TabsTrigger>
-          <TabsTrigger value="forecasting">Прогнозы</TabsTrigger>
+          <TabsTrigger value="market-trends">Market Trends</TabsTrigger>
+          <TabsTrigger value="districts">District Analysis</TabsTrigger>
+          <TabsTrigger value="property-types">Property Types</TabsTrigger>
+          <TabsTrigger value="forecasting">Forecasts</TabsTrigger>
         </TabsList>
 
         <TabsContent value="market-trends" className="space-y-6">
@@ -460,10 +460,10 @@ export default function AdvancedAnalytics() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <AlertCircle className="h-5 w-5" />
-                Прогноз на 2025 год
+                2025 Forecast
               </CardTitle>
               <CardDescription>
-                AI-прогнозирование рынка недвижимости Дубая
+                AI-powered Dubai real estate market forecasting
               </CardDescription>
             </CardHeader>
             <CardContent>

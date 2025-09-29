@@ -6,28 +6,28 @@ import { useEffect, useState } from "react";
 const MarketAnalytics = () => {
   const [marketData, setMarketData] = useState([
     {
-      title: "Средняя цена за кв.м",
+      title: "Average Price per sqm",
       value: "15,240 AED",
       change: "+8.5%",
       trend: "up",
       icon: DollarSign
     },
     {
-      title: "Объем транзакций",
+      title: "Transaction Volume",
       value: "12,450",
       change: "+15.2%", 
       trend: "up",
       icon: Activity
     },
     {
-      title: "Время продажи",
-      value: "45 дней",
+      title: "Time on Market",
+      value: "45 days",
       change: "-12%",
       trend: "down",
       icon: Target
     },
     {
-      title: "ROI годовой",
+      title: "Annual ROI",
       value: "14.8%",
       change: "+2.1%",
       trend: "up", 
@@ -36,17 +36,17 @@ const MarketAnalytics = () => {
   ]);
 
   const [topLocations, setTopLocations] = useState([
-    { name: "Downtown Dubai", growth: "+18.5%", avgPrice: "18,500 AED/кв.м" },
-    { name: "Dubai Marina", growth: "+12.3%", avgPrice: "14,200 AED/кв.м" },
-    { name: "Palm Jumeirah", growth: "+22.1%", avgPrice: "25,800 AED/кв.м" },
-    { name: "Business Bay", growth: "+9.8%", avgPrice: "12,900 AED/кв.м" }
+    { name: "Downtown Dubai", growth: "+18.5%", avgPrice: "18,500 AED/sqm" },
+    { name: "Dubai Marina", growth: "+12.3%", avgPrice: "14,200 AED/sqm" },
+    { name: "Palm Jumeirah", growth: "+22.1%", avgPrice: "25,800 AED/sqm" },
+    { name: "Business Bay", growth: "+9.8%", avgPrice: "12,900 AED/sqm" }
   ]);
 
   const [forecast, setForecast] = useState({
     priceGrowth: "+12-15%",
-    marketActivity: "Высокая",
+    marketActivity: "High",
     roi: "14-18%",
-    recommendation: "Оптимальное время для инвестиций в элитную недвижимость Downtown Dubai и Palm Jumeirah"
+    recommendation: "Optimal time to invest in premium properties in Downtown Dubai and Palm Jumeirah"
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -73,28 +73,28 @@ const MarketAnalytics = () => {
         // Update market metrics
         setMarketData([
           {
-            title: "Средняя цена за кв.м",
+            title: "Average Price per sqm",
             value: `${Math.round(analysis.keyMetrics.avgPricePerSqm).toLocaleString()} AED`,
             change: `+${analysis.keyMetrics.priceGrowth.toFixed(1)}%`,
             trend: analysis.keyMetrics.priceGrowth > 0 ? "up" : "down",
             icon: DollarSign
           },
           {
-            title: "Объем транзакций",
+            title: "Transaction Volume",
             value: `${Math.round(analysis.keyMetrics.transactionVolume).toLocaleString()}`,
             change: "+15.2%", 
             trend: "up",
             icon: Activity
           },
           {
-            title: "Время продажи",
-            value: `${Math.round(analysis.keyMetrics.timeOnMarket)} дней`,
+            title: "Time on Market",
+            value: `${Math.round(analysis.keyMetrics.timeOnMarket)} days`,
             change: "-12%",
             trend: "down",
             icon: Target
           },
           {
-            title: "ROI годовой",
+            title: "Annual ROI",
             value: `${analysis.keyMetrics.roi.toFixed(1)}%`,
             change: "+2.1%",
             trend: "up", 
@@ -106,14 +106,14 @@ const MarketAnalytics = () => {
         setTopLocations(analysis.districts.map(district => ({
           name: district.name,
           growth: `+${district.growth.toFixed(1)}%`,
-          avgPrice: `${Math.round(district.avgPrice).toLocaleString()} AED/кв.м`
+          avgPrice: `${Math.round(district.avgPrice).toLocaleString()} AED/sqm`
         })));
 
         // Update forecast
         setForecast({
           priceGrowth: `+${analysis.forecast.priceGrowthForecast.toFixed(0)}-${(analysis.forecast.priceGrowthForecast + 3).toFixed(0)}%`,
-          marketActivity: analysis.forecast.marketActivity === "высокая" ? "Высокая" : 
-                          analysis.forecast.marketActivity === "средняя" ? "Средняя" : "Низкая",
+          marketActivity: analysis.forecast.marketActivity === "высокая" ? "High" : 
+                          analysis.forecast.marketActivity === "средняя" ? "Medium" : "Low",
           roi: `${(analysis.forecast.roi - 2).toFixed(0)}-${analysis.forecast.roi.toFixed(0)}%`,
           recommendation: analysis.forecast.recommendation
         });
@@ -131,13 +131,13 @@ const MarketAnalytics = () => {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-display font-bold text-foreground mb-6">
-            Аналитика
+            Market
             <span className="block bg-gradient-to-r from-dubai-gold to-dubai-gold-light bg-clip-text text-transparent">
-              Рынка
+              Analytics
             </span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Актуальные данные и инсайты для принятия обоснованных инвестиционных решений
+            Real-time data and insights for making informed investment decisions
           </p>
         </div>
 
@@ -174,7 +174,7 @@ const MarketAnalytics = () => {
             <CardHeader>
               <CardTitle className="text-2xl font-display flex items-center">
                 <TrendingUp className="w-6 h-6 text-dubai-gold mr-3" />
-                Топ Районы по Росту
+                Top Growing Districts
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -186,7 +186,7 @@ const MarketAnalytics = () => {
                   </div>
                   <div className="text-right">
                     <div className="text-lg font-bold text-green-400">{location.growth}</div>
-                    <div className="text-xs text-muted-foreground">за год</div>
+                    <div className="text-xs text-muted-foreground">yearly</div>
                   </div>
                 </div>
               ))}
@@ -198,7 +198,7 @@ const MarketAnalytics = () => {
             <CardHeader>
               <CardTitle className="text-2xl font-display flex items-center">
                 <Activity className="w-6 h-6 text-dubai-gold mr-3" />
-                Прогноз на 2024
+                2024 Forecast
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
