@@ -140,75 +140,76 @@ export default function PremiumSidebar({ property }: PremiumSidebarProps) {
                 Market Position
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-4 p-6">
               <div className="flex justify-between items-center">
-                <span className="text-xs text-muted-foreground">Price vs Market</span>
-                <Badge 
-                  variant={marketComparison.marketPosition === 'below' ? 'default' : 'secondary'}
-                  className="text-xs"
-                >
+                <span className="text-xs text-gray-600 font-semibold uppercase tracking-wide">Price vs Market</span>
+                <div className={`px-3 py-1 text-xs font-bold uppercase tracking-wider ${
+                  marketComparison.marketPosition === 'below' ? 'bg-blue-900 text-white' : 'bg-gray-700 text-white'
+                }`}>
                   {marketComparison.marketPosition === 'below' ? 'Below Market' : 
                    marketComparison.marketPosition === 'market' ? 'Market Rate' : 'Above Market'}
-                </Badge>
+                </div>
               </div>
               
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs">
-                  <span>This Property</span>
-                  <span className="font-medium">{property.price.toLocaleString()} AED</span>
+              <div className="space-y-3 border border-gray-200 p-4">
+                <div className="flex justify-between text-xs border-b border-gray-200 pb-2">
+                  <span className="font-semibold text-gray-900">This Property</span>
+                  <span className="font-bold text-blue-900">{property.price.toLocaleString()} AED</span>
+                </div>
+                <div className="flex justify-between text-xs border-b border-gray-200 pb-2">
+                  <span className="font-semibold text-gray-900">Market Average</span>
+                  <span className="font-bold text-gray-900">{marketComparison.avgPrice.toLocaleString()} AED</span>
                 </div>
                 <div className="flex justify-between text-xs">
-                  <span>Market Average</span>
-                  <span>{marketComparison.avgPrice.toLocaleString()} AED</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span>Price/sq.ft</span>
-                  <span>{marketComparison.pricePerSqft} AED</span>
+                  <span className="font-semibold text-gray-900">Price/sq.ft</span>
+                  <span className="font-bold text-gray-900">{marketComparison.pricePerSqft} AED</span>
                 </div>
               </div>
 
-              <div className="pt-2 border-t">
-                <div className="flex justify-between text-xs mb-1">
-                  <span>Similar Properties</span>
-                  <span className="font-medium">{marketComparison.similarProperties}</span>
+              <div className="pt-3 border-t border-gray-200">
+                <div className="flex justify-between text-xs mb-2 border-b border-gray-200 pb-2">
+                  <span className="font-semibold text-gray-900">Similar Properties</span>
+                  <span className="font-bold text-blue-900">{marketComparison.similarProperties}</span>
                 </div>
                 <div className="flex justify-between text-xs">
-                  <span>Avg. Days on Market</span>
-                  <span className="font-medium">{marketComparison.daysOnMarket} days</span>
+                  <span className="font-semibold text-gray-900">Avg. Days on Market</span>
+                  <span className="font-bold text-blue-900">{marketComparison.daysOnMarket} days</span>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* AI Valuation */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <BarChart3 className="w-4 h-4" />
-                AI Valuation Range
+          {/* Professional AI Valuation */}
+          <Card className="border-gray-200">
+            <CardHeader className="pb-3 border-b border-gray-200">
+              <CardTitle className="text-sm flex items-center gap-3 text-gray-900 font-bold uppercase tracking-wider">
+                <div className="w-5 h-5 bg-blue-900 flex items-center justify-center">
+                  <BarChart3 className="w-3 h-3 text-white" />
+                </div>
+                AI Valuation Analysis
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span>Conservative</span>
-                    <span className="font-medium">{(property.price * 0.95).toLocaleString()} AED</span>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <div className="space-y-3 border border-gray-200 p-4">
+                  <div className="flex justify-between text-xs border-b border-gray-200 pb-2">
+                    <span className="font-semibold text-gray-900">Conservative</span>
+                    <span className="font-bold text-gray-700">{(property.price * 0.95).toLocaleString()} AED</span>
+                  </div>
+                  <div className="flex justify-between text-xs border-b border-gray-200 pb-2">
+                    <span className="font-semibold text-gray-900">Market Value</span>
+                    <span className="font-bold text-blue-900">{property.price.toLocaleString()} AED</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span>Market Value</span>
-                    <span className="font-medium text-primary">{property.price.toLocaleString()} AED</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span>Optimistic</span>
-                    <span className="font-medium">{(property.price * 1.08).toLocaleString()} AED</span>
+                    <span className="font-semibold text-gray-900">Optimistic</span>
+                    <span className="font-bold text-green-700">{(property.price * 1.08).toLocaleString()} AED</span>
                   </div>
                 </div>
                 
-                <div className="pt-2">
-                  <Progress value={75} className="h-2" />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    75% confidence in current pricing
+                <div className="pt-3">
+                  <Progress value={75} className="h-3 border border-gray-200" />
+                  <p className="text-xs text-gray-600 mt-2 font-medium">
+                    75% institutional confidence in current pricing
                   </p>
                 </div>
               </div>
@@ -216,43 +217,45 @@ export default function PremiumSidebar({ property }: PremiumSidebarProps) {
           </Card>
         </TabsContent>
 
-        <TabsContent value="investment" className="space-y-4 mt-4">
-          {/* Investment Metrics */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <TrendingUp className="w-4 h-4" />
-                Investment Metrics
+        <TabsContent value="investment" className="space-y-6 mt-6">
+          {/* Professional Investment Metrics */}
+          <Card className="border-gray-200">
+            <CardHeader className="pb-3 border-b border-gray-200">
+              <CardTitle className="text-sm flex items-center gap-3 text-gray-900 font-bold uppercase tracking-wider">
+                <div className="w-5 h-5 bg-blue-900 flex items-center justify-center">
+                  <TrendingUp className="w-3 h-3 text-white" />
+                </div>
+                Investment Analysis
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="text-center p-2 bg-muted/50 rounded">
-                  <div className="text-lg font-bold text-primary">{investmentMetrics.roi}%</div>
-                  <div className="text-xs text-muted-foreground">ROI</div>
+            <CardContent className="space-y-4 p-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-3 border border-gray-200 bg-gray-50">
+                  <div className="text-lg font-bold text-blue-900">{investmentMetrics.roi}%</div>
+                  <div className="text-xs text-gray-600 font-semibold uppercase tracking-wide">ROI</div>
                 </div>
-                <div className="text-center p-2 bg-muted/50 rounded">
-                  <div className="text-lg font-bold text-green-600">{investmentMetrics.rentYield}%</div>
-                  <div className="text-xs text-muted-foreground">Rent Yield</div>
+                <div className="text-center p-3 border border-gray-200 bg-gray-50">
+                  <div className="text-lg font-bold text-green-700">{investmentMetrics.rentYield}%</div>
+                  <div className="text-xs text-gray-600 font-semibold uppercase tracking-wide">Rent Yield</div>
                 </div>
-                <div className="text-center p-2 bg-muted/50 rounded">
-                  <div className="text-lg font-bold text-blue-600">+{investmentMetrics.appreciation}%</div>
-                  <div className="text-xs text-muted-foreground">Appreciation</div>
+                <div className="text-center p-3 border border-gray-200 bg-gray-50">
+                  <div className="text-lg font-bold text-blue-700">+{investmentMetrics.appreciation}%</div>
+                  <div className="text-xs text-gray-600 font-semibold uppercase tracking-wide">Appreciation</div>
                 </div>
-                <div className="text-center p-2 bg-muted/50 rounded">
-                  <div className="text-lg font-bold text-purple-600">{investmentMetrics.paybackPeriod}y</div>
-                  <div className="text-xs text-muted-foreground">Payback</div>
+                <div className="text-center p-3 border border-gray-200 bg-gray-50">
+                  <div className="text-lg font-bold text-purple-700">{investmentMetrics.paybackPeriod}y</div>
+                  <div className="text-xs text-gray-600 font-semibold uppercase tracking-wide">Payback</div>
                 </div>
               </div>
 
-              <div className="pt-2 border-t">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs text-muted-foreground">Risk Assessment</span>
-                  <Badge className={`text-xs ${getRiskColor(investmentMetrics.riskScore)}`}>
+              <div className="pt-4 border-t border-gray-200">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-xs text-gray-600 font-semibold uppercase tracking-wide">Risk Assessment</span>
+                  <div className={`px-3 py-1 text-xs font-bold uppercase tracking-wider ${getRiskColor(investmentMetrics.riskScore)}`}>
                     {getRiskLabel(investmentMetrics.riskScore)}
-                  </Badge>
+                  </div>
                 </div>
-                <Progress value={(5 - investmentMetrics.riskScore) * 20} className="h-2" />
+                <Progress value={(5 - investmentMetrics.riskScore) * 20} className="h-3 border border-gray-200" />
               </div>
             </CardContent>
           </Card>

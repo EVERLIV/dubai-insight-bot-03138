@@ -268,7 +268,7 @@ export default function EnhancedPriceTrends({ location, propertyType, bedrooms }
 
         <Tabs value={viewType} onValueChange={setViewType}>
           <TabsContent value="price">
-            <div className="h-64">
+            <div className="h-64 border border-gray-200">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={historicalData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -287,12 +287,13 @@ export default function EnhancedPriceTrends({ location, propertyType, bedrooms }
                   <Tooltip 
                     formatter={(value: number) => [formatPrice(value), 'Price']}
                     labelStyle={{ fontSize: '12px' }}
+                    contentStyle={{ border: '1px solid #e5e7eb', backgroundColor: 'white' }}
                   />
                   <Area 
                     type="monotone" 
                     dataKey="price" 
-                    stroke="#3b82f6" 
-                    fill="#3b82f6" 
+                    stroke="#1e3a8a" 
+                    fill="#1e3a8a" 
                     fillOpacity={0.2}
                     strokeWidth={2}
                   />
@@ -302,7 +303,7 @@ export default function EnhancedPriceTrends({ location, propertyType, bedrooms }
           </TabsContent>
 
           <TabsContent value="volume">
-            <div className="h-64">
+            <div className="h-64 border border-gray-200">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={historicalData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -318,7 +319,7 @@ export default function EnhancedPriceTrends({ location, propertyType, bedrooms }
                     tick={{ fontSize: 10 }}
                     tickFormatter={formatVolume}
                   />
-                  <Tooltip />
+                  <Tooltip contentStyle={{ border: '1px solid #e5e7eb', backgroundColor: 'white' }} />
                   <Bar dataKey="volume" fill="#10b981" />
                 </BarChart>
               </ResponsiveContainer>
@@ -326,7 +327,7 @@ export default function EnhancedPriceTrends({ location, propertyType, bedrooms }
           </TabsContent>
 
           <TabsContent value="combined">
-            <div className="h-64">
+            <div className="h-64 border border-gray-200">
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={historicalData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -350,15 +351,15 @@ export default function EnhancedPriceTrends({ location, propertyType, bedrooms }
                     tickLine={false}
                     tick={{ fontSize: 10 }}
                   />
-                  <Tooltip />
+                  <Tooltip contentStyle={{ border: '1px solid #e5e7eb', backgroundColor: 'white' }} />
                   <Bar yAxisId="volume" dataKey="volume" fill="#e5e7eb" opacity={0.3} />
                   <Line 
                     yAxisId="price"
                     type="monotone" 
                     dataKey="price" 
-                    stroke="#3b82f6" 
+                    stroke="#1e3a8a" 
                     strokeWidth={2}
-                    dot={{ fill: '#3b82f6', strokeWidth: 2, r: 3 }}
+                    dot={{ fill: '#1e3a8a', strokeWidth: 2, r: 3 }}
                   />
                 </ComposedChart>
               </ResponsiveContainer>
@@ -366,7 +367,7 @@ export default function EnhancedPriceTrends({ location, propertyType, bedrooms }
           </TabsContent>
 
           <TabsContent value="forecast">
-            <div className="h-64">
+            <div className="h-64 border border-gray-200">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={[...historicalData.slice(-6), ...forecastData.slice(0, 6)]}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -382,13 +383,13 @@ export default function EnhancedPriceTrends({ location, propertyType, bedrooms }
                     tick={{ fontSize: 10 }}
                     tickFormatter={formatPrice}
                   />
-                  <Tooltip />
+                  <Tooltip contentStyle={{ border: '1px solid #e5e7eb', backgroundColor: 'white' }} />
                   <Line 
                     type="monotone" 
                     dataKey="price" 
-                    stroke="#3b82f6" 
+                    stroke="#1e3a8a" 
                     strokeWidth={2}
-                    dot={{ fill: '#3b82f6', strokeWidth: 2, r: 3 }}
+                    dot={{ fill: '#1e3a8a', strokeWidth: 2, r: 3 }}
                     connectNulls={false}
                   />
                   <Line 
@@ -403,35 +404,35 @@ export default function EnhancedPriceTrends({ location, propertyType, bedrooms }
               </ResponsiveContainer>
             </div>
             
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+            <div className="mt-4 p-4 bg-blue-50 border border-gray-200">
               <div className="flex items-center gap-2 mb-2">
                 <AlertCircle className="w-4 h-4 text-blue-600" />
-                <span className="text-sm font-medium text-blue-800">Market Forecast</span>
+                <span className="text-sm font-medium text-blue-800">Market Forecast Analysis</span>
               </div>
               <p className="text-xs text-blue-700">
-                Based on current market trends, the property value is expected to increase by{' '}
+                Based on current institutional market trends, the property value is expected to increase by{' '}
                 <span className="font-medium">8-12%</span> over the next 12 months with{' '}
-                <span className="font-medium">{forecastData[0]?.confidence || 85}%</span> confidence.
+                <span className="font-medium">{forecastData[0]?.confidence || 85}%</span> confidence rating.
               </p>
             </div>
           </TabsContent>
         </Tabs>
 
-        {/* Key Insights */}
-        <div className="mt-6 space-y-2">
-          <h4 className="text-sm font-semibold">Key Insights</h4>
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-xs">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span>Price growth accelerating in Q4 2024</span>
+        {/* Professional Key Insights */}
+        <div className="mt-8 space-y-3 border-t border-gray-200 pt-6">
+          <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Market Intelligence Summary</h4>
+          <div className="space-y-2">
+            <div className="flex items-center gap-3 text-xs border-l-4 border-green-600 pl-3 py-1">
+              <div className="w-2 h-2 bg-green-600"></div>
+              <span className="font-medium text-gray-900">Price appreciation accelerating in Q4 2024</span>
             </div>
-            <div className="flex items-center gap-2 text-xs">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <span>Transaction volume remains stable</span>
+            <div className="flex items-center gap-3 text-xs border-l-4 border-blue-600 pl-3 py-1">
+              <div className="w-2 h-2 bg-blue-600"></div>
+              <span className="font-medium text-gray-900">Transaction volume maintaining stability</span>
             </div>
-            <div className="flex items-center gap-2 text-xs">
-              <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-              <span>Market momentum shifting bullish</span>
+            <div className="flex items-center gap-3 text-xs border-l-4 border-orange-600 pl-3 py-1">
+              <div className="w-2 h-2 bg-orange-600"></div>
+              <span className="font-medium text-gray-900">Market momentum shifting to institutional buying</span>
             </div>
           </div>
         </div>

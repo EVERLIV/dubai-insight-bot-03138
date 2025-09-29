@@ -195,22 +195,22 @@ export default function PropertyReport({ property }: PropertyReportProps) {
             </p>
           </div>
           
-          <div className="space-y-3 mb-6">
-            <div className="flex items-center justify-center gap-2 text-sm">
+          <div className="space-y-4 mb-8">
+            <div className="flex items-center justify-center gap-3 text-sm border border-gray-200 p-3">
               <CheckCircle className="w-4 h-4 text-green-600" />
-              <span>Market Position Analysis</span>
+              <span className="font-semibold text-gray-900">Market Position Analysis</span>
             </div>
-            <div className="flex items-center justify-center gap-2 text-sm">
+            <div className="flex items-center justify-center gap-3 text-sm border border-gray-200 p-3">
               <CheckCircle className="w-4 h-4 text-green-600" />
-              <span>Investment Metrics & ROI</span>
+              <span className="font-semibold text-gray-900">Investment Metrics & ROI</span>
             </div>
-            <div className="flex items-center justify-center gap-2 text-sm">
+            <div className="flex items-center justify-center gap-3 text-sm border border-gray-200 p-3">
               <CheckCircle className="w-4 h-4 text-green-600" />
-              <span>Risk Assessment</span>
+              <span className="font-semibold text-gray-900">Risk Assessment</span>
             </div>
-            <div className="flex items-center justify-center gap-2 text-sm">
+            <div className="flex items-center justify-center gap-3 text-sm border border-gray-200 p-3">
               <CheckCircle className="w-4 h-4 text-green-600" />
-              <span>Future Growth Projections</span>
+              <span className="font-semibold text-gray-900">Future Growth Projections</span>
             </div>
           </div>
 
@@ -218,12 +218,12 @@ export default function PropertyReport({ property }: PropertyReportProps) {
             onClick={generateReport}
             disabled={isGenerating}
             size="lg"
-            className="min-w-32"
+            className="min-w-40 bg-blue-900 hover:bg-blue-800 text-white font-bold uppercase tracking-wider"
           >
             {isGenerating ? (
               <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                Generating...
+                <div className="w-4 h-4 border-2 border-white border-t-transparent animate-spin mr-2" />
+                Generating Analysis...
               </>
             ) : (
               <>
@@ -239,53 +239,57 @@ export default function PropertyReport({ property }: PropertyReportProps) {
 
   return (
     <div className="space-y-6">
-      {/* Report Header */}
-      <Card>
-        <CardHeader>
+      {/* Professional Report Header */}
+      <Card className="border-gray-200">
+        <CardHeader className="border-b border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2 mb-2">
-                <FileText className="w-5 h-5" />
-                Property Analysis Report
+              <CardTitle className="flex items-center gap-3 mb-2 text-gray-900 font-bold uppercase tracking-wider">
+                <div className="w-6 h-6 bg-blue-900 flex items-center justify-center">
+                  <FileText className="w-4 h-4 text-white" />
+                </div>
+                Executive Property Analysis Report
               </CardTitle>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-gray-600 font-medium">
                 Generated on {new Date().toLocaleDateString()}
               </p>
             </div>
             <div className="text-right">
-              <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getScoreColor(reportData.overallScore)}`}>
-                <Star className="w-4 h-4 mr-1" />
+              <div className={`inline-flex items-center px-4 py-2 text-sm font-bold uppercase tracking-wider ${getScoreColor(reportData.overallScore)}`}>
+                <Star className="w-4 h-4 mr-2" />
                 {reportData.overallScore}/100
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Overall Score</p>
+              <p className="text-xs text-gray-600 mt-1 font-medium uppercase tracking-wide">Overall Score</p>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center p-3 bg-muted/50 rounded-lg">
-              <Badge className={getRecommendationColor(reportData.investmentMetrics.recommendation)}>
+            <div className="text-center p-4 border border-gray-200 bg-gray-50">
+              <div className={`inline-block px-4 py-2 text-sm font-bold uppercase tracking-wider ${getRecommendationColor(reportData.investmentMetrics.recommendation)}`}>
                 {reportData.investmentMetrics.recommendation.toUpperCase()}
-              </Badge>
-              <p className="text-xs text-muted-foreground mt-1">Recommendation</p>
+              </div>
+              <p className="text-xs text-gray-600 mt-2 font-medium uppercase tracking-wide">Recommendation</p>
             </div>
-            <div className="text-center p-3 bg-muted/50 rounded-lg">
-              <div className="text-lg font-bold text-primary">{reportData.investmentMetrics.roi}%</div>
-              <p className="text-xs text-muted-foreground">Expected ROI</p>
+            <div className="text-center p-4 border border-gray-200 bg-gray-50">
+              <div className="text-xl font-bold text-blue-900">{reportData.investmentMetrics.roi}%</div>
+              <p className="text-xs text-gray-600 font-medium uppercase tracking-wide">Expected ROI</p>
             </div>
-            <div className="text-center p-3 bg-muted/50 rounded-lg">
-              <div className="text-lg font-bold text-purple-600">{reportData.investmentMetrics.paybackPeriod}y</div>
-              <p className="text-xs text-muted-foreground">Payback Period</p>
+            <div className="text-center p-4 border border-gray-200 bg-gray-50">
+              <div className="text-xl font-bold text-purple-700">{reportData.investmentMetrics.paybackPeriod}y</div>
+              <p className="text-xs text-gray-600 font-medium uppercase tracking-wide">Payback Period</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Market Analysis */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="w-5 h-5" />
+      {/* Professional Market Analysis */}
+      <Card className="border-gray-200">
+        <CardHeader className="border-b border-gray-200">
+          <CardTitle className="flex items-center gap-3 text-gray-900 font-bold uppercase tracking-wider">
+            <div className="w-6 h-6 bg-blue-900 flex items-center justify-center">
+              <BarChart3 className="w-4 h-4 text-white" />
+            </div>
             Market Analysis
           </CardTitle>
         </CardHeader>
