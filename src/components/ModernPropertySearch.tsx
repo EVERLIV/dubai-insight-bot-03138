@@ -29,6 +29,8 @@ export default function ModernPropertySearch() {
   const [sources, setSources] = useState<string[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<any>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [resultsPerPage] = useState(25);
 
   const handleSearch = async () => {
     setIsLoading(true);
@@ -53,7 +55,7 @@ export default function ModernPropertySearch() {
         max_bedrooms_param: null,
         source_type_param: null,
         housing_status_param: searchHousingStatus,
-        limit_param: 20
+        limit_param: 50
       });
 
       if (scrapedError) throw scrapedError;
@@ -68,7 +70,7 @@ export default function ModernPropertySearch() {
         min_bedrooms_param: searchBedrooms,
         max_bedrooms_param: null,
         housing_status_param: searchHousingStatus,
-        limit_param: 10
+        limit_param: 25
       });
 
       // Combine results
@@ -91,6 +93,7 @@ export default function ModernPropertySearch() {
       setTotalResults(allResults.length);
       setSources(uniqueSources);
       setSearchPerformed(true);
+      setCurrentPage(1);
 
       toast.success(`Found ${allResults.length} properties from ${uniqueSources.length} sources`);
 
@@ -133,6 +136,17 @@ export default function ModernPropertySearch() {
     } finally {
       setIsRefreshing(false);
     }
+  };
+
+  // Calculate pagination
+  const totalPages = Math.ceil(searchResults.length / resultsPerPage);
+  const startIndex = (currentPage - 1) * resultsPerPage;
+  const endIndex = startIndex + resultsPerPage;
+  const currentResults = searchResults.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -217,7 +231,7 @@ export default function ModernPropertySearch() {
                       <h2 className="text-xl font-bold text-gray-900">Search Results</h2>
                     </div>
                     <p className="text-sm text-gray-600">
-                      {totalResults} properties identified from {sources.length} verified sources
+                      Showing {startIndex + 1}-{Math.min(endIndex, searchResults.length)} of {totalResults} properties from {sources.length} verified sources
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -239,14 +253,71 @@ export default function ModernPropertySearch() {
             {/* Properties Grid */}
             {searchPerformed ? (
               searchResults.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {searchResults.slice(0, 12).map((property, index) => (
-                    <PropertyCard 
-                      key={index} 
-                      property={property} 
-                      onViewDetails={handleViewDetails}
-                    />
-                  ))}
+                <div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+                    {currentResults.map((property, index) => (
+                      <PropertyCard 
+                        key={index} 
+                        property={property} 
+                        onViewDetails={handleViewDetails}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-2 mt-8">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="border-gray-300 text-gray-900"
+                      >
+                        Previous
+                      </Button>
+                      
+                      <div className="flex gap-1">
+                        {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                          let pageNum;
+                          if (totalPages <= 5) {
+                            pageNum = i + 1;
+                          } else if (currentPage <= 3) {
+                            pageNum = i + 1;
+                          } else if (currentPage >= totalPages - 2) {
+                            pageNum = totalPages - 4 + i;
+                          } else {
+                            pageNum = currentPage - 2 + i;
+                          }
+                          
+                          return (
+                            <Button
+                              key={pageNum}
+                              variant={currentPage === pageNum ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => handlePageChange(pageNum)}
+                              className={currentPage === pageNum 
+                                ? "bg-blue-900 text-white" 
+                                : "border-gray-300 text-gray-900"
+                              }
+                            >
+                              {pageNum}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="border-gray-300 text-gray-900"
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="bg-white border border-gray-200 p-12 text-center">
