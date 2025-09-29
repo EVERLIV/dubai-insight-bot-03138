@@ -115,7 +115,7 @@ export default function PropertyDetails() {
       <Header />
       <main className="flex-1">
         {/* Professional Navigation Bar */}
-        <div className="border-b border-gray-300 bg-white">
+        <div className="border-b border-gray-100 bg-white">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <Button
@@ -132,12 +132,12 @@ export default function PropertyDetails() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsFavorite(!isFavorite)}
-                  className="flex items-center gap-2 text-gray-900 font-semibold uppercase tracking-wide border border-gray-300"
+                  className="flex items-center gap-2 text-gray-900 font-semibold uppercase tracking-wide border border-gray-200"
                 >
                   <Heart className={`w-4 h-4 ${isFavorite ? 'fill-blue-900 text-blue-900' : ''}`} />
                   Save Property
                 </Button>
-                <Button variant="ghost" size="sm" className="flex items-center gap-2 text-gray-900 font-semibold uppercase tracking-wide border border-gray-300">
+                <Button variant="ghost" size="sm" className="flex items-center gap-2 text-gray-900 font-semibold uppercase tracking-wide border border-gray-200">
                   <Share2 className="w-4 h-4" />
                   Share Property
                 </Button>
@@ -148,7 +148,7 @@ export default function PropertyDetails() {
 
         <div className="container mx-auto px-4 py-8">
           {/* Professional Property Header */}
-          <div className="mb-8 border-b border-gray-300 pb-6">
+          <div className="mb-8 border-b border-gray-100 pb-6">
             <div className="mb-4">
               <h1 className="text-4xl font-bold text-gray-900 mb-3">{property.title}</h1>
               <div className="flex items-center text-gray-600">
@@ -178,7 +178,7 @@ export default function PropertyDetails() {
                 {/* Professional Photo Gallery */}
                 <div className="lg:col-span-2">
                   {/* Main Professional Photo */}
-                  <div className="relative h-96 mb-4 border border-gray-300">
+                  <div className="relative h-96 mb-4 border border-gray-100">
                     <img
                       src={property.images?.[0] || "/placeholder.svg"}
                       alt={property.title}
@@ -199,7 +199,7 @@ export default function PropertyDetails() {
                   {/* Professional Photo Grid */}
                   <div className="grid grid-cols-6 gap-2">
                     {[0,1,2,3,4,5].map((i) => (
-                      <div key={i} className="aspect-square border border-gray-300">
+                      <div key={i} className="aspect-square border border-gray-100">
                         <img
                           src="/placeholder.svg"
                           alt={`Property ${i + 1}`}
@@ -212,7 +212,7 @@ export default function PropertyDetails() {
 
                 {/* Professional Features Panel */}
                 <div className="lg:col-span-1">
-                  <Card className="h-full border-gray-300">
+                  <Card className="h-full border-gray-100">
                     <CardContent className="p-6 h-full">
                       <h3 className="text-sm font-bold mb-4 text-gray-900 uppercase tracking-wider border-b border-gray-300 pb-2">Property Specifications</h3>
                       <div className="space-y-4">
@@ -236,7 +236,7 @@ export default function PropertyDetails() {
               </div>
 
               {/* Professional Amenities Section */}
-              <Card className="border-gray-300">
+              <Card className="border-gray-100">
                 <CardContent className="p-6">
                   <h3 className="text-sm font-bold mb-4 text-gray-900 uppercase tracking-wider border-b border-gray-300 pb-2">Executive Amenities</h3>
                   <div className="grid grid-cols-2 gap-3">
@@ -256,7 +256,7 @@ export default function PropertyDetails() {
               </Card>
 
               {/* Professional Description */}
-              <Card className="border-gray-300">
+              <Card className="border-gray-100">
                 <CardContent className="p-6">
                   <h3 className="text-sm font-bold mb-4 text-gray-900 uppercase tracking-wider border-b border-gray-300 pb-2">Property Overview</h3>
                   <p className="text-sm text-gray-700 leading-relaxed font-medium">
@@ -266,7 +266,7 @@ export default function PropertyDetails() {
               </Card>
 
               {/* Professional Location Analysis */}
-              <Card className="border-gray-300">
+              <Card className="border-gray-100">
                 <CardContent className="p-6">
                   <h3 className="text-sm font-bold mb-4 text-gray-900 uppercase tracking-wider border-b border-gray-300 pb-2">Location Intelligence</h3>
                   <p className="text-sm text-gray-700 mb-4 font-medium">
@@ -283,7 +283,7 @@ export default function PropertyDetails() {
                   </div>
 
                   {/* Professional Map */}
-                  <div className="h-64 border border-gray-300">
+                  <div className="h-64 border border-gray-100">
                     <MapPlaceholder />
                   </div>
                 </CardContent>
@@ -306,7 +306,7 @@ export default function PropertyDetails() {
               
               {/* Professional Agent Contact */}
               {property.agent_name && (
-                <Card className="border-gray-300">
+                <Card className="border-gray-100">
                   <CardContent className="p-6">
                     <h3 className="text-sm font-bold mb-4 text-gray-900 uppercase tracking-wider border-b border-gray-300 pb-2">Licensed Agent</h3>
                     <div className="flex items-center gap-4 mb-6">

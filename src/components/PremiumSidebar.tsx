@@ -131,7 +131,7 @@ export default function PremiumSidebar({ property }: PremiumSidebarProps) {
 
         <TabsContent value="analysis" className="space-y-6 mt-6">
           {/* Professional Market Position */}
-          <Card className="border-gray-300">
+          <Card className="border-gray-100">
             <CardHeader className="pb-3 border-b border-gray-300">
               <CardTitle className="text-sm flex items-center gap-3 text-gray-900 font-bold uppercase tracking-wider">
                 <div className="w-5 h-5 bg-blue-900 flex items-center justify-center">

@@ -178,7 +178,7 @@ export default function EnhancedPriceTrends({ location, propertyType, bedrooms }
   const formatVolume = (value: number) => value.toFixed(0);
 
   return (
-    <Card className="border-gray-300">
+    <Card className="border-gray-100">
       <CardHeader className="border-b border-gray-300">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-3 text-gray-900 font-bold uppercase tracking-wider">

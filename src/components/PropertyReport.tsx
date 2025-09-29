@@ -174,7 +174,7 @@ export default function PropertyReport({ property }: PropertyReportProps) {
 
   if (!reportGenerated) {
     return (
-      <Card className="border-gray-300">
+      <Card className="border-gray-100">
         <CardHeader className="border-b border-gray-300">
           <CardTitle className="flex items-center gap-3 text-gray-900 font-bold uppercase tracking-wider">
             <div className="w-6 h-6 bg-blue-900 flex items-center justify-center">
