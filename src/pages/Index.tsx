@@ -13,7 +13,7 @@ import {
   MapPin, Clock, Shield, Zap, Users, Star, CheckCircle,
   Target, Globe, Smartphone, Brain, PieChart, Activity,
   Crown, Sparkles, ChevronRight, Play, Award, Database,
-  Search, Bell, Calculator, Newspaper
+  Search, Bell, Calculator, Newspaper, Calendar, Download
 } from "lucide-react";
 
 // Import generated images
@@ -113,138 +113,164 @@ export default function Index() {
   const benefits = [
     {
       icon: Search,
-      title: "Quick Access to New Deals",
-      description: "Be the first to discover premium properties as they hit the market with our real-time notifications."
+      title: "Exclusive Market Access",
+      subtitle: "Off-Market Opportunities",
+      description: "Gain privileged access to pre-launch developments and off-market properties through our network of developer partnerships and broker relationships. Receive priority notifications 48-72 hours before public listing.",
+      keyPoints: [
+        "Pre-launch developer allocations",
+        "Exclusive broker network access",
+        "Private investor opportunities",
+        "Early-stage project investments"
+      ]
     },
     {
       icon: Calculator,
-      title: "Price Analysis Before Purchase", 
-      description: "Get instant property valuations and market comparisons to make informed buying decisions."
+      title: "Advanced Valuation Services", 
+      subtitle: "Professional Property Assessment",
+      description: "Our certified valuation experts provide comprehensive property assessments using multiple valuation methodologies including sales comparison, income capitalization, and cost approach analysis.",
+      keyPoints: [
+        "RICS-certified valuation reports",
+        "Multiple valuation methodologies",
+        "Market rental assessments",
+        "Investment grade documentation"
+      ]
     },
     {
       icon: MapPin,
-      title: "District Analysis",
-      description: "Comprehensive neighborhood insights including infrastructure, amenities, and growth potential."
+      title: "District Intelligence Platform",
+      subtitle: "Comprehensive Area Analysis",
+      description: "Access detailed neighborhood analytics including infrastructure development plans, demographic trends, rental yields, capital appreciation patterns, and future development pipeline.",
+      keyPoints: [
+        "Government master plan analysis",
+        "Infrastructure development tracking",
+        "Demographic and economic indicators",
+        "Transportation connectivity studies"
+      ]
     },
     {
       icon: Newspaper,
-      title: "Real Estate News Portal",
-      description: "Stay updated with the latest market news, regulations, and investment opportunities."
+      title: "Market Intelligence Service",
+      subtitle: "Professional Research & Analysis",
+      description: "Receive institutional-quality market research including quarterly reports, regulatory updates, policy analysis, and strategic investment recommendations from our research team.",
+      keyPoints: [
+        "Quarterly market research reports",
+        "Regulatory and policy analysis",
+        "Strategic investment recommendations",
+        "Economic trend forecasting"
+      ]
     }
   ];
 
   const stats = [
     { number: "3,000+", label: "Properties Added Monthly", icon: Building2 },
-    { number: "50+", label: "Data Sources", icon: Database },
-    { number: "95%", label: "Accuracy Rate", icon: Target },
+    { number: "50+", label: "Verified Data Sources", icon: Database },
+    { number: "95%", label: "Prediction Accuracy", icon: Target },
     { number: "24/7", label: "Market Monitoring", icon: Clock }
   ];
 
   const testimonials = [
     {
       name: "Ahmed Al-Mansouri",
-      role: "Real Estate Investor",
-      content: "This platform helped me identify undervalued properties in Business Bay. I've made 3 successful investments with 15%+ ROI.",
+      role: "Managing Director, Al-Mansouri Investment Group",
+      company: "AUM: $500M+",
+      content: "The institutional-grade analysis and exclusive deal flow have been instrumental in our Dubai portfolio expansion. Their AI-driven insights identified opportunities that generated 22% IRR across our last three acquisitions.",
       rating: 5
     },
     {
       name: "Sarah Thompson", 
-      role: "Property Developer",
-      content: "The AI analysis is incredibly accurate. It saved me from a bad investment and pointed me to a goldmine in JVC.",
+      role: "Head of Real Estate, Meridian Capital",
+      company: "International Investment Fund",
+      content: "Professional service that matches our institutional standards. The comprehensive due diligence reports and market intelligence have become essential tools for our MENA real estate investments.",
       rating: 5
     },
     {
       name: "Omar Hassan",
-      role: "Investment Advisor", 
-      content: "My clients love the detailed reports. It's become an essential tool for our real estate advisory services.",
+      role: "Senior Partner, Hassan Family Office", 
+      company: "Multi-Family Office",
+      content: "Exceptional market access and analytical capabilities. The team's expertise in UAE regulations and tax optimization strategies has added significant value to our real estate allocation strategy.",
       rating: 5
     }
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white">
       <Header />
       
-      {/* Hero Section - Reduced padding */}
+      {/* Hero Section - Strict Professional Style */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
           <img
             src={heroImage}
-            alt="Luxury Dubai Apartment"
+            alt="Dubai Real Estate Investment"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-black/50"></div>
+          <div className="absolute inset-0 bg-gray-900/70"></div>
         </div>
         
         <div className="relative z-10 container mx-auto px-4 text-center text-white">
-          <Badge className="mb-3 bg-white/15 text-white border-white/20 backdrop-blur-sm text-xs px-3 py-1">
-            <Crown className="w-3 h-3 mr-1.5" />
-            Premium Real Estate Intelligence
-          </Badge>
+          <div className="mb-4 inline-block bg-blue-900 px-4 py-2 text-xs font-semibold uppercase tracking-wide">
+            Institutional Real Estate Intelligence
+          </div>
           
-          <h1 className="text-3xl md:text-5xl font-display font-bold mb-3 leading-tight">
-            Discover Dubai's
-            <span className="block bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-              Hidden Gems
+          <h1 className="text-4xl md:text-6xl font-bold mb-4 leading-tight">
+            Professional Investment Solutions for
+            <span className="block text-blue-400 mt-2">
+              Dubai Real Estate
             </span>
           </h1>
           
-          <p className="text-base md:text-lg mb-4 max-w-2xl mx-auto leading-relaxed opacity-90">
-            AI-powered real estate analysis with 3,000+ properties added monthly. 
-            Make smarter investment decisions with professional-grade market intelligence.
+          <p className="text-lg md:text-xl mb-6 max-w-3xl mx-auto leading-relaxed opacity-90">
+            Institutional-grade market intelligence, exclusive deal access, and comprehensive 
+            investment analysis trusted by family offices and investment funds across the MENA region.
           </p>
           
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-4">
-            <div className="flex items-center bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/20">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
+            <div className="flex items-center bg-white/10 backdrop-blur-sm px-4 py-3 border border-white/20">
               <input
                 type="email"
-                placeholder="Enter your email"
+                placeholder="Professional Email Address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-transparent border-none outline-none text-white placeholder-white/60 text-sm w-56"
+                className="bg-transparent border-none outline-none text-white placeholder-white/60 text-sm w-64"
               />
             </div>
             <Button 
               onClick={handleRegister}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-5 py-2 text-sm font-medium"
+              className="bg-blue-900 hover:bg-blue-800 text-white px-6 py-3 text-sm font-semibold h-12 transition-colors"
             >
-              Register for Free
-              <ArrowRight className="w-4 h-4 ml-1.5" />
+              Request Institutional Access
+              <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
           
-          <div className="flex items-center justify-center gap-4 text-xs opacity-80">
-            <div className="flex items-center gap-1.5">
-              <CheckCircle className="w-3 h-3 text-green-400" />
-              <span>No Credit Card Required</span>
+          <div className="flex items-center justify-center gap-6 text-xs opacity-80">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-blue-400" />
+              <span>Institutional-Grade Analysis</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <CheckCircle className="w-3 h-3 text-green-400" />
-              <span>Instant Access</span>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-blue-400" />
+              <span>Exclusive Deal Access</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <CheckCircle className="w-3 h-3 text-green-400" />
-              <span>Free Forever Plan</span>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-blue-400" />
+              <span>Professional Support</span>
             </div>
           </div>
         </div>
-        
-        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 animate-bounce">
-          <ChevronRight className="w-5 h-5 text-white/60 rotate-90" />
-        </div>
       </section>
 
-      {/* Stats Section - Compact padding */}
-      <section className="py-6 bg-gradient-to-r from-blue-50 to-purple-50">
+      {/* Stats Section - Professional */}
+      <section className="py-8 bg-gray-100">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mb-2">
-                  <stat.icon className="w-5 h-5 text-white" />
+              <div key={index} className="text-center bg-white p-6 border border-gray-200">
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-900 mb-3">
+                  <stat.icon className="w-6 h-6 text-white" />
                 </div>
-                <div className="text-xl font-bold text-gray-900 mb-1">{stat.number}</div>
-                <div className="text-sm text-gray-600">{stat.label}</div>
+                <div className="text-2xl font-bold text-gray-900 mb-1">{stat.number}</div>
+                <div className="text-sm text-gray-600 font-medium">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -292,7 +318,7 @@ export default function Index() {
                     <ul className="space-y-2">
                       {feature.details.map((detail, idx) => (
                         <li key={idx} className="flex items-start gap-3">
-                          <div className="w-1.5 h-1.5 bg-blue-900 rounded-full mt-2 flex-shrink-0"></div>
+                          <div className="w-1.5 h-1.5 bg-blue-900 mt-2 flex-shrink-0"></div>
                           <span className="text-sm text-gray-700">{detail}</span>
                         </li>
                       ))}
@@ -312,7 +338,7 @@ export default function Index() {
                   <div className="pt-4">
                     <Button 
                       variant="outline" 
-                      className="border-blue-900 text-blue-900 hover:bg-blue-900 hover:text-white px-6 py-2 h-10 font-semibold"
+                      className="border-blue-900 text-blue-900 hover:bg-blue-900 hover:text-white px-6 py-2 h-10 font-semibold transition-colors"
                     >
                       Learn More About This Solution
                       <ArrowRight className="w-4 h-4 ml-2" />
@@ -373,29 +399,41 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Benefits Grid - Compact */}
-      <section className="py-6 bg-gradient-to-r from-gray-50 to-blue-50">
+      {/* Benefits Grid - Professional */}
+      <section className="py-12 bg-gray-100">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl md:text-3xl font-display font-bold mb-3">
-              Why Choose Our Platform?
+          <div className="text-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold mb-3 text-gray-900">
+              Comprehensive Investment Services
             </h2>
-            <p className="text-base text-muted-foreground max-w-2xl mx-auto">
-              Get the competitive edge with features designed for serious real estate professionals and investors.
+            <p className="text-base text-gray-700 max-w-3xl mx-auto">
+              Professional services designed for institutional investors, family offices, and high-net-worth individuals 
+              seeking sophisticated real estate investment solutions in the UAE market.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {benefits.map((benefit, index) => (
-              <Card key={index} className="p-4 hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-0 bg-white/80 backdrop-blur-sm">
-                <CardContent className="p-0">
-                  <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg mb-2">
-                    <benefit.icon className="w-4 h-4 text-white" />
+              <div key={index} className="bg-white p-6 border border-gray-200 hover:shadow-lg transition-shadow">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="flex-shrink-0 w-10 h-10 bg-blue-900 flex items-center justify-center">
+                    <benefit.icon className="w-5 h-5 text-white" />
                   </div>
-                  <h3 className="text-base font-semibold mb-1">{benefit.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{benefit.description}</p>
-                </CardContent>
-              </Card>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-1">{benefit.title}</h3>
+                    <p className="text-sm font-semibold text-blue-900 uppercase tracking-wide">{benefit.subtitle}</p>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-700 leading-relaxed mb-4">{benefit.description}</p>
+                <ul className="space-y-1">
+                  {benefit.keyPoints.map((point, idx) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <div className="w-1 h-1 bg-blue-900 mt-2 flex-shrink-0"></div>
+                      <span className="text-xs text-gray-600">{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ))}
           </div>
         </div>
@@ -404,111 +442,112 @@ export default function Index() {
       {/* Live Market Analytics Section */}
       <MarketAnalytics />
 
-      {/* Advanced Analytics Demo - Compact */}
-      <section className="py-6 bg-gradient-to-r from-gray-50 to-blue-50">
+      {/* Advanced Analytics Demo */}
+      <section className="py-12 bg-gray-100">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-4">
-            <h2 className="text-xl md:text-2xl font-display font-bold mb-2">
-              Real-Time Market Intelligence
+          <div className="text-center mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold mb-3 text-gray-900">
+              Real-Time Market Intelligence Platform
             </h2>
-            <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
-              Comprehensive analytics dashboard with detailed market insights and forecasting.
+            <p className="text-base text-gray-700 max-w-3xl mx-auto">
+              Access institutional-grade analytics and comprehensive market intelligence through our 
+              professional dashboard designed for serious real estate investors.
             </p>
           </div>
           <CompactAnalytics />
         </div>
       </section>
 
-      {/* Real-time Indicators - Compact */}
-      <section className="py-6">
+      {/* Real-time Indicators */}
+      <section className="py-12 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-4">
-            <h2 className="text-xl md:text-2xl font-display font-bold mb-2">
-              Live Market Indicators
+          <div className="text-center mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold mb-3 text-gray-900">
+              Live Market Performance Indicators
             </h2>
-            <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
-              Real-time tracking of key market metrics and performance indicators.
+            <p className="text-base text-gray-700 max-w-3xl mx-auto">
+              Monitor real-time market metrics and performance indicators with our professional-grade 
+              tracking system updated every 15 minutes during market hours.
             </p>
           </div>
           <RealtimeMarketIndicators />
         </div>
       </section>
 
-      {/* Testimonials - Compact */}
-      <section className="py-6 bg-gradient-to-r from-gray-50 to-blue-50">
+      {/* Testimonials - Professional */}
+      <section className="py-12 bg-gray-100">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl md:text-3xl font-display font-bold mb-3">
-              Trusted by Real Estate Professionals
+          <div className="text-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold mb-3 text-gray-900">
+              Trusted by Leading Investment Professionals
             </h2>
-            <p className="text-base text-muted-foreground max-w-2xl mx-auto">
-              Join thousands of investors who are making smarter decisions with our platform.
+            <p className="text-base text-gray-700 max-w-3xl mx-auto">
+              Read testimonials from institutional clients who rely on our professional services 
+              for their Middle East real estate investment strategies.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {testimonials.map((testimonial, index) => (
-              <Card key={index} className="p-4 hover:shadow-md transition-all duration-300">
-                <CardContent className="p-0">
-                  <div className="flex items-center mb-2">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
-                    ))}
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-2 italic">"{testimonial.content}"</p>
-                  <div>
-                    <div className="font-semibold text-sm">{testimonial.name}</div>
-                    <div className="text-xs text-muted-foreground">{testimonial.role}</div>
-                  </div>
-                </CardContent>
-              </Card>
+              <div key={index} className="bg-white p-6 border border-gray-200">
+                <div className="flex items-center mb-3">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <Star key={i} className="w-4 h-4 text-yellow-500 fill-current" />
+                  ))}
+                </div>
+                <p className="text-sm text-gray-700 mb-4 italic leading-relaxed">"{testimonial.content}"</p>
+                <div className="border-t border-gray-200 pt-4">
+                  <div className="font-semibold text-gray-900 text-sm">{testimonial.name}</div>
+                  <div className="text-xs text-gray-600">{testimonial.role}</div>
+                  <div className="text-xs text-blue-900 font-medium">{testimonial.company}</div>
+                </div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section - Compact */}
-      <section className="py-8 bg-gradient-to-r from-blue-600 to-purple-600 text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="container mx-auto px-4 relative z-10">
+      {/* CTA Section - Professional */}
+      <section className="py-12 bg-gray-900 text-white">
+        <div className="container mx-auto px-4">
           <div className="text-center">
-            <h2 className="text-2xl md:text-3xl font-display font-bold mb-3">
-              Ready to Start Investing Smarter?
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Schedule Your Institutional Consultation
             </h2>
-            <p className="text-base mb-4 max-w-2xl mx-auto opacity-90">
-              Join thousands of successful investors who trust our AI-powered platform 
-              to find the best real estate opportunities in Dubai.
+            <p className="text-lg mb-6 max-w-3xl mx-auto text-gray-300">
+              Connect with our institutional team to discuss your real estate investment requirements 
+              and access our exclusive deal pipeline reserved for qualified institutional investors.
             </p>
             
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-4">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
               <Button 
                 onClick={handleRegister}
-                className="bg-white text-blue-600 hover:bg-gray-100 px-5 py-2 text-sm font-medium h-10"
+                className="bg-blue-900 hover:bg-blue-800 text-white px-8 py-3 text-sm font-semibold h-12 transition-colors"
               >
-                <Crown className="w-4 h-4 mr-1.5" />
-                Register for Free
+                Schedule Consultation
+                <Calendar className="w-4 h-4 ml-2" />
               </Button>
               <Button 
                 variant="outline" 
-                className="border-white text-white hover:bg-white hover:text-blue-600 px-5 py-2 text-sm h-10"
+                className="border-white text-white hover:bg-white hover:text-gray-900 px-8 py-3 text-sm h-12 transition-colors"
               >
-                <Play className="w-4 h-4 mr-1.5" />
-                Watch Demo
+                Download Investment Guide
+                <Download className="w-4 h-4 ml-2" />
               </Button>
             </div>
             
-            <div className="flex items-center justify-center gap-6 text-xs opacity-80">
-              <div className="flex items-center gap-1.5">
-                <Award className="w-3 h-3" />
-                <span>No Setup Fees</span>
+            <div className="flex items-center justify-center gap-8 text-sm text-gray-300">
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4" />
+                <span>Confidential Service</span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <Shield className="w-3 h-3" />
-                <span>Bank-Level Security</span>
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                <span>Dedicated Support Team</span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <Users className="w-3 h-3" />
-                <span>24/7 Support</span>
+              <div className="flex items-center gap-2">
+                <Award className="w-4 h-4" />
+                <span>Institutional Standards</span>
               </div>
             </div>
           </div>
