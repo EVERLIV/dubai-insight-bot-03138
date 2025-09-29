@@ -11,6 +11,9 @@ import {
   TrendingUp, Calendar
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
+import PremiumSidebar from '@/components/PremiumSidebar';
+import EnhancedPriceTrends from '@/components/EnhancedPriceTrends';
+import PropertyReport from '@/components/PropertyReport';
 
 // Mock price data for charts
 const priceData = [
@@ -274,51 +277,21 @@ export default function PropertyDetails() {
                 </CardContent>
               </Card>
 
-              {/* Price Trends */}
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold">Price Trends - {property.location_area}</h3>
-                    <div className="text-sm text-green-600 font-medium">
-                      <TrendingUp className="w-4 h-4 inline mr-1" />
-                      {district.priceGrowth} YoY
-                    </div>
-                  </div>
-                  <div className="h-32">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={priceData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                        <XAxis 
-                          dataKey="month" 
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fontSize: 10 }}
-                        />
-                        <YAxis 
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fontSize: 10 }}
-                          tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
-                        />
-                        <Line 
-                          type="monotone" 
-                          dataKey="price" 
-                          stroke="#3b82f6" 
-                          strokeWidth={2}
-                          dot={{ fill: '#3b82f6', strokeWidth: 2, r: 3 }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-2">
-                    Average area price: {district.avgPrice}
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Enhanced Price Trends */}
+              <EnhancedPriceTrends 
+                location={property.location_area || 'Dubai Marina'}
+                propertyType={property.property_type}
+                bedrooms={property.bedrooms}
+              />
+
+              {/* Property Report */}
+              <PropertyReport property={property} />
             </div>
 
-            {/* Sidebar */}
+            {/* Premium Sidebar */}
             <div className="space-y-4">
+              <PremiumSidebar property={property} />
+              
               {/* Agent Info */}
               {property.agent_name && (
                 <Card>
@@ -347,27 +320,6 @@ export default function PropertyDetails() {
                   </CardContent>
                 </Card>
               )}
-
-              {/* Market Stats */}
-              <Card>
-                <CardContent className="p-4">
-                  <h3 className="text-sm font-semibold mb-3">Market Overview</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">Avg. Price/sq.ft</span>
-                      <span className="font-medium">1,780 AED</span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">Price Growth</span>
-                      <span className="font-medium text-green-600">{district.priceGrowth}</span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">Market Activity</span>
-                      <span className="font-medium">High</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           </div>
         </div>
