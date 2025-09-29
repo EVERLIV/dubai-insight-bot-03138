@@ -1556,6 +1556,7 @@ async function handleCallbackQuery(callbackQuery: any) {
       await handleUniversalSearch(chatId, messageId, userId, {
         purpose: 'for-rent',
         property_type: propertyType === 'any' ? null : propertyType,
+        housing_status: 'secondary', // Для аренды используем secondary (готовая недвижимость)
         title: `Аренда ${getPropertyTypeTitle(propertyType)}`
       });
     }
