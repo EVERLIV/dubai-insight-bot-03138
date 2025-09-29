@@ -162,9 +162,9 @@ export default function EnhancedPriceTrends({ location, propertyType, bedrooms }
 
   const getMomentumColor = (momentum: string) => {
     switch (momentum) {
-      case 'bullish': return 'text-green-600 bg-green-100';
-      case 'bearish': return 'text-red-600 bg-red-100';
-      default: return 'text-yellow-600 bg-yellow-100';
+      case 'bullish': return 'bg-green-600 text-white';
+      case 'bearish': return 'bg-red-600 text-white';
+      default: return 'bg-yellow-600 text-white';
     }
   };
 

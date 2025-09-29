@@ -47,9 +47,9 @@ export default function PropertyCard({ property, onViewDetails }: PropertyCardPr
   };
 
   const getPurposeColor = () => {
-    if (property.purpose === 'for-sale') return 'bg-green-100 text-green-800 border-green-200';
-    if (property.purpose === 'for-rent') return 'bg-blue-100 text-blue-800 border-blue-200';
-    return 'bg-gray-100 text-gray-800 border-gray-200';
+    if (property.purpose === 'for-sale') return 'bg-green-600 text-white border-green-600';
+    if (property.purpose === 'for-rent') return 'bg-blue-600 text-white border-blue-600';
+    return 'bg-gray-600 text-white border-gray-600';
   };
 
   return (

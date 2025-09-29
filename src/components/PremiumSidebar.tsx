@@ -91,9 +91,9 @@ export default function PremiumSidebar({ property }: PremiumSidebarProps) {
   };
 
   const getRiskColor = (score: number) => {
-    if (score <= 2) return 'text-green-600';
-    if (score <= 3.5) return 'text-yellow-600';
-    return 'text-red-600';
+    if (score <= 2) return 'bg-green-600 text-white';
+    if (score <= 3.5) return 'bg-yellow-600 text-white';
+    return 'bg-red-600 text-white';
   };
 
   const getRiskLabel = (score: number) => {

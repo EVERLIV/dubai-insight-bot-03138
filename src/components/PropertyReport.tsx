@@ -140,35 +140,35 @@ export default function PropertyReport({ property }: PropertyReportProps) {
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600 bg-green-100';
-    if (score >= 60) return 'text-yellow-600 bg-yellow-100';
-    return 'text-red-600 bg-red-100';
+    if (score >= 80) return 'bg-green-600 text-white';
+    if (score >= 60) return 'bg-yellow-600 text-white';
+    return 'bg-red-600 text-white';
   };
 
   const getRecommendationColor = (rec: string) => {
     switch (rec) {
-      case 'buy': return 'text-green-600 bg-green-100';
-      case 'hold': return 'text-yellow-600 bg-yellow-100';
-      case 'sell': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
+      case 'buy': return 'bg-green-600 text-white';
+      case 'hold': return 'bg-yellow-600 text-white';
+      case 'sell': return 'bg-red-600 text-white';
+      default: return 'bg-gray-600 text-white';
     }
   };
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'low': return 'text-green-600';
-      case 'medium': return 'text-yellow-600';
-      case 'high': return 'text-red-600';
-      default: return 'text-gray-600';
+      case 'low': return 'bg-green-600 text-white';
+      case 'medium': return 'bg-yellow-600 text-white';
+      case 'high': return 'bg-red-600 text-white';
+      default: return 'bg-gray-600 text-white';
     }
   };
 
   const getPotentialColor = (potential: string) => {
     switch (potential) {
-      case 'high': return 'text-green-600';
-      case 'medium': return 'text-yellow-600';
-      case 'low': return 'text-orange-600';
-      default: return 'text-gray-600';
+      case 'high': return 'bg-green-600 text-white';
+      case 'medium': return 'bg-yellow-600 text-white';
+      case 'low': return 'bg-orange-600 text-white';
+      default: return 'bg-gray-600 text-white';
     }
   };
 
