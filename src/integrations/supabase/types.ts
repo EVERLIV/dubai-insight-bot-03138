@@ -499,29 +499,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      search_properties: {
-        Args:
-          | {
-              housing_status_param?: string
-              limit_param?: number
-              location_param?: string
-              max_bedrooms_param?: number
-              max_price_param?: number
-              min_bedrooms_param?: number
-              min_price_param?: number
-              property_type_param?: string
-              search_purpose?: string
-            }
-          | {
-              limit_param?: number
-              location_param?: string
-              max_bedrooms_param?: number
-              max_price_param?: number
-              min_bedrooms_param?: number
-              min_price_param?: number
-              property_type_param?: string
-              search_purpose?: string
-            }
+      search_properties_unified: {
+        Args: {
+          housing_status_param?: string
+          limit_param?: number
+          location_param?: string
+          max_bedrooms_param?: number
+          max_price_param?: number
+          min_bedrooms_param?: number
+          min_price_param?: number
+          property_type_param?: string
+          search_purpose?: string
+        }
         Returns: {
           agent_name: string
           agent_phone: string
@@ -536,6 +525,8 @@ export type Database = {
           price: number
           property_type: string
           purpose: string
+          source_category: string
+          source_name: string
           title: string
         }[]
       }
