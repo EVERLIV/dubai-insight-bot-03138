@@ -7,61 +7,61 @@
 
 @layer base {
   :root {
-    /* Dubai-inspired color palette */
-    --background: 215 30% 5%;
-    --foreground: 45 100% 96%;
+    /* Modern E-commerce Light Theme */
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
 
-    --card: 220 20% 8%;
-    --card-foreground: 45 100% 96%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
 
-    --popover: 220 20% 8%;
-    --popover-foreground: 45 100% 96%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
 
-    /* Gold primary - Dubai luxury */
-    --primary: 45 100% 65%;
-    --primary-foreground: 220 20% 8%;
+    /* Blue primary - Modern & Professional */
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
 
-    /* Deep blue secondary - Dubai sky */
-    --secondary: 215 30% 12%;
-    --secondary-foreground: 45 100% 96%;
+    /* Light gray secondary */
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
 
-    --muted: 215 25% 15%;
-    --muted-foreground: 210 15% 65%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 45 80% 50%;
-    --accent-foreground: 220 20% 8%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 45 100% 96%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 215 25% 20%;
-    --input: 215 25% 15%;
-    --ring: 45 100% 65%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
 
     --radius: 12px;
 
-    /* Dubai Invest custom tokens */
-    --dubai-gold: 45 100% 65%;
-    --dubai-gold-light: 45 100% 75%;
-    --dubai-gold-dark: 45 100% 55%;
+    /* Modern E-commerce custom tokens */
+    --accent-blue: 221.2 83.2% 53.3%;
+    --accent-blue-light: 221.2 83.2% 63.3%;
+    --accent-blue-dark: 221.2 83.2% 43.3%;
     
-    --dubai-blue: 215 30% 5%;
-    --dubai-blue-light: 215 30% 12%;
-    --dubai-blue-lighter: 215 25% 20%;
+    --surface: 0 0% 98%;
+    --surface-hover: 210 40% 96%;
+    --surface-border: 214.3 31.8% 91.4%;
     
-    --dubai-glass: 45 20% 95%;
-    --dubai-glass-dark: 220 20% 8%;
+    --success: 142.1 76.2% 36.3%;
+    --warning: 38.4 92.1% 50.2%;
+    --info: 199.8 89.1% 48.0%;
 
     /* Gradients */
-    --gradient-gold: linear-gradient(135deg, hsl(var(--dubai-gold)), hsl(var(--dubai-gold-light)));
-    --gradient-blue: linear-gradient(135deg, hsl(var(--dubai-blue)), hsl(var(--dubai-blue-light)));
-    --gradient-hero: linear-gradient(135deg, hsl(var(--dubai-blue)) 0%, hsl(var(--dubai-blue-light)) 50%, hsl(var(--dubai-gold) / 0.1) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(var(--dubai-blue-light)), hsl(var(--dubai-blue-lighter)));
+    --gradient-primary: linear-gradient(135deg, hsl(var(--accent-blue)), hsl(var(--accent-blue-light)));
+    --gradient-surface: linear-gradient(145deg, hsl(var(--surface)), hsl(var(--background)));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--surface)) 0%, hsl(var(--accent-blue-light) / 0.1) 100%);
 
     /* Shadows */
-    --shadow-gold: 0 10px 40px hsl(var(--dubai-gold) / 0.3);
-    --shadow-elegant: 0 20px 60px hsl(var(--dubai-blue) / 0.5);
-    --shadow-card: 0 8px 32px hsl(var(--dubai-blue) / 0.4);
+    --shadow-soft: 0 2px 8px hsl(221.2 83.2% 53.3% / 0.08);
+    --shadow-medium: 0 4px 16px hsl(221.2 83.2% 53.3% / 0.12);
+    --shadow-large: 0 8px 32px hsl(221.2 83.2% 53.3% / 0.16);
 
     /* Animations */
     --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -130,13 +130,13 @@
 
   body {
     @apply bg-background text-foreground font-sans;
-    background: var(--gradient-hero);
+    background: hsl(var(--surface));
     min-height: 100vh;
   }
 }
 
 @layer components {
-  /* Dubai Invest utility classes */
+  /* Modern E-commerce utility classes */
   .font-display {
     font-family: 'Playfair Display', serif;
   }
@@ -145,28 +145,32 @@
     font-family: 'Inter', sans-serif;
   }
 
-  .gradient-gold {
-    background: var(--gradient-gold);
+  .gradient-primary {
+    background: var(--gradient-primary);
   }
 
-  .gradient-blue {
-    background: var(--gradient-blue);
+  .gradient-surface {
+    background: var(--gradient-surface);
   }
 
-  .gradient-card {
-    background: var(--gradient-card);
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
   }
 
-  .shadow-gold {
-    box-shadow: var(--shadow-gold);
+  .shadow-medium {
+    box-shadow: var(--shadow-medium);
   }
 
-  .shadow-elegant {
-    box-shadow: var(--shadow-elegant);
+  .shadow-large {
+    box-shadow: var(--shadow-large);
   }
 
-  .shadow-card {
-    box-shadow: var(--shadow-card);
+  .property-card {
+    @apply bg-card rounded-xl border border-border shadow-soft hover:shadow-medium transition-all duration-300 hover:-translate-y-1;
+  }
+
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-200;
   }
 
   .transition-smooth {
