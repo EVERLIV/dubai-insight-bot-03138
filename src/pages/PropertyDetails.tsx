@@ -142,6 +142,25 @@ export default function PropertyDetails() {
         </div>
 
         <div className="container mx-auto px-4 py-6">
+          {/* Property Title & Price - Moved to top */}
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold mb-2">{property.title}</h1>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center text-muted-foreground">
+                <MapPin className="w-4 h-4 mr-1" />
+                {property.location_area}, Dubai
+              </div>
+              <div className="text-right">
+                <div className="text-3xl font-bold text-primary">
+                  {property.price?.toLocaleString()} AED
+                </div>
+                {property.purpose === 'for-rent' && (
+                  <div className="text-sm text-muted-foreground">/year</div>
+                )}
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-4">
@@ -176,28 +195,10 @@ export default function PropertyDetails() {
                 </div>
               </div>
 
-              {/* Property Info - Fixed Layout */}
+              {/* Property Info - Updated without title */}
               <Card>
                 <CardContent className="p-4">
                   <div className="space-y-3">
-                    <div className="flex flex-col space-y-2">
-                      <h1 className="text-xl font-bold">{property.title}</h1>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center text-muted-foreground text-sm">
-                          <MapPin className="w-4 h-4 mr-1" />
-                          {property.location_area}, Dubai
-                        </div>
-                        <div className="text-right">
-                          <div className="text-2xl font-bold text-primary">
-                            {property.price?.toLocaleString()} AED
-                          </div>
-                          {property.purpose === 'for-rent' && (
-                            <div className="text-sm text-muted-foreground">/year</div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
                     {/* Features - Compact Grid */}
                     <div className="grid grid-cols-6 gap-2">
                       {features.map((feature, index) => (
