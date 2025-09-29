@@ -47,6 +47,33 @@ export type Database = {
         }
         Relationships: []
       }
+      cron_job_logs: {
+        Row: {
+          error_message: string | null
+          executed_at: string
+          id: string
+          job_name: string
+          response_data: Json | null
+          status: string
+        }
+        Insert: {
+          error_message?: string | null
+          executed_at?: string
+          id?: string
+          job_name: string
+          response_data?: Json | null
+          status: string
+        }
+        Update: {
+          error_message?: string | null
+          executed_at?: string
+          id?: string
+          job_name?: string
+          response_data?: Json | null
+          status?: string
+        }
+        Relationships: []
+      }
       data_sources: {
         Row: {
           created_at: string

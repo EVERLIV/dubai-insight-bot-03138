@@ -26,6 +26,15 @@ verify_jwt = false
 [functions.dubai-bot]
 verify_jwt = false
 
+[functions.market-data-analytics]
+verify_jwt = false
+
+[functions.news-analytics]
+verify_jwt = false
+
+[functions.property-scraper]
+verify_jwt = false
+
 [functions.property-search]
 verify_jwt = false
 
@@ -36,7 +45,4 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.web-scraper]
-verify_jwt = false
-
-[functions.news-analytics]
 verify_jwt = false
