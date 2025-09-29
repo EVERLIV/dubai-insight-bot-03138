@@ -168,34 +168,36 @@ export default function PropertyDetails() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 {/* Photo Gallery - Takes 2 columns */}
                 <div className="lg:col-span-2">
-                  <div className="grid grid-cols-2 gap-2 h-80">
-                    <div className="relative">
-                      <img
-                        src={property.images?.[0] || "/placeholder.svg"}
-                        alt={property.title}
-                        className="w-full h-full object-cover rounded-lg"
-                      />
-                      <div className="absolute top-3 left-3 flex gap-2">
-                        <Badge className="bg-green-100 text-green-800 text-xs">
-                          {property.purpose === 'for-sale' ? 'For Sale' : 'For Rent'}
+                  {/* Main Photo */}
+                  <div className="relative h-80 mb-3">
+                    <img
+                      src={property.images?.[0] || "/placeholder.svg"}
+                      alt={property.title}
+                      className="w-full h-full object-cover rounded-lg"
+                    />
+                    <div className="absolute top-3 left-3 flex gap-2">
+                      <Badge className="bg-green-100 text-green-800 text-xs">
+                        {property.purpose === 'for-sale' ? 'For Sale' : 'For Rent'}
+                      </Badge>
+                      {property.housing_status && (
+                        <Badge variant="secondary" className="text-xs">
+                          {property.housing_status === 'primary' ? 'Off-plan' : 'Ready'}
                         </Badge>
-                        {property.housing_status && (
-                          <Badge variant="secondary" className="text-xs">
-                            {property.housing_status === 'primary' ? 'Off-plan' : 'Ready'}
-                          </Badge>
-                        )}
-                      </div>
+                      )}
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      {[1,2,3,4].map((i) => (
+                  </div>
+                  
+                  {/* Photo Thumbnails Slider */}
+                  <div className="flex gap-2 overflow-x-auto pb-2">
+                    {[0,1,2,3,4,5].map((i) => (
+                      <div key={i} className="flex-shrink-0">
                         <img
-                          key={i}
                           src="/placeholder.svg"
-                          alt={`Property ${i}`}
-                          className="w-full h-full object-cover rounded-lg"
+                          alt={`Property ${i + 1}`}
+                          className="w-20 h-16 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                         />
-                      ))}
-                    </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
