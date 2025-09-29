@@ -50,8 +50,8 @@ async function searchProperties(params: SearchParams): Promise<{
   try {
     console.log('Searching properties with params:', params);
 
-    // Use the database function for optimized search
-    const { data, error } = await supabase.rpc('search_properties', {
+    // Use the new unified database function 
+    const { data, error } = await supabase.rpc('search_properties_unified', {
       search_purpose: params.purpose || null,
       min_price_param: params.min_price || null,
       max_price_param: params.max_price || null,
@@ -59,6 +59,7 @@ async function searchProperties(params: SearchParams): Promise<{
       location_param: params.location || null,
       min_bedrooms_param: params.min_bedrooms || null,
       max_bedrooms_param: params.max_bedrooms || null,
+      housing_status_param: null,
       limit_param: params.limit || 50
     });
 

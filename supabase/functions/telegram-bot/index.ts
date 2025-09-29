@@ -90,11 +90,14 @@ async function sendTelegramMessage(chatId: number, text: string, replyMarkup?: a
 // Search properties in database
 async function searchProperties(query: string): Promise<Property[]> {
   try {
+    console.log('Searching properties with query:', query);
+    
     // Parse search query for parameters
     const searchParams = parseSearchQuery(query);
+    console.log('Parsed search params:', searchParams);
     
-    // Search in both API and scraped properties
-    const { data: apiData, error: apiError } = await supabase.rpc('search_properties', {
+    // Use the new unified search function that combines API and scraped data
+    const { data, error } = await supabase.rpc('search_properties_unified', {
       search_purpose: searchParams.purpose,
       min_price_param: searchParams.minPrice,
       max_price_param: searchParams.maxPrice,
@@ -103,48 +106,28 @@ async function searchProperties(query: string): Promise<Property[]> {
       min_bedrooms_param: searchParams.bedrooms,
       max_bedrooms_param: null,
       housing_status_param: null,
-      limit_param: 5
+      limit_param: 10
     });
 
-    const { data: scrapedData, error: scrapedError } = await supabase.rpc('search_scraped_properties', {
-      search_purpose: searchParams.purpose,
-      min_price_param: searchParams.minPrice,
-      max_price_param: searchParams.maxPrice,
-      property_type_param: searchParams.propertyType,
-      location_param: searchParams.location,
-      min_bedrooms_param: searchParams.bedrooms,
-      max_bedrooms_param: null,
-      source_type_param: null,
-      housing_status_param: null,
-      limit_param: 8
-    });
+    if (error) {
+      console.error('Database search error:', error);
+      return [];
+    }
 
-    if (apiError) console.error('API search error:', apiError);
-    if (scrapedError) console.error('Scraped search error:', scrapedError);
-
-    // Combine results with preference for API data
-    const apiResults = (apiData || []).map((item: any) => ({
-      ...item,
-      source_category: 'api'
-    }));
-
-    const scrapedResults = (scrapedData || []).map((item: any) => ({
-      ...item,
-      source_category: 'scraped'
-    }));
-
-    const allResults = [...apiResults, ...scrapedResults];
+    console.log(`Found ${data?.length || 0} properties`);
 
     // Generate unique IDs and store mapping
-    allResults.forEach(property => {
-      if (!property.unique_id) {
-        const uniqueId = generatePropertyID();
-        property.unique_id = uniqueId;
-        propertyIdMapping.set(uniqueId, property);
-      }
+    const results = (data || []).map((property: any) => {
+      const uniqueId = generatePropertyID();
+      const propertyWithId = {
+        ...property,
+        unique_id: uniqueId
+      };
+      propertyIdMapping.set(uniqueId, propertyWithId);
+      return propertyWithId;
     });
 
-    return allResults.slice(0, 10); // Limit to 10 results
+    return results;
   } catch (error) {
     console.error('Error searching properties:', error);
     return [];
@@ -494,357 +477,378 @@ async function setupBotCommands() {
         commands: commands
       }),
     });
-    
+
     const result = await response.json();
-    console.log('Bot commands setup:', result);
+    console.log('Bot commands setup result:', result);
   } catch (error) {
     console.error('Error setting up bot commands:', error);
   }
 }
 
-async function generateAIResponse(userQuery: string): Promise<string> {
-  try {
-    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          {
-            role: 'system',
-            content: `Ты эксперт по недвижимости в Дубае. Отвечай на русском языке. 
-            Помогай пользователям с:
-            - Поиском недвижимости для покупки и аренды
-            - Анализом рынка недвижимости
-            - Советами по инвестициям
-            - Информацией о районах Дубая
-            - Ценовыми трендами
-            
-            Давай конкретные, полезные советы. Будь дружелюбным и профессиональным.`
-          },
-          {
-            role: 'user',
-            content: userQuery
-          }
-        ],
-        max_tokens: 1000,
-        temperature: 0.7,
-      }),
-    });
+async function handleCallbackQuery(update: TelegramUpdate) {
+  if (!update.callback_query) return;
 
-    const data = await response.json();
-    return data.choices?.[0]?.message?.content || 'Извините, не смог обработать ваш запрос.';
-  } catch (error) {
-    console.error('Error calling DeepSeek API:', error);
-    return 'Произошла ошибка при обработке запроса. Попробуйте позже.';
+  const chatId = update.callback_query.message.chat.id;
+  const data = update.callback_query.data;
+
+  console.log(`Handling callback query: ${data}`);
+
+  if (data === 'main_menu') {
+    await sendTelegramMessage(chatId, 
+      '🏗️ <b>Dubai Invest Bot - Главное меню</b>\n\nВыберите действие:',
+      {
+        inline_keyboard: [
+          [
+            { text: '🔍 Поиск недвижимости', callback_data: 'search_menu' },
+            { text: '💰 Оценка стоимости', callback_data: 'valuation_menu' }
+          ],
+          [
+            { text: '📊 Рыночная аналитика', callback_data: 'analytics_menu' },
+            { text: '🏗️ Застройщики', callback_data: 'developers_menu' }
+          ],
+          [
+            { text: '⚙️ Настройки', callback_data: 'settings_menu' },
+            { text: '📞 Контакты', callback_data: 'contacts' }
+          ],
+          [
+            { text: '❓ Помощь', callback_data: 'help' }
+          ]
+        ]
+      }
+    );
+  } else if (data === 'search_menu') {
+    await sendTelegramMessage(chatId, 
+      '🔍 <b>Поиск недвижимости</b>\n\n' +
+      '💬 <b>Просто напишите что ищете!</b>\n\n' +
+      '📝 Примеры запросов:\n' +
+      '• "2 комнаты в Marina для аренды"\n' +
+      '• "квартира в Downtown до 2 млн AED"\n' +
+      '• "студия в JBR для покупки"\n' +
+      '• "вилла в Palm Jumeirah"\n' +
+      '• "пентхаус в Business Bay"\n\n' +
+      '🔍 Или выберите готовый фильтр:',
+      {
+        inline_keyboard: [
+          [
+            { text: '🏠 Квартиры для аренды', callback_data: 'quick_search_rent_apt' },
+            { text: '🏢 Квартиры для покупки', callback_data: 'quick_search_buy_apt' }
+          ],
+          [
+            { text: '🏖️ Недвижимость у моря', callback_data: 'quick_search_waterfront' },
+            { text: '🏙️ В центре города', callback_data: 'quick_search_downtown' }
+          ],
+          [
+            { text: '💬 Включить чат поиск', callback_data: 'enable_search_chat' }
+          ],
+          [
+            { text: '🔙 Назад', callback_data: 'main_menu' }
+          ]
+        ]
+      }
+    );
+  } else if (data === 'enable_search_chat') {
+    await sendTelegramMessage(chatId,
+      '💬 <b>Чат поиск включен!</b>\n\n' +
+      '🔍 Теперь просто напишите что ищете и я найду подходящие варианты.\n\n' +
+      '📝 <b>Примеры запросов:</b>\n' +
+      '• "2 комнаты в Marina для аренды"\n' +
+      '• "квартира в Downtown до 2 млн AED"\n' +
+      '• "студия в JBR"\n' +
+      '• "вилла в Emirates Hills"\n' +
+      '• "пентхаус с видом на море"\n\n' +
+      '🆔 <b>Детальная информация:</b>\n' +
+      'Введите 5-значный ID объекта для получения полного анализа\n\n' +
+      '✨ <b>Начните писать ваш запрос прямо сейчас!</b>',
+      {
+        inline_keyboard: [
+          [
+            { text: '🏠 Главное меню', callback_data: 'main_menu' }
+          ]
+        ]
+      }
+    );
+  } else if (data === 'quick_search_rent_apt') {
+    const properties = await searchProperties('квартира для аренды');
+    if (properties.length > 0) {
+      let responseText = `🏠 <b>Квартиры для аренды</b>\n\n📋 Найдено ${properties.length} объектов:\n\n`;
+      properties.slice(0, 5).forEach((property, index) => {
+        responseText += `${index + 1}. ${formatPropertyDisplay(property)}\n\n`;
+      });
+      await sendTelegramMessage(chatId, responseText, {
+        inline_keyboard: [
+          [{ text: '🔍 Искать еще', callback_data: 'search_menu' }],
+          [{ text: '🏠 Главное меню', callback_data: 'main_menu' }]
+        ]
+      });
+    }
+  } else if (data === 'quick_search_buy_apt') {
+    const properties = await searchProperties('квартира для покупки');
+    if (properties.length > 0) {
+      let responseText = `🏢 <b>Квартиры для покупки</b>\n\n📋 Найдено ${properties.length} объектов:\n\n`;
+      properties.slice(0, 5).forEach((property, index) => {
+        responseText += `${index + 1}. ${formatPropertyDisplay(property)}\n\n`;
+      });
+      await sendTelegramMessage(chatId, responseText, {
+        inline_keyboard: [
+          [{ text: '🔍 Искать еще', callback_data: 'search_menu' }],
+          [{ text: '🏠 Главное меню', callback_data: 'main_menu' }]
+        ]
+      });
+    }
+  } else if (data === 'quick_search_waterfront') {
+    const properties = await searchProperties('недвижимость Marina JBR у моря');
+    if (properties.length > 0) {
+      let responseText = `🏖️ <b>Недвижимость у моря</b>\n\n📋 Найдено ${properties.length} объектов:\n\n`;
+      properties.slice(0, 5).forEach((property, index) => {
+        responseText += `${index + 1}. ${formatPropertyDisplay(property)}\n\n`;
+      });
+      await sendTelegramMessage(chatId, responseText, {
+        inline_keyboard: [
+          [{ text: '🔍 Искать еще', callback_data: 'search_menu' }],
+          [{ text: '🏠 Главное меню', callback_data: 'main_menu' }]
+        ]
+      });
+    }
+  } else if (data === 'quick_search_downtown') {
+    const properties = await searchProperties('недвижимость Downtown центр города');
+    if (properties.length > 0) {
+      let responseText = `🏙️ <b>Недвижимость в центре</b>\n\n📋 Найдено ${properties.length} объектов:\n\n`;
+      properties.slice(0, 5).forEach((property, index) => {
+        responseText += `${index + 1}. ${formatPropertyDisplay(property)}\n\n`;
+      });
+      await sendTelegramMessage(chatId, responseText, {
+        inline_keyboard: [
+          [{ text: '🔍 Искать еще', callback_data: 'search_menu' }],
+          [{ text: '🏠 Главное меню', callback_data: 'main_menu' }]
+        ]
+      });
+    }
+  } else if (data === 'help') {
+    await sendTelegramMessage(chatId,
+      '❓ <b>Помощь - Dubai Invest Bot</b>\n\n' +
+      
+      '🔍 <b>Поиск недвижимости:</b>\n' +
+      '• Просто напишите что ищете текстом\n' +
+      '• Используйте готовые фильтры в меню\n' +
+      '• Примеры: "2BR Marina rent", "villa Downtown"\n\n' +
+      
+      '🆔 <b>Детальная информация:</b>\n' +
+      '• Введите 5-значный ID объекта\n' +
+      '• Получите полный анализ и прогноз\n\n' +
+      
+      '💰 <b>Оценка стоимости:</b>\n' +
+      '• AVM система автоматической оценки\n' +
+      '• Анализ рыночных трендов\n\n' +
+      
+      '📊 <b>Аналитика:</b>\n' +
+      '• Рыночные тренды в реальном времени\n' +
+      '• Прогнозы цен по районам\n\n' +
+      
+      '🏗️ <b>Застройщики:</b>\n' +
+      '• Информация о топ девелоперах\n' +
+      '• Новые проекты и акции\n\n' +
+      
+      '📞 <b>Поддержка:</b>\n' +
+      'Если возникли вопросы - напишите @DubaiPropertySupport',
+      {
+        inline_keyboard: [
+          [
+            { text: '💬 Включить чат поиск', callback_data: 'enable_search_chat' }
+          ],
+          [
+            { text: '🔍 Попробовать поиск', callback_data: 'search_menu' }
+          ],
+          [
+            { text: '🏠 Главное меню', callback_data: 'main_menu' }
+          ]
+        ]
+      }
+    );
+  }
+}
+
+async function handleMessage(update: TelegramUpdate) {
+  const message = update.message;
+  if (!message || !message.text) return;
+
+  const chatId = message.chat.id;
+  const messageText = message.text.trim();
+
+  console.log(`Received message: ${messageText}`);
+
+  // Handle commands
+  if (messageText.startsWith('/')) {
+    await handleCommand(chatId, messageText);
+    return;
+  }
+
+  // Check if user entered a property ID
+  if (/^\d{5}$/.test(messageText)) {
+    const propertyDetails = await getPropertyDetails(messageText);
+    await sendTelegramMessage(chatId, propertyDetails, {
+      inline_keyboard: [
+        [
+          { text: '🔍 Новый поиск', callback_data: 'search_menu' },
+          { text: '🏠 Главное меню', callback_data: 'main_menu' }
+        ]
+      ]
+    });
+    return;
+  }
+
+  // Handle natural language property search
+  console.log('Processing natural language search query');
+  const properties = await searchProperties(messageText);
+
+  if (properties.length === 0) {
+    await sendTelegramMessage(chatId, 
+      '❌ По вашему запросу недвижимость не найдена.\n\n' +
+      '💡 Попробуйте изменить параметры поиска:\n' +
+      '• Укажите другой район (Marina, Downtown, JBR)\n' +
+      '• Измените тип недвижимости (студия, квартира, вилла)\n' +
+      '• Укажите другой бюджет или количество комнат\n\n' +
+      '📝 Примеры запросов:\n' +
+      '• "2 комнаты в Marina для аренды"\n' +
+      '• "квартира в Downtown до 2 млн"\n' +
+      '• "студия в JBR для покупки"\n' +
+      '• "вилла в Palm Jumeirah"',
+      {
+        inline_keyboard: [
+          [
+            { text: '💬 Включить чат поиск', callback_data: 'enable_search_chat' }
+          ],
+          [
+            { text: '🔍 Попробовать другой запрос', callback_data: 'search_menu' },
+            { text: '💡 Примеры поиска', callback_data: 'search_examples' }
+          ],
+          [
+            { text: '🏠 Главное меню', callback_data: 'main_menu' }
+          ]
+        ]
+      }
+    );
+    return;
+  }
+
+  // Format and send results
+  let responseText = `🔍 <b>Результаты поиска</b>\n\n📋 <b>Найдено ${properties.length} объектов:</b>\n\n`;
+  
+  properties.forEach((property, index) => {
+    responseText += `${index + 1}. ${formatPropertyDisplay(property)}\n\n`;
+  });
+
+  responseText += '\n💡 Поиск по актуальной базе недвижимости Дубая';
+
+  await sendTelegramMessage(chatId, responseText, {
+    inline_keyboard: [
+      [
+        { text: '🔍 Искать еще', callback_data: 'search_menu' },
+        { text: '📊 Аналитика', callback_data: 'analytics_menu' }
+      ],
+      [
+        { text: '💬 Включить чат поиск', callback_data: 'enable_search_chat' }
+      ],
+      [
+        { text: '🏠 Главное меню', callback_data: 'main_menu' }
+      ]
+    ]
+  });
+}
+
+async function handleCommand(chatId: number, command: string) {
+  if (command === '/start') {
+    await sendTelegramMessage(chatId,
+      '🏗️ <b>Добро пожаловать в Dubai Invest Bot!</b>\n\n' +
+      'Я ваш персональный консультант по недвижимости в Дубае с доступом к реальной базе данных и системой автоматической оценки. \n\n' +
+      '💼 <b>Мои возможности:</b>\n' +
+      '• 🔍 Поиск недвижимости для покупки и аренды\n' +
+      '• 💰 Автоматическая оценка стоимости (AVM)\n' +
+      '• 📊 Анализ рынка и трендов в реальном времени\n' +
+      '• 📰 Анализ новостей и их влияние на цены\n' +
+      '• 💡 Советы по инвестициям\n' +
+      '• 📍 Информация о районах Дубая\n' +
+      '• 🏗️ Топ застройщиков и их проекты\n\n' +
+      '🎯 <b>Используйте кнопки меню для быстрого доступа!</b>\n\n' +
+      '✨ Или просто опишите что ищете текстом!',
+      {
+        inline_keyboard: [
+          [
+            { text: '🔍 Поиск недвижимости', callback_data: 'search_menu' },
+            { text: '💰 Оценка стоимости', callback_data: 'valuation_menu' }
+          ],
+          [
+            { text: '📊 Рыночная аналитика', callback_data: 'analytics_menu' },
+            { text: '🏗️ Застройщики', callback_data: 'developers_menu' }
+          ],
+          [
+            { text: '⚙️ Настройки', callback_data: 'settings_menu' },
+            { text: '📞 Контакты', callback_data: 'contacts' }
+          ],
+          [
+            { text: '❓ Помощь', callback_data: 'help' }
+          ]
+        ]
+      }
+    );
+  } else if (command === '/help') {
+    await sendTelegramMessage(chatId,
+      '❓ <b>Помощь - Dubai Invest Bot</b>\n\n' +
+      '💬 <b>Поиск недвижимости:</b>\n' +
+      'Просто напишите что ищете. Примеры:\n' +
+      '• "2 комнаты в Marina для аренды"\n' +
+      '• "квартира в Downtown до 2 млн AED"\n' +
+      '• "вилла в Palm Jumeirah"\n\n' +
+      '🆔 <b>Детальная информация:</b>\n' +
+      'Введите 5-значный ID объекта для полного анализа\n\n' +
+      '📋 <b>Команды:</b>\n' +
+      '/search - быстрый поиск\n' +
+      '/analytics - аналитика рынка\n' +
+      '/help - эта справка'
+    );
+  } else if (command === '/search') {
+    await sendTelegramMessage(chatId,
+      '🔍 <b>Поиск недвижимости</b>\n\n' +
+      'Напишите что ищете или используйте кнопки ниже:',
+      {
+        inline_keyboard: [
+          [
+            { text: '🏠 Квартиры аренда', callback_data: 'quick_search_rent_apt' },
+            { text: '🏢 Квартиры покупка', callback_data: 'quick_search_buy_apt' }
+          ],
+          [
+            { text: '🏖️ У моря', callback_data: 'quick_search_waterfront' },
+            { text: '🏙️ Центр города', callback_data: 'quick_search_downtown' }
+          ],
+          [
+            { text: '💬 Включить чат поиск', callback_data: 'enable_search_chat' }
+          ]
+        ]
+      }
+    );
   }
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const update: TelegramUpdate = await req.json();
-    console.log('Received update:', update);
-
-    // Handle callback queries (inline buttons)
-    if (update.callback_query) {
-      const callbackQuery = update.callback_query;
-      const chatId = callbackQuery.message.chat.id;
-      const data = callbackQuery.data;
-
-      if (data === 'search_more') {
-        const searchMessage = `
-🔍 <b>Новый поиск недвижимости</b>
-
-Опишите что вы ищете:
-
-💡 <b>Примеры запросов:</b>
-• "студия в аренду в Marina до 60k"  
-• "2 комнаты для покупки в Downtown"
-• "вилла в Emirates Hills до 5M"
-• "квартира в Business Bay"
-
-✨ Просто напишите ваши требования!
-        `;
-        await sendTelegramMessage(chatId, searchMessage);
-      }
-
-      return new Response('OK', { status: 200 });
-    }
-
-    if (!update.message?.text) {
-      return new Response('OK', { status: 200 });
-    }
-
-    const { message } = update;
-    const userQuery = message.text;
-    const chatId = message.chat.id;
-
-    if (!userQuery) {
-      return new Response('OK', { status: 200 });
-    }
-
-    // Setup bot commands on first request
+    // Setup bot commands on first run
     await setupBotCommands();
 
-    // Check if it's a property ID (5 digits)
-    const propertyIdMatch = userQuery.match(/^\s*(\d{5})\s*$/);
-    if (propertyIdMatch) {
-      const propertyId = propertyIdMatch[1];
-      const detailedInfo = await getPropertyDetails(propertyId);
-      await sendTelegramMessage(chatId, detailedInfo);
-      return new Response('OK', { status: 200 });
+    const update: TelegramUpdate = await req.json();
+    console.log('Received update:', JSON.stringify(update, null, 2));
+
+    if (update.callback_query) {
+      await handleCallbackQuery(update);
+    } else if (update.message) {
+      await handleMessage(update);
     }
 
-    // Handle commands
-    if (userQuery === '/start') {
-      const welcomeMessage = `
-🏗️ <b>Добро пожаловать в Dubai Invest!</b>
-
-Я ваш персональный консультант по недвижимости в Дубае. 
-
-💼 <b>Я могу помочь вам с:</b>
-• Поиском недвижимости для покупки
-• Арендой жилья
-• Анализом рынка и трендов
-• Советами по инвестициям
-• Информацией о районах
-
-🔍 <b>Умный поиск:</b>
-Просто напишите что ищете: "студия в Marina до 60k" или "2BR Downtown для покупки"
-
-🆔 <b>Детальная информация:</b> 
-Получите 5-значный ID объекта и введите его для полного анализа с прогнозами
-
-✨ Начните с поиска или выберите команду из меню!
-
-📋 <b>Доступные команды:</b>
-/search - поиск недвижимости  
-/analytics - аналитика рынка
-/roi - ROI калькулятор
-/news - новости рынка
-      `;
-      
-      await sendTelegramMessage(chatId, welcomeMessage);
-      return new Response('OK', { status: 200 });
-    }
-
-    if (userQuery === '/help') {
-      const helpMessage = `
-📚 <b>Помощь - Dubai Invest Bot</b>
-
-<b>🔍 Умный поиск недвижимости:</b>
-Просто опишите что ищете:
-• "студия в аренду в Marina до 60k"
-• "2 комнаты Downtown для покупки" 
-• "вилла в Emirates Hills"
-
-<b>🆔 Получение детальной информации:</b>
-1. Найдите объект через поиск
-2. Получите 5-значный ID
-3. Введите ID для полного анализа
-
-<b>📋 Команды бота:</b>
-🔍 /search - Поиск недвижимости
-📊 /analytics - Аналитика рынка
-💰 /roi - ROI калькулятор  
-📰 /news - Новости рынка
-
-💡 <b>Совет:</b> Для лучших результатов указывайте район, тип объекта и бюджет
-      `;
-      
-      await sendTelegramMessage(chatId, helpMessage);
-      return new Response('OK', { status: 200 });
-    }
-
-    if (userQuery === '/search') {
-      const searchMessage = `
-🔍 <b>Поиск недвижимости в Дубае</b>
-
-Опишите что вы ищете:
-
-📝 <b>Укажите:</b>
-• Тип объекта (квартира, вилла, студия)
-• Район или локация
-• Бюджет
-• Количество комнат
-• Цель (покупка/аренда)
-
-💡 <b>Примеры запросов:</b>
-"студия в аренду в Marina до 60k AED"
-"2 комнаты для покупки в Downtown до 2M"
-"вилла в Emirates Hills"
-"квартира в Business Bay"
-
-✨ Просто напишите ваши требования!
-      `;
-      
-      await sendTelegramMessage(chatId, searchMessage);
-      return new Response('OK', { status: 200 });
-    }
-
-    // Handle other commands (analytics, roi, news) as before...
-    if (userQuery === '/analytics') {
-      const analyticsMessage = `
-📊 <b>Аналитика рынка недвижимости Дубая</b>
-
-Выберите тип аналитики:
-
-📈 <b>Доступные отчеты:</b>
-• Ценовые тренды по районам
-• Анализ доходности
-• Прогнозы рынка на 2025 год
-• Сравнение районов
-• Динамика цен
-
-💡 <b>Примеры запросов:</b>
-"Покажи тренды цен в Downtown"
-"Анализ доходности в Business Bay"
-"Прогноз роста цен на 2025"
-
-✨ Напишите, какую аналитику вас интересует!
-      `;
-      
-      await sendTelegramMessage(chatId, analyticsMessage);
-      return new Response('OK', { status: 200 });
-    }
-
-    if (userQuery === '/roi') {
-      const roiMessage = `
-💰 <b>ROI Калькулятор недвижимости</b>
-
-Рассчитаю доходность ваших инвестиций!
-
-📝 <b>Для расчета укажите:</b>
-• Стоимость объекта
-• Месячная арендная плата
-• Дополнительные расходы (по желанию)
-
-💡 <b>Пример:</b>
-"Объект за $200,000, аренда $1,500/месяц"
-"Квартира $150k, доход 8000 AED/месяц"
-
-📊 <b>Получите:</b>
-• Годовую доходность (ROI)
-• Срок окупаемости
-• Чистую прибыль
-• Сравнение с рынком
-
-✨ Напишите данные для расчета!
-      `;
-      
-      await sendTelegramMessage(chatId, roiMessage);
-      return new Response('OK', { status: 200 });
-    }
-
-    if (userQuery === '/news') {
-      const newsMessage = `
-📰 <b>Новости рынка недвижимости Дубая</b>
-
-Получите актуальные новости и аналитику!
-
-📋 <b>Доступно:</b>
-• Последние новости рынка
-• Изменения в законодательстве
-• Новые проекты и застройщики
-• Экономические тренды
-• Инвестиционные возможности
-
-💡 <b>Примеры запросов:</b>
-"Последние новости недвижимости"
-"Новые проекты в 2025"
-"Изменения цен на рынке"
-
-✨ Напишите, какие новости вас интересуют!
-      `;
-      
-      await sendTelegramMessage(chatId, newsMessage);
-      return new Response('OK', { status: 200 });
-    }
-
-    // Check if it's a property search query
-    const searchKeywords = ['ищу', 'нужна', 'нужен', 'аренда', 'аренду', 'купить', 'покупка', 'студия', 'квартира', 'вилла', 'marina', 'downtown', 'business bay', 'jbr'];
-    const isSearchQuery = searchKeywords.some(keyword => userQuery.toLowerCase().includes(keyword));
-
-    if (isSearchQuery) {
-      await sendTelegramMessage(chatId, '🔍 Ищу недвижимость по вашим критериям...');
-      
-      const properties = await searchProperties(userQuery);
-      
-      if (properties.length > 0) {
-        let responseMessage = `
-🎯 <b>Найдено ${properties.length} объектов по вашему запросу:</b>
-
-━━━━━━━━━━━━━━━━━━━━━━━━
-        `;
-
-        properties.forEach((property, index) => {
-          responseMessage += '\n' + formatPropertyDisplay(property);
-          if (index < properties.length - 1) {
-            responseMessage += '\n━━━━━━━━━━━━━━━━━━━━━━━━';
-          }
-        });
-
-        responseMessage += `
-        
-💡 <b>Как получить детальную информацию:</b>
-Введите любой ID из списка для получения полного анализа с прогнозом цен, рентабельности и описанием района.
-        `;
-
-        const keyboard = {
-          inline_keyboard: [[
-            {
-              text: "🔍 Искать еще",
-              callback_data: "search_more"
-            }
-          ]]
-        };
-
-        await sendTelegramMessage(chatId, responseMessage, keyboard);
-      } else {
-        const noResultsMessage = `
-❌ <b>По вашему запросу ничего не найдено</b>
-
-💡 <b>Попробуйте:</b>
-• Упростить запрос
-• Указать другой район
-• Изменить бюджет или тип объекта
-
-<b>Примеры успешных запросов:</b>
-"студия в Marina"
-"квартира Downtown"
-"2 комнаты Business Bay"
-        `;
-
-        const keyboard = {
-          inline_keyboard: [[
-            {
-              text: "🔍 Новый поиск",
-              callback_data: "search_more"
-            }
-          ]]
-        };
-
-        await sendTelegramMessage(chatId, noResultsMessage, keyboard);
-      }
-      
-      return new Response('OK', { status: 200 });
-    }
-
-    // Generate AI response for other messages
-    const aiResponse = await generateAIResponse(userQuery);
-    await sendTelegramMessage(chatId, aiResponse);
-
-    return new Response('OK', { status: 200 });
+    return new Response('OK', { status: 200, headers: corsHeaders });
   } catch (error) {
-    console.error('Error processing telegram webhook:', error);
-    return new Response('Error', { status: 500 });
+    console.error('Error handling update:', error);
+    return new Response('Error', { status: 500, headers: corsHeaders });
   }
 });

@@ -61,7 +61,7 @@ export default function ModernPropertySearch() {
       if (scrapedError) throw scrapedError;
 
       // Search API properties
-      const { data: apiData, error: apiError } = await supabase.rpc('search_properties', {
+      const { data: apiData, error: apiError } = await supabase.rpc('search_properties_unified', {
         search_purpose: searchPurpose,
         min_price_param: filters.budget[0] * 0.8,
         max_price_param: filters.budget[0] * 1.2,

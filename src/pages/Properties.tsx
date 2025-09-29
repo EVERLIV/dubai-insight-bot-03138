@@ -42,7 +42,7 @@ const Properties = () => {
     
     try {
       // Load properties from Bayut API first
-      const { data: apiData, error: apiError } = await supabase.rpc('search_properties', {
+      const { data: apiData, error: apiError } = await supabase.rpc('search_properties_unified', {
         search_purpose: null,
         min_price_param: null,
         max_price_param: null,
@@ -112,7 +112,7 @@ const Properties = () => {
       const searchHousingStatus = filters.housingStatus === "all" ? null : filters.housingStatus;
 
       // Search API properties first
-      const { data: apiData, error: apiError } = await supabase.rpc('search_properties', {
+      const { data: apiData, error: apiError } = await supabase.rpc('search_properties_unified', {
         search_purpose: searchPurpose,
         min_price_param: filters.budget[0] * 0.7,
         max_price_param: filters.budget[0] * 1.3,

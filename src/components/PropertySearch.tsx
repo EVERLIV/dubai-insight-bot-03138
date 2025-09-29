@@ -49,7 +49,7 @@ const PropertySearch = () => {
       }
 
       // Also get regular properties for comparison
-      const { data: regularData, error: regularError } = await supabase.rpc('search_properties', {
+      const { data: regularData, error: regularError } = await supabase.rpc('search_properties_unified', {
         search_purpose: null,
         min_price_param: budget[0] * 0.8,
         max_price_param: budget[0] * 1.2,
