@@ -50,7 +50,7 @@ async function searchProperties(params: SearchParams): Promise<{
   try {
     console.log('Searching properties with params:', params);
 
-    // Use the new unified database function 
+    // Use the unified database function 
     const { data, error } = await supabase.rpc('search_properties_unified', {
       search_purpose: params.purpose || null,
       min_price_param: params.min_price || null,

@@ -578,6 +578,134 @@ async function handleCallbackQuery(update: TelegramUpdate) {
         ]
       }
     );
+  } else if (data === 'search_sale') {
+    console.log('Searching for properties for sale');
+    // Call property-search for sale properties
+    const { data: searchResponse, error: searchError } = await supabase.functions.invoke('property-search', {
+      body: {
+        telegram_user_id: update.callback_query.from.id,
+        purpose: 'for-sale',
+        limit: 10
+      }
+    });
+
+    console.log('Search response received:', searchResponse?.properties?.length, 'properties');
+
+    if (searchError) {
+      console.error('Property search API error:', searchError);
+      await sendTelegramMessage(chatId, 
+        '❌ Ошибка поиска. Попробуйте позже.',
+        {
+          inline_keyboard: [
+            [{ text: '🏠 Главное меню', callback_data: 'main_menu' }]
+          ]
+        }
+      );
+      return;
+    }
+
+    const properties = searchResponse?.properties || [];
+    if (properties.length > 0) {
+      const propertiesWithIds = properties.map((property: any) => {
+        const uniqueId = generatePropertyID();
+        const propertyWithId = { ...property, unique_id: uniqueId };
+        propertyIdMapping.set(uniqueId, propertyWithId);
+        return propertyWithId;
+      });
+
+      let responseText = `🏠 <b>Недвижимость на продажу</b>\n\n📋 Найдено ${propertiesWithIds.length} объектов:\n\n`;
+      propertiesWithIds.forEach((property: Property, index: number) => {
+        responseText += `${index + 1}. ${formatPropertyDisplay(property)}\n\n`;
+      });
+      responseText += '\n💡 Данные с Bayut API';
+      
+      await sendTelegramMessage(chatId, responseText, {
+        inline_keyboard: [
+          [
+            { text: '📊 Аналитика', callback_data: 'analytics_menu' },
+            { text: '🔍 Новый поиск', callback_data: 'search_menu' }
+          ],
+          [
+            { text: '🏠 Главное меню', callback_data: 'main_menu' }
+          ]
+        ]
+      });
+    } else {
+      await sendTelegramMessage(chatId, 
+        '❌ Недвижимость для продажи не найдена.',
+        {
+          inline_keyboard: [
+            [
+              { text: '🔍 Попробовать еще', callback_data: 'search_menu' },
+              { text: '🏠 Главное меню', callback_data: 'main_menu' }
+            ]
+          ]
+        }
+      );
+    }
+  } else if (data === 'search_rent') {
+    console.log('Searching for properties for rent');
+    // Call property-search for rent properties
+    const { data: searchResponse, error: searchError } = await supabase.functions.invoke('property-search', {
+      body: {
+        telegram_user_id: update.callback_query.from.id,
+        purpose: 'for-rent',
+        limit: 10
+      }
+    });
+
+    if (searchError) {
+      console.error('Property search API error:', searchError);
+      await sendTelegramMessage(chatId, 
+        '❌ Ошибка поиска. Попробуйте позже.',
+        {
+          inline_keyboard: [
+            [{ text: '🏠 Главное меню', callback_data: 'main_menu' }]
+          ]
+        }
+      );
+      return;
+    }
+
+    const properties = searchResponse?.properties || [];
+    if (properties.length > 0) {
+      const propertiesWithIds = properties.map((property: any) => {
+        const uniqueId = generatePropertyID();
+        const propertyWithId = { ...property, unique_id: uniqueId };
+        propertyIdMapping.set(uniqueId, propertyWithId);
+        return propertyWithId;
+      });
+
+      let responseText = `🏠 <b>Недвижимость в аренду</b>\n\n📋 Найдено ${propertiesWithIds.length} объектов:\n\n`;
+      propertiesWithIds.forEach((property: Property, index: number) => {
+        responseText += `${index + 1}. ${formatPropertyDisplay(property)}\n\n`;
+      });
+      responseText += '\n💡 Данные с Bayut API';
+      
+      await sendTelegramMessage(chatId, responseText, {
+        inline_keyboard: [
+          [
+            { text: '📊 Аналитика', callback_data: 'analytics_menu' },
+            { text: '🔍 Новый поиск', callback_data: 'search_menu' }
+          ],
+          [
+            { text: '🏠 Главное меню', callback_data: 'main_menu' }
+          ]
+        ]
+      });
+    } else {
+      await sendTelegramMessage(chatId, 
+        '❌ Недвижимость для аренды не найдена.',
+        {
+          inline_keyboard: [
+            [
+              { text: '🔍 Попробовать еще', callback_data: 'search_menu' },
+              { text: '🏠 Главное меню', callback_data: 'main_menu' }
+            ]
+          ]
+        }
+      );
+    }
   } else if (data === 'quick_search_rent_apt') {
     // Call property-search for rent apartments
     const { data: searchResponse } = await supabase.functions.invoke('property-search', {
