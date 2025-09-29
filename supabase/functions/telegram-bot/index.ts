@@ -96,23 +96,29 @@ async function searchProperties(query: string): Promise<Property[]> {
     const searchParams = parseSearchQuery(query);
     console.log('Parsed search params:', searchParams);
     
-    // Use the new unified search function that combines API and scraped data
-    const { data, error } = await supabase.rpc('search_properties_unified', {
-      search_purpose: searchParams.purpose,
-      min_price_param: searchParams.minPrice,
-      max_price_param: searchParams.maxPrice,
-      property_type_param: searchParams.propertyType,
-      location_param: searchParams.location,
-      min_bedrooms_param: searchParams.bedrooms,
-      max_bedrooms_param: null,
-      housing_status_param: null,
-      limit_param: 10
+// Use the property-search edge function for better results
+    const { data: response, error } = await supabase.functions.invoke('property-search', {
+      body: {
+        telegram_user_id: 0, // Default user ID for telegram searches
+        purpose: searchParams.purpose,
+        min_price: searchParams.minPrice,
+        max_price: searchParams.maxPrice,
+        property_type: searchParams.propertyType,
+        location: searchParams.location,
+        min_bedrooms: searchParams.bedrooms,
+        max_bedrooms: null,
+        limit: 10,
+        query: query
+      }
     });
 
     if (error) {
-      console.error('Database search error:', error);
+      console.error('Property search API error:', error);
       return [];
     }
+
+    const data = response?.properties || [];
+
 
     console.log(`Found ${data?.length || 0} properties`);
 
@@ -213,24 +219,29 @@ function formatPropertyDisplay(property: Property): string {
     `${property.price.toLocaleString()} AED` : 'Цена по запросу';
   
   const bedroomsDisplay = property.bedrooms !== undefined ? 
-    `${property.bedrooms} спален` : '';
+    `${property.bedrooms}BR` : '';
   
   const areaDisplay = property.area_sqft ? 
     `${property.area_sqft} кв.фт` : '';
 
-  const sourceDisplay = property.source_category === 'api' ? '✅ Верифицировано' : '📋 Проверяется';
+  const sourceDisplay = property.source_category === 'api' ? '✅ Bayut API' : '📋 Проверяется';
+  
+  const imageDisplay = property.images && property.images.length > 0 ? 
+    `📸 ${property.images.length} фото` : '';
+
+  const purposeDisplay = property.purpose === 'for-sale' ? 'Продажа' : 'Аренда';
+  const statusDisplay = property.housing_status === 'primary' ? '🆕 Первичное' : '🏗️ Вторичное';
 
   return `
 🏢 <b>${property.title}</b>
 💰 ${priceDisplay}
 📍 ${property.location_area || 'Дубай'}
-🏠 ${property.property_type || 'Недвижимость'}
-${bedroomsDisplay ? `🛏️ ${bedroomsDisplay}` : ''}
+🏠 ${property.property_type || 'Тип не указан'} • ${bedroomsDisplay}
+🎯 Назначение: ${purposeDisplay} • ${statusDisplay}
+${imageDisplay}
 ${areaDisplay ? `📐 ${areaDisplay}` : ''}
 ${sourceDisplay}
-
 🆔 <b>ID: ${property.unique_id}</b>
-<i>Введите ID для подробной информации</i>
   `.trim();
 }
 
@@ -568,12 +579,31 @@ async function handleCallbackQuery(update: TelegramUpdate) {
       }
     );
   } else if (data === 'quick_search_rent_apt') {
-    const properties = await searchProperties('квартира для аренды');
+    // Call property-search for rent apartments
+    const { data: searchResponse } = await supabase.functions.invoke('property-search', {
+      body: {
+        telegram_user_id: update.callback_query.from.id,
+        purpose: 'for-rent',
+        property_type: 'Apartment',
+        limit: 5
+      }
+    });
+
+    const properties = searchResponse?.properties || [];
     if (properties.length > 0) {
-      let responseText = `🏠 <b>Квартиры для аренды</b>\n\n📋 Найдено ${properties.length} объектов:\n\n`;
-      properties.slice(0, 5).forEach((property, index) => {
+      const propertiesWithIds = properties.map((property: any) => {
+        const uniqueId = generatePropertyID();
+        const propertyWithId = { ...property, unique_id: uniqueId };
+        propertyIdMapping.set(uniqueId, propertyWithId);
+        return propertyWithId;
+      });
+
+      let responseText = `🏠 <b>Квартиры для аренды</b>\n\n📋 Найдено ${propertiesWithIds.length} объектов:\n\n`;
+      propertiesWithIds.forEach((property: Property, index: number) => {
         responseText += `${index + 1}. ${formatPropertyDisplay(property)}\n\n`;
       });
+      responseText += '\n💡 Данные с Bayut API';
+      
       await sendTelegramMessage(chatId, responseText, {
         inline_keyboard: [
           [{ text: '🔍 Искать еще', callback_data: 'search_menu' }],
@@ -582,12 +612,31 @@ async function handleCallbackQuery(update: TelegramUpdate) {
       });
     }
   } else if (data === 'quick_search_buy_apt') {
-    const properties = await searchProperties('квартира для покупки');
+    // Call property-search for buy apartments
+    const { data: searchResponse } = await supabase.functions.invoke('property-search', {
+      body: {
+        telegram_user_id: update.callback_query.from.id,
+        purpose: 'for-sale',
+        property_type: 'Apartment',
+        limit: 5
+      }
+    });
+
+    const properties = searchResponse?.properties || [];
     if (properties.length > 0) {
-      let responseText = `🏢 <b>Квартиры для покупки</b>\n\n📋 Найдено ${properties.length} объектов:\n\n`;
-      properties.slice(0, 5).forEach((property, index) => {
+      const propertiesWithIds = properties.map((property: any) => {
+        const uniqueId = generatePropertyID();
+        const propertyWithId = { ...property, unique_id: uniqueId };
+        propertyIdMapping.set(uniqueId, propertyWithId);
+        return propertyWithId;
+      });
+
+      let responseText = `🏢 <b>Квартиры для покупки</b>\n\n📋 Найдено ${propertiesWithIds.length} объектов:\n\n`;
+      propertiesWithIds.forEach((property: Property, index: number) => {
         responseText += `${index + 1}. ${formatPropertyDisplay(property)}\n\n`;
       });
+      responseText += '\n💡 Данные с Bayut API';
+      
       await sendTelegramMessage(chatId, responseText, {
         inline_keyboard: [
           [{ text: '🔍 Искать еще', callback_data: 'search_menu' }],
@@ -596,12 +645,30 @@ async function handleCallbackQuery(update: TelegramUpdate) {
       });
     }
   } else if (data === 'quick_search_waterfront') {
-    const properties = await searchProperties('недвижимость Marina JBR у моря');
+    // Call property-search for waterfront properties
+    const { data: searchResponse } = await supabase.functions.invoke('property-search', {
+      body: {
+        telegram_user_id: update.callback_query.from.id,
+        location: 'JBR',
+        limit: 5
+      }
+    });
+
+    const properties = searchResponse?.properties || [];
     if (properties.length > 0) {
-      let responseText = `🏖️ <b>Недвижимость у моря</b>\n\n📋 Найдено ${properties.length} объектов:\n\n`;
-      properties.slice(0, 5).forEach((property, index) => {
+      const propertiesWithIds = properties.map((property: any) => {
+        const uniqueId = generatePropertyID();
+        const propertyWithId = { ...property, unique_id: uniqueId };
+        propertyIdMapping.set(uniqueId, propertyWithId);
+        return propertyWithId;
+      });
+
+      let responseText = `🏖️ <b>Недвижимость у моря</b>\n\n📋 Найдено ${propertiesWithIds.length} объектов:\n\n`;
+      propertiesWithIds.forEach((property: Property, index: number) => {
         responseText += `${index + 1}. ${formatPropertyDisplay(property)}\n\n`;
       });
+      responseText += '\n💡 Данные с Bayut API';
+      
       await sendTelegramMessage(chatId, responseText, {
         inline_keyboard: [
           [{ text: '🔍 Искать еще', callback_data: 'search_menu' }],
@@ -610,12 +677,30 @@ async function handleCallbackQuery(update: TelegramUpdate) {
       });
     }
   } else if (data === 'quick_search_downtown') {
-    const properties = await searchProperties('недвижимость Downtown центр города');
+    // Call property-search for downtown properties
+    const { data: searchResponse } = await supabase.functions.invoke('property-search', {
+      body: {
+        telegram_user_id: update.callback_query.from.id,
+        location: 'Downtown',
+        limit: 5
+      }
+    });
+
+    const properties = searchResponse?.properties || [];
     if (properties.length > 0) {
-      let responseText = `🏙️ <b>Недвижимость в центре</b>\n\n📋 Найдено ${properties.length} объектов:\n\n`;
-      properties.slice(0, 5).forEach((property, index) => {
+      const propertiesWithIds = properties.map((property: any) => {
+        const uniqueId = generatePropertyID();
+        const propertyWithId = { ...property, unique_id: uniqueId };
+        propertyIdMapping.set(uniqueId, propertyWithId);
+        return propertyWithId;
+      });
+
+      let responseText = `🏙️ <b>Недвижимость в центре</b>\n\n📋 Найдено ${propertiesWithIds.length} объектов:\n\n`;
+      propertiesWithIds.forEach((property: Property, index: number) => {
         responseText += `${index + 1}. ${formatPropertyDisplay(property)}\n\n`;
       });
+      responseText += '\n💡 Данные с Bayut API';
+      
       await sendTelegramMessage(chatId, responseText, {
         inline_keyboard: [
           [{ text: '🔍 Искать еще', callback_data: 'search_menu' }],
@@ -808,19 +893,25 @@ async function handleCommand(chatId: number, command: string) {
   } else if (command === '/search') {
     await sendTelegramMessage(chatId,
       '🔍 <b>Поиск недвижимости</b>\n\n' +
-      'Напишите что ищете или используйте кнопки ниже:',
+      '💬 Просто напишите что ищете!\n\n' +
+      'Примеры запросов:\n' +
+      '• "2 комнаты в Marina для аренды"\n' +
+      '• "квартира в Downtown до 2 млн"\n' +
+      '• "студия в JBR"\n' +
+      '• "вилла в Palm Jumeirah"\n\n' +
+      'Или используйте быстрые кнопки ниже:',
       {
         inline_keyboard: [
           [
-            { text: '🏠 Квартиры аренда', callback_data: 'quick_search_rent_apt' },
-            { text: '🏢 Квартиры покупка', callback_data: 'quick_search_buy_apt' }
+            { text: '🏠 Квартиры аренда', callback_data: 'search_rent' },
+            { text: '🏢 Квартиры покупка', callback_data: 'search_sale' }
           ],
           [
             { text: '🏖️ У моря', callback_data: 'quick_search_waterfront' },
             { text: '🏙️ Центр города', callback_data: 'quick_search_downtown' }
           ],
           [
-            { text: '💬 Включить чат поиск', callback_data: 'enable_search_chat' }
+            { text: '🏠 Главное меню', callback_data: 'main_menu' }
           ]
         ]
       }
