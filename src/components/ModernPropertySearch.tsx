@@ -159,7 +159,7 @@ export default function ModernPropertySearch() {
                   <Database className="w-4 h-4 text-blue-400" />
                   <span className="text-xs font-medium text-gray-300 uppercase tracking-wide">Database Size</span>
                 </div>
-                <div className="text-xl font-bold">800+</div>
+                <div className="text-xl font-bold">1400+</div>
                 <div className="text-xs text-gray-400">Verified Properties</div>
               </div>
               <div className="bg-white/10 border border-white/20 p-4">
@@ -183,7 +183,7 @@ export default function ModernPropertySearch() {
                   <MapPin className="w-4 h-4 text-green-400" />
                   <span className="text-xs font-medium text-gray-300 uppercase tracking-wide">Coverage</span>
                 </div>
-                <div className="text-xl font-bold">25+</div>
+                <div className="text-xl font-bold">31+</div>
                 <div className="text-xs text-gray-400">Dubai Districts</div>
               </div>
             </div>
@@ -352,7 +352,7 @@ export default function ModernPropertySearch() {
                     <div className="w-8 h-8 bg-blue-900 flex items-center justify-center mx-auto mb-3">
                       <BarChart3 className="w-4 h-4 text-white" />
                     </div>
-                    <div className="text-2xl font-bold text-gray-900 mb-1">800+</div>
+                    <div className="text-2xl font-bold text-gray-900 mb-1">1400+</div>
                     <div className="text-xs text-gray-600 font-medium uppercase tracking-wide">Active Properties</div>
                   </div>
                   <div className="bg-white border border-gray-200 p-6 text-center">
@@ -366,7 +366,7 @@ export default function ModernPropertySearch() {
                     <div className="w-8 h-8 bg-blue-900 flex items-center justify-center mx-auto mb-3">
                       <MapPin className="w-4 h-4 text-white" />
                     </div>
-                    <div className="text-2xl font-bold text-gray-900 mb-1">25+</div>
+                    <div className="text-2xl font-bold text-gray-900 mb-1">31+</div>
                     <div className="text-xs text-gray-600 font-medium uppercase tracking-wide">Dubai Districts</div>
                   </div>
                 </div>
