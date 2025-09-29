@@ -107,7 +107,9 @@ export default function ModernPropertySearch() {
   };
 
   const handleViewDetails = (property: any) => {
-    navigate(`/property/${property.id || 'sample'}`, { state: { property } });
+    // Use external_id for real property details, or a generated ID for scraped properties
+    const propertyId = property.external_id || property.id || `scraped-${property.id || Math.random().toString(36).substr(2, 9)}`;
+    navigate(`/property/${propertyId}`, { state: { property } });
   };
 
   const handleCloseDetailModal = () => {

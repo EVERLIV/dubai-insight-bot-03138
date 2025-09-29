@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -52,10 +52,14 @@ const districtInfo: Record<string, any> = {
 export default function PropertyDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isFavorite, setIsFavorite] = useState(false);
   
-  // Mock property data - in real app, fetch based on ID
-  const property = {
+  // Get property from navigation state if available, otherwise use mock data
+  const propertyFromState = location.state?.property;
+  
+  // Mock property data - use real property if passed via state
+  const property = propertyFromState || {
     id: id,
     title: "Executive Marina Residence - Premium Commercial Grade Property",
     price: 3200000,
