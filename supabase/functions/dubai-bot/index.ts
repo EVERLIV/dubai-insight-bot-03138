@@ -410,12 +410,12 @@ async function callMultiPlatformSearch(searchParams: any): Promise<any> {
       ]);
       
       if (expandedBayut.success && expandedBayut.properties) {
-        allProperties = [...allProperties, ...expandedBayut.properties.slice(0, 2)];
+        allProperties = [...allProperties, ...expandedBayut.properties.slice(0, 10)];
         totalCount += expandedBayut.count || 0;
       }
       
         if (expandedScraped.success && expandedScraped.data) {
-          const scrapedProps = expandedScraped.data.slice(0, 3).map((prop: any) => ({
+          const scrapedProps = expandedScraped.data.slice(0, 10).map((prop: any) => ({
             ...prop,
             source_type: 'scraped'
           }));
@@ -442,7 +442,7 @@ async function callMultiPlatformSearch(searchParams: any): Promise<any> {
       }
       
         if (generalScraped.success && generalScraped.data) {
-          const scrapedProps = generalScraped.data.slice(0, 2).map((prop: any) => ({
+          const scrapedProps = generalScraped.data.slice(0, 10).map((prop: any) => ({
             ...prop,
             source_type: 'scraped'
           }));
@@ -1495,7 +1495,7 @@ async function handleCallbackQuery(callbackQuery: any) {
           query: 'premium properties',
           location: 'emirates hills,palm jumeirah,downtown',
           min_price: 2000000,
-          limit: 5
+          limit: 10
         });
         
         await handleSearchResults(chatId, messageId, searchResult, 'Премиум недвижимость');
@@ -1528,7 +1528,7 @@ async function handleCallbackQuery(callbackQuery: any) {
       const searchParams: any = {
         telegram_user_id: userId,
         query: `${searchType} properties`,
-        limit: 5
+        limit: 10
       };
       
       // Set proper purpose for search
@@ -1641,6 +1641,16 @@ async function handleCallbackQuery(callbackQuery: any) {
 
 async function handleSearchResults(chatId: number, messageId: number, searchResult: any, title: string) {
   if (searchResult.success && searchResult.properties && searchResult.properties.length > 0) {
+    // Save search context for pagination
+    const context = userContexts.get(chatId) || {};
+    context.lastSearch = {
+      query: title,
+      telegram_user_id: 0, // Will be set by caller if needed
+      offset: 0,
+      totalCount: searchResult.count || searchResult.properties.length
+    };
+    userContexts.set(chatId, context);
+    
     let response = `🏠 <b>${title}</b>\n\n📋 Найдено ${searchResult.count || searchResult.properties.length} объектов:\n\n`;
     
     searchResult.properties.forEach((property: any, index: number) => {
@@ -1671,18 +1681,35 @@ async function handleSearchResults(chatId: number, messageId: number, searchResu
 
     response += '\n💡 <i>Актуальные данные по недвижимости Дубая</i>';
     
-    await editTelegramMessage(chatId, messageId, response, {
-      reply_markup: {
-        inline_keyboard: [
-          [
-            { text: "📊 Аналитика", callback_data: "analytics_menu" },
-            { text: "🔍 Новый поиск", callback_data: "search_menu" }
-          ],
-          [
-            { text: "🏠 Главное меню", callback_data: "main_menu" }
-          ]
+    // Add "Show more" button if there are more results
+    const hasMore = (searchResult.count || 0) > searchResult.properties.length;
+    const keyboard = hasMore ? {
+      inline_keyboard: [
+        [
+          { text: `📋 Показать ещё (${(searchResult.count || 0) - searchResult.properties.length})`, callback_data: "search_more" }
+        ],
+        [
+          { text: "📊 Аналитика", callback_data: "analytics_menu" },
+          { text: "🔍 Новый поиск", callback_data: "search_menu" }
+        ],
+        [
+          { text: "🏠 Главное меню", callback_data: "main_menu" }
         ]
-      }
+      ]
+    } : {
+      inline_keyboard: [
+        [
+          { text: "📊 Аналитика", callback_data: "analytics_menu" },
+          { text: "🔍 Новый поиск", callback_data: "search_menu" }
+        ],
+        [
+          { text: "🏠 Главное меню", callback_data: "main_menu" }
+        ]
+      ]
+    };
+    
+    await editTelegramMessage(chatId, messageId, response, {
+      reply_markup: keyboard
     });
   } else {
     await editTelegramMessage(chatId, messageId,
