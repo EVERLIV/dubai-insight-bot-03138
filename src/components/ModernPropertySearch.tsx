@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import SearchFilters from "./SearchFilters";
 import PropertyCard from "./PropertyCard";
 import PropertyDetailModal from "./PropertyDetailModal";
-import { BarChart3, TrendingUp, MapPin, Building2, Database, Clock, Target, Image } from "lucide-react";
+import { BarChart3, TrendingUp, MapPin, Building2, Database, Clock, Target } from "lucide-react";
 
 export default function ModernPropertySearch() {
   const navigate = useNavigate();
@@ -100,25 +100,6 @@ export default function ModernPropertySearch() {
     } catch (error) {
       console.error('Search error:', error);
       toast.error('Error searching properties');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleMatchBayutImages = async () => {
-    setIsLoading(true);
-    
-    try {
-      const { data, error } = await supabase.functions.invoke('match-bayut-images');
-
-      if (data?.success) {
-        toast.success(`Matched ${data.matched} properties with Bayut images (${data.matchRate}% success rate)`);
-      } else {
-        throw new Error(data?.error || 'Error matching images');
-      }
-    } catch (error) {
-      console.error('Match images error:', error);
-      toast.error('Error matching images with Bayut data');
     } finally {
       setIsLoading(false);
     }
@@ -233,7 +214,6 @@ export default function ModernPropertySearch() {
               onFiltersChange={setFilters}
               onSearch={handleSearch}
               onRefresh={handleRefresh}
-              onMatchImages={handleMatchBayutImages}
               isLoading={isLoading}
               isRefreshing={isRefreshing}
             />

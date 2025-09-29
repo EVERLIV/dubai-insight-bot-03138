@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, MapPin, Home, DollarSign, Bed, RefreshCw, Image } from "lucide-react";
+import { Search, Filter, MapPin, Home, DollarSign, Bed, RefreshCw } from "lucide-react";
 import { Select, Slider, Space, Tag, Divider, Typography, Row, Col } from "antd";
 import { useState } from "react";
 
@@ -16,7 +16,6 @@ interface SearchFiltersProps {
   onFiltersChange: (filters: any) => void;
   onSearch: () => void;
   onRefresh: () => void;
-  onMatchImages?: () => void;
   isLoading: boolean;
   isRefreshing: boolean;
 }
@@ -61,7 +60,6 @@ export default function SearchFilters({
   onFiltersChange,
   onSearch,
   onRefresh,
-  onMatchImages,
   isLoading,
   isRefreshing
 }: SearchFiltersProps) {
@@ -246,50 +244,37 @@ export default function SearchFilters({
           <div className="border-t border-gray-200 my-4"></div>
 
           {/* Professional Action Buttons */}
-          <div className="space-y-2">
-            <div className="grid grid-cols-4 gap-2">
-              <Button 
-                disabled={isLoading}
-                onClick={onSearch}
-                className="col-span-3 bg-blue-900 hover:bg-blue-800 text-white text-xs font-medium h-10"
-              >
-                {isLoading ? (
-                  <>
-                    <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
-                    Searching...
-                  </>
-                ) : (
-                  <>
-                    <Search className="w-3 h-3 mr-1" />
-                    Execute Search
-                  </>
-                )}
-              </Button>
-              
-              <Button 
-                disabled={isRefreshing}
-                onClick={onRefresh}
-                className="border-gray-300 text-gray-700 hover:border-blue-900 hover:text-blue-900 text-xs h-10"
-                variant="outline"
-              >
-                {isRefreshing ? (
-                  <RefreshCw className="w-3 h-3 animate-spin" />
-                ) : (
-                  <RefreshCw className="w-3 h-3" />
-                )}
-              </Button>
-            </div>
+          <div className="grid grid-cols-4 gap-2">
+            <Button 
+              disabled={isLoading}
+              onClick={onSearch}
+              className="col-span-3 bg-blue-900 hover:bg-blue-800 text-white text-xs font-medium h-10"
+            >
+              {isLoading ? (
+                <>
+                  <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
+                  Searching...
+                </>
+              ) : (
+                <>
+                  <Search className="w-3 h-3 mr-1" />
+                  Execute Search
+                </>
+              )}
+            </Button>
             
-            {onMatchImages && (
-              <Button 
-                disabled={isLoading}
-                onClick={onMatchImages}
-                className="w-full bg-green-600 hover:bg-green-700 text-white text-xs font-medium h-8"
-              >
-                <Image className="w-3 h-3 mr-1" />
-                Match Bayut Images
-              </Button>
-            )}
+            <Button 
+              disabled={isRefreshing}
+              onClick={onRefresh}
+              className="border-gray-300 text-gray-700 hover:border-blue-900 hover:text-blue-900 text-xs h-10"
+              variant="outline"
+            >
+              {isRefreshing ? (
+                <RefreshCw className="w-3 h-3 animate-spin" />
+              ) : (
+                <RefreshCw className="w-3 h-3" />
+              )}
+            </Button>
           </div>
         </Space>
       </div>
