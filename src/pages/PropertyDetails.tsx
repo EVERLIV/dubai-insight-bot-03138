@@ -150,20 +150,20 @@ export default function PropertyDetails() {
           {/* Professional Property Header */}
           <div className="mb-8 border-b border-gray-100 pb-6">
             <div className="mb-4">
-              <h1 className="text-4xl font-bold text-gray-900 mb-3">{property.title}</h1>
+              <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-3 max-w-4xl">{property.title}</h1>
               <div className="flex items-center text-gray-600">
                 <div className="w-5 h-5 bg-blue-900 flex items-center justify-center mr-2">
                   <MapPin className="w-3 h-3 text-white" />
                 </div>
-                <span className="font-semibold uppercase tracking-wide">{property.location_area}, Dubai</span>
+                <span className="font-semibold uppercase tracking-wide text-sm">{property.location_area}, Dubai</span>
               </div>
             </div>
-            <div className="flex items-center justify-between">
-              <div className="text-right">
-                <div className="text-4xl font-bold text-blue-900 mb-1">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="max-w-xs">
+                <div className="text-2xl md:text-3xl font-bold text-blue-900 mb-1">
                   {property.price?.toLocaleString()} AED
                 </div>
-                <div className="text-sm text-gray-600 font-medium uppercase tracking-wide">
+                <div className="text-xs text-gray-600 font-medium uppercase tracking-wide">
                   {property.purpose === 'for-rent' ? 'Annual Rate' : 'Investment Price'}
                 </div>
               </div>
