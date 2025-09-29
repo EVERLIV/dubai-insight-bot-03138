@@ -174,20 +174,24 @@ export default function PropertyReport({ property }: PropertyReportProps) {
 
   if (!reportGenerated) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="w-5 h-5" />
-            Comprehensive Property Report
+      <Card className="border-gray-300">
+        <CardHeader className="border-b border-gray-300">
+          <CardTitle className="flex items-center gap-3 text-gray-900 font-bold uppercase tracking-wider">
+            <div className="w-6 h-6 bg-blue-900 flex items-center justify-center">
+              <FileText className="w-4 h-4 text-white" />
+            </div>
+            Executive Property Analysis
           </CardTitle>
         </CardHeader>
-        <CardContent className="text-center py-8">
-          <div className="mb-6">
-            <Building className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Professional Property Analysis</h3>
-            <p className="text-muted-foreground max-w-md mx-auto">
-              Generate a comprehensive report with AI-powered market analysis, 
-              investment metrics, and detailed insights for this property.
+        <CardContent className="text-center py-12">
+          <div className="mb-8">
+            <div className="w-20 h-20 bg-gray-200 border border-gray-300 mx-auto mb-6 flex items-center justify-center">
+              <Building className="w-10 h-10 text-gray-600" />
+            </div>
+            <h3 className="text-xl font-bold mb-4 text-gray-900">Institutional Property Analysis</h3>
+            <p className="text-gray-700 max-w-lg mx-auto font-medium">
+              Generate comprehensive institutional-grade analysis featuring AI-powered market intelligence, 
+              certified investment metrics, and detailed compliance insights.
             </p>
           </div>
           

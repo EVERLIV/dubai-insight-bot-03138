@@ -178,34 +178,38 @@ export default function EnhancedPriceTrends({ location, propertyType, bedrooms }
   const formatVolume = (value: number) => value.toFixed(0);
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="border-gray-300">
+      <CardHeader className="border-b border-gray-300">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="w-5 h-5" />
-            Price Trends - {location}
+          <CardTitle className="flex items-center gap-3 text-gray-900 font-bold uppercase tracking-wider">
+            <div className="w-6 h-6 bg-blue-900 flex items-center justify-center">
+              <BarChart3 className="w-4 h-4 text-white" />
+            </div>
+            Market Intelligence - {location}
           </CardTitle>
-          <div className="flex items-center gap-2">
-            <Badge className={getMomentumColor(marketStats.momentum)}>
+          <div className="flex items-center gap-3">
+            <div className={`px-3 py-1 text-xs font-bold uppercase tracking-wider ${getMomentumColor(marketStats.momentum)}`}>
               {marketStats.momentum}
-            </Badge>
+            </div>
             <Button 
               variant="outline" 
               size="sm" 
               onClick={generateTrendData}
               disabled={isLoading}
+              className="border-gray-300 text-gray-900 font-semibold uppercase tracking-wide"
             >
               <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+              Refresh
             </Button>
           </div>
         </div>
       </CardHeader>
       
-      <CardContent>
-        {/* Controls */}
-        <div className="flex flex-wrap gap-3 mb-6">
+      <CardContent className="p-6">
+        {/* Professional Controls */}
+        <div className="flex flex-wrap gap-4 mb-8">
           <Select value={timeframe} onValueChange={setTimeframe}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-40 border-gray-300 font-semibold">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -216,49 +220,49 @@ export default function EnhancedPriceTrends({ location, propertyType, bedrooms }
           </Select>
 
           <Select value={viewType} onValueChange={setViewType}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-40 border-gray-300 font-semibold">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="price">Price Trends</SelectItem>
-              <SelectItem value="volume">Volume</SelectItem>
-              <SelectItem value="combined">Combined</SelectItem>
-              <SelectItem value="forecast">Forecast</SelectItem>
+              <SelectItem value="price">Price Analysis</SelectItem>
+              <SelectItem value="volume">Volume Analysis</SelectItem>
+              <SelectItem value="combined">Combined View</SelectItem>
+              <SelectItem value="forecast">Market Forecast</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        {/* Market Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="text-center p-3 bg-muted/50 rounded-lg">
-            <div className="text-lg font-bold text-primary">
+        {/* Professional Market Statistics */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="text-center p-4 border border-gray-300 bg-gray-50">
+            <div className="text-xl font-bold text-blue-900">
               {formatPrice(marketStats.avgPrice)}
             </div>
-            <div className="text-xs text-muted-foreground">Avg Price</div>
+            <div className="text-xs text-gray-600 font-semibold uppercase tracking-wide">Average Price</div>
           </div>
           
-          <div className="text-center p-3 bg-muted/50 rounded-lg">
-            <div className="flex items-center justify-center gap-1">
+          <div className="text-center p-4 border border-gray-300 bg-gray-50">
+            <div className="flex items-center justify-center gap-2">
               {getTrendIcon(marketStats.priceGrowth)}
-              <span className={`text-lg font-bold ${marketStats.priceGrowth > 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <span className={`text-xl font-bold ${marketStats.priceGrowth > 0 ? 'text-green-700' : 'text-red-700'}`}>
                 {marketStats.priceGrowth > 0 ? '+' : ''}{marketStats.priceGrowth}%
               </span>
             </div>
-            <div className="text-xs text-muted-foreground">YoY Growth</div>
+            <div className="text-xs text-gray-600 font-semibold uppercase tracking-wide">YoY Growth</div>
           </div>
           
-          <div className="text-center p-3 bg-muted/50 rounded-lg">
-            <div className="text-lg font-bold text-orange-600">
+          <div className="text-center p-4 border border-gray-300 bg-gray-50">
+            <div className="text-xl font-bold text-orange-700">
               {marketStats.volatility}%
             </div>
-            <div className="text-xs text-muted-foreground">Volatility</div>
+            <div className="text-xs text-gray-600 font-semibold uppercase tracking-wide">Volatility</div>
           </div>
           
-          <div className="text-center p-3 bg-muted/50 rounded-lg">
-            <div className="text-lg font-bold text-purple-600">
+          <div className="text-center p-4 border border-gray-300 bg-gray-50">
+            <div className="text-xl font-bold text-purple-700">
               {forecastData.length > 0 ? forecastData[0].confidence : 85}%
             </div>
-            <div className="text-xs text-muted-foreground">Confidence</div>
+            <div className="text-xs text-gray-600 font-semibold uppercase tracking-wide">Confidence</div>
           </div>
         </div>
 

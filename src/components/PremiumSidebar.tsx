@@ -103,34 +103,40 @@ export default function PremiumSidebar({ property }: PremiumSidebarProps) {
   };
 
   return (
-    <div className="space-y-4">
-      {/* Premium Badge */}
-      <Card className="border-gradient-to-r from-yellow-400 to-yellow-600 bg-gradient-to-br from-yellow-50 to-orange-50">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <Crown className="w-5 h-5 text-yellow-600" />
-            <span className="font-semibold text-yellow-800">Premium Analysis</span>
-            <Sparkles className="w-4 h-4 text-yellow-600" />
+    <div className="space-y-6">
+      {/* Professional Premium Badge */}
+      <Card className="border-2 border-blue-900 bg-white">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="w-8 h-8 bg-blue-900 flex items-center justify-center">
+              <Crown className="w-5 h-5 text-white" />
+            </div>
+            <span className="font-bold text-gray-900 uppercase tracking-wider">Executive Analysis</span>
+            <div className="w-6 h-6 bg-blue-900 flex items-center justify-center">
+              <Sparkles className="w-3 h-3 text-white" />
+            </div>
           </div>
-          <p className="text-sm text-yellow-700 text-center">
-            Advanced AI-powered insights and market analysis
+          <p className="text-sm text-gray-700 text-center font-medium">
+            Institutional-grade market intelligence and investment analytics
           </p>
         </CardContent>
       </Card>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="analysis" className="text-xs">Analysis</TabsTrigger>
-          <TabsTrigger value="investment" className="text-xs">Investment</TabsTrigger>
-          <TabsTrigger value="reports" className="text-xs">Reports</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 border border-gray-300">
+          <TabsTrigger value="analysis" className="text-xs font-semibold uppercase tracking-wide">Analysis</TabsTrigger>
+          <TabsTrigger value="investment" className="text-xs font-semibold uppercase tracking-wide">Investment</TabsTrigger>
+          <TabsTrigger value="reports" className="text-xs font-semibold uppercase tracking-wide">Reports</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="analysis" className="space-y-4 mt-4">
-          {/* Market Position */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Target className="w-4 h-4" />
+        <TabsContent value="analysis" className="space-y-6 mt-6">
+          {/* Professional Market Position */}
+          <Card className="border-gray-300">
+            <CardHeader className="pb-3 border-b border-gray-300">
+              <CardTitle className="text-sm flex items-center gap-3 text-gray-900 font-bold uppercase tracking-wider">
+                <div className="w-5 h-5 bg-blue-900 flex items-center justify-center">
+                  <Target className="w-3 h-3 text-white" />
+                </div>
                 Market Position
               </CardTitle>
             </CardHeader>
