@@ -1820,12 +1820,6 @@ async function handleSearchResults(chatId: number, messageId: number, searchResu
       
       response += `\n🎯 <b>Назначение:</b> ${purpose}\n`;
       
-      if (property.agent_name) {
-        response += `👨‍💼 Агент: ${property.agent_name}\n`;
-      }
-      if (property.agent_phone) {
-        response += `📞 ${property.agent_phone}\n`;
-      }
       if (property.images && property.images.length > 0) {
         response += `📸 ${property.images.length} фото доступно\n`;
       }
