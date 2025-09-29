@@ -73,12 +73,7 @@ export default function ModernPropertySearch() {
         limit_param: 25
       });
 
-      // Combine results
-      const scrapedResults = (scrapedData || []).map((item: any) => ({
-        ...item,
-        source_category: 'scraped'
-      }));
-      
+      // Combine results - Bayut API first (with images), then scraped properties
       const apiResults = (apiData || []).map((item: any) => ({
         ...item,
         source_category: 'api',
@@ -86,7 +81,13 @@ export default function ModernPropertySearch() {
         source_type: 'api'
       }));
 
-      const allResults = [...scrapedResults, ...apiResults];
+      const scrapedResults = (scrapedData || []).map((item: any) => ({
+        ...item,
+        source_category: 'scraped'
+      }));
+      
+      // Show API results first (better quality, with images), then scraped
+      const allResults = [...apiResults, ...scrapedResults];
       const uniqueSources = [...new Set(allResults.map(r => r.source_name).filter(Boolean))];
       
       setSearchResults(allResults);
@@ -95,7 +96,7 @@ export default function ModernPropertySearch() {
       setSearchPerformed(true);
       setCurrentPage(1);
 
-      toast.success(`Found ${allResults.length} properties from ${uniqueSources.length} sources`);
+      toast.success(`Found ${allResults.length} properties: ${apiResults.length} from Bayut API, ${scrapedResults.length} from other sources`);
 
     } catch (error) {
       console.error('Search error:', error);

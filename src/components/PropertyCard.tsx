@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
   Heart, Share2, MapPin, Home, Maximize2, Bath,
-  Bed, User, Clock
+  Bed, User, Clock, Star
 } from "lucide-react";
 import { useState } from "react";
 
@@ -24,6 +24,7 @@ interface PropertyCardProps {
     housing_status?: string;
     source_type?: string;
     source_name?: string;
+    source_category?: string;
     scraped_at?: string;
     description?: string;
     amenities?: string[];
@@ -78,6 +79,16 @@ export default function PropertyCard({ property, onViewDetails }: PropertyCardPr
           <div className="absolute top-3 right-3 z-10">
             <div className="bg-white/90 text-gray-700 px-3 py-1 text-xs font-semibold border border-gray-300">
               {property.housing_status === 'primary' ? 'OFF-PLAN' : 'READY'}
+            </div>
+          </div>
+        )}
+
+        {/* Premium Source Badge */}
+        {property.source_category === 'api' && (
+          <div className="absolute top-12 right-3 z-10">
+            <div className="bg-blue-600 text-white px-2 py-1 text-xs font-semibold flex items-center gap-1">
+              <Star className="w-3 h-3" />
+              VERIFIED
             </div>
           </div>
         )}
