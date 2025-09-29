@@ -56,14 +56,14 @@ export default function PropertyDetailModal({ property, isOpen, onClose }: Prope
   };
 
   const getPurposeBadge = () => {
-    if (property.purpose === 'for-sale') return { text: 'Продажа', color: 'green' };
-    if (property.purpose === 'for-rent') return { text: 'Аренда', color: 'blue' };
-    return { text: property.purpose || 'Не указано', color: 'default' };
+    if (property.purpose === 'for-sale') return { text: 'For Sale', color: 'green' };
+    if (property.purpose === 'for-rent') return { text: 'For Rent', color: 'blue' };
+    return { text: property.purpose || 'Not specified', color: 'default' };
   };
 
   const getHousingStatusBadge = () => {
-    if (property.housing_status === 'primary') return { text: 'Первичное', color: 'orange' };
-    if (property.housing_status === 'secondary') return { text: 'Вторичное', color: 'purple' };
+    if (property.housing_status === 'primary') return { text: 'Off-plan', color: 'orange' };
+    if (property.housing_status === 'secondary') return { text: 'Ready', color: 'purple' };
     return null;
   };
 
@@ -155,17 +155,17 @@ export default function PropertyDetailModal({ property, isOpen, onClose }: Prope
                   
                   <div className="flex items-center gap-3 mb-4">
                     <Title level={1} className="text-primary m-0">
-                      {property.price ? `${property.price.toLocaleString()} AED` : 'Цена по запросу'}
+                      {property.price ? `${property.price.toLocaleString()} AED` : 'Price on request'}
                     </Title>
                     {property.purpose === 'for-rent' && (
-                      <Text type="secondary">/год</Text>
+                      <Text type="secondary">/year</Text>
                     )}
                   </div>
 
                   {property.location_area && (
                     <div className="flex items-center text-muted-foreground mb-4">
                       <MapPin className="w-4 h-4 mr-2" />
-                      <Text>{property.location_area}, Дубай</Text>
+                      <Text>{property.location_area}, Dubai</Text>
                     </div>
                   )}
                 </div>
@@ -174,7 +174,7 @@ export default function PropertyDetailModal({ property, isOpen, onClose }: Prope
 
                 {/* Property Details */}
                 <div>
-                  <Title level={4}>Характеристики</Title>
+                  <Title level={4}>Features</Title>
                   <Row gutter={[16, 16]}>
                     {property.property_type && (
                       <Col xs={12} sm={8}>
@@ -183,7 +183,7 @@ export default function PropertyDetailModal({ property, isOpen, onClose }: Prope
                             <Home className="w-6 h-6 text-primary mx-auto mb-2" />
                             <Text strong>{property.property_type}</Text>
                             <br />
-                            <Text type="secondary" className="text-xs">Тип</Text>
+                            <Text type="secondary" className="text-xs">Type</Text>
                           </CardContent>
                         </Card>
                       </Col>
@@ -194,9 +194,9 @@ export default function PropertyDetailModal({ property, isOpen, onClose }: Prope
                         <Card className="text-center property-card h-full">
                           <CardContent className="p-4">
                             <Bed className="w-6 h-6 text-primary mx-auto mb-2" />
-                            <Text strong>{property.bedrooms || 'Студия'}</Text>
+                            <Text strong>{property.bedrooms || 'Studio'}</Text>
                             <br />
-                            <Text type="secondary" className="text-xs">Спальни</Text>
+                            <Text type="secondary" className="text-xs">Bedrooms</Text>
                           </CardContent>
                         </Card>
                       </Col>
@@ -209,7 +209,7 @@ export default function PropertyDetailModal({ property, isOpen, onClose }: Prope
                             <Bath className="w-6 h-6 text-primary mx-auto mb-2" />
                             <Text strong>{property.bathrooms}</Text>
                             <br />
-                            <Text type="secondary" className="text-xs">Ванные</Text>
+                            <Text type="secondary" className="text-xs">Bathrooms</Text>
                           </CardContent>
                         </Card>
                       </Col>
@@ -222,7 +222,7 @@ export default function PropertyDetailModal({ property, isOpen, onClose }: Prope
                             <Maximize2 className="w-6 h-6 text-primary mx-auto mb-2" />
                             <Text strong>{property.area_sqft}</Text>
                             <br />
-                            <Text type="secondary" className="text-xs">кв.фт</Text>
+                            <Text type="secondary" className="text-xs">sq.ft</Text>
                           </CardContent>
                         </Card>
                       </Col>
@@ -233,9 +233,9 @@ export default function PropertyDetailModal({ property, isOpen, onClose }: Prope
                         <Card className="text-center property-card h-full">
                           <CardContent className="p-4">
                             <Building className="w-6 h-6 text-primary mx-auto mb-2" />
-                            <Text strong>{property.is_furnished ? 'Меблирована' : 'Без мебели'}</Text>
+                            <Text strong>{property.is_furnished ? 'Furnished' : 'Unfurnished'}</Text>
                             <br />
-                            <Text type="secondary" className="text-xs">Мебель</Text>
+                            <Text type="secondary" className="text-xs">Furniture</Text>
                           </CardContent>
                         </Card>
                       </Col>
@@ -247,12 +247,12 @@ export default function PropertyDetailModal({ property, isOpen, onClose }: Prope
                           <CardContent className="p-4">
                             <Calendar className="w-6 h-6 text-primary mx-auto mb-2" />
                             <Text strong>
-                              {property.completion_status === 'ready' ? 'Готово' : 
-                               property.completion_status === 'under-construction' ? 'Строится' : 
+                              {property.completion_status === 'ready' ? 'Ready' : 
+                               property.completion_status === 'under-construction' ? 'Under Construction' : 
                                property.completion_status}
                             </Text>
                             <br />
-                            <Text type="secondary" className="text-xs">Статус</Text>
+                            <Text type="secondary" className="text-xs">Status</Text>
                           </CardContent>
                         </Card>
                       </Col>
@@ -265,7 +265,7 @@ export default function PropertyDetailModal({ property, isOpen, onClose }: Prope
                   <>
                     <Divider />
                     <div>
-                      <Title level={4}>Описание</Title>
+                      <Title level={4}>Description</Title>
                       <Paragraph>{property.description}</Paragraph>
                     </div>
                   </>
@@ -276,7 +276,7 @@ export default function PropertyDetailModal({ property, isOpen, onClose }: Prope
                   <>
                     <Divider />
                     <div>
-                      <Title level={4}>Удобства</Title>
+                      <Title level={4}>Amenities</Title>
                       <Space wrap>
                         {property.amenities.map((amenity, index) => (
                           <Tag key={index} className="px-3 py-1 rounded-full">
@@ -297,7 +297,7 @@ export default function PropertyDetailModal({ property, isOpen, onClose }: Prope
                 {(property.agent_name || property.agent_phone) && (
                   <Card className="shadow-medium">
                     <CardContent className="p-6">
-                      <Title level={4} className="mb-4">Контакты агента</Title>
+                      <Title level={4} className="mb-4">Agent Contact</Title>
                       
                       {property.agent_name && (
                         <div className="flex items-center mb-3">
@@ -325,7 +325,7 @@ export default function PropertyDetailModal({ property, isOpen, onClose }: Prope
                           }}
                         >
                           <Phone className="w-4 h-4 mr-2" />
-                          Позвонить
+                          Call Now
                         </Button>
                         <Button 
                           htmlType="button"
@@ -333,7 +333,7 @@ export default function PropertyDetailModal({ property, isOpen, onClose }: Prope
                           className="w-full rounded-xl border-primary text-primary"
                         >
                           <MessageCircle className="w-4 h-4 mr-2" />
-                          Написать
+                          Message
                         </Button>
                       </Space>
                     </CardContent>
@@ -343,25 +343,25 @@ export default function PropertyDetailModal({ property, isOpen, onClose }: Prope
                 {/* Property Info */}
                 <Card className="shadow-medium">
                   <CardContent className="p-6">
-                    <Title level={4} className="mb-4">Информация</Title>
+                    <Title level={4} className="mb-4">Property Info</Title>
                     
                     <Space direction="vertical" size="small" className="w-full">
                       <div className="flex justify-between">
-                        <Text type="secondary">ID объекта:</Text>
-                        <Text strong>{property.id || 'Не указан'}</Text>
+                        <Text type="secondary">Property ID:</Text>
+                        <Text strong>{property.id || 'Not specified'}</Text>
                       </div>
                       
                       {property.scraped_at && (
                         <div className="flex justify-between">
-                          <Text type="secondary">Обновлено:</Text>
+                          <Text type="secondary">Updated:</Text>
                           <Text strong>
-                            {new Date(property.scraped_at).toLocaleDateString('ru-RU')}
+                            {new Date(property.scraped_at).toLocaleDateString('en-US')}
                           </Text>
                         </div>
                       )}
                       
                       <div className="flex justify-between">
-                        <Text type="secondary">Источник:</Text>
+                        <Text type="secondary">Source:</Text>
                         <div className="flex items-center gap-1">
                           {getSourceIcon()}
                           <Text strong>{property.source_name || 'API'}</Text>
@@ -375,9 +375,9 @@ export default function PropertyDetailModal({ property, isOpen, onClose }: Prope
                 {property.purpose === 'for-sale' && (
                   <Card className="shadow-medium">
                     <CardContent className="p-6">
-                      <Title level={4} className="mb-4">Ипотечный калькулятор</Title>
+                      <Title level={4} className="mb-4">Mortgage Calculator</Title>
                       <Text type="secondary" className="block mb-4">
-                        Рассчитайте ежемесячный платеж
+                        Calculate monthly payment
                       </Text>
                       <Button 
                         htmlType="button"
@@ -385,7 +385,7 @@ export default function PropertyDetailModal({ property, isOpen, onClose }: Prope
                         className="w-full rounded-xl border-primary text-primary"
                       >
                         <DollarSign className="w-4 h-4 mr-2" />
-                        Рассчитать ипотеку
+                        Calculate Mortgage
                       </Button>
                     </CardContent>
                   </Card>

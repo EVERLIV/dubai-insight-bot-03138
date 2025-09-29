@@ -78,89 +78,97 @@ export default function SearchFilters({
     <Card className="shadow-medium border-0 rounded-2xl overflow-hidden">
       <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b-0">
         <CardTitle className="flex items-center gap-2">
-          <Filter className="w-5 h-5 text-primary" />
-          <Title level={4} className="m-0 text-foreground">Фильтры поиска</Title>
+          <Filter className="w-4 h-4 text-primary" />
+          <span className="text-sm font-semibold text-foreground">Search Properties</span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-6">
+      <CardContent className="p-4">
         <Space direction="vertical" size="middle" className="w-full">
           {/* Purpose & Housing Status */}
-          <Row gutter={[12, 12]}>
+          <Row gutter={[8, 8]}>
             <Col xs={24} sm={12}>
-              <Space direction="vertical" size="small" className="w-full">
-                <Text strong className="flex items-center gap-2 text-sm">
-                  <DollarSign className="w-4 h-4 text-primary" />
-                  Тип сделки
+              <Space direction="vertical" size={4} className="w-full">
+                <Text strong className="flex items-center gap-1 text-xs">
+                  <DollarSign className="w-3 h-3 text-primary" />
+                  Transaction Type
                 </Text>
                 <Select
                   value={filters.purpose}
                   onChange={(value) => updateFilter('purpose', value)}
-                  placeholder="Выберите тип"
-                  size="large"
+                  placeholder="Select type"
+                  size="small"
                   className="w-full"
-                  options={purposes}
+                  options={[
+                    { value: "all", label: "All Types" },
+                    { value: "for-sale", label: "Buy" },
+                    { value: "for-rent", label: "Rent" }
+                  ]}
                 />
               </Space>
             </Col>
             <Col xs={24} sm={12}>
-              <Space direction="vertical" size="small" className="w-full">
-                <Text strong className="flex items-center gap-2 text-sm">
-                  <Home className="w-4 h-4 text-primary" />
-                  Рынок
+              <Space direction="vertical" size={4} className="w-full">
+                <Text strong className="flex items-center gap-1 text-xs">
+                  <Home className="w-3 h-3 text-primary" />
+                  Market
                 </Text>
                 <Select
                   value={filters.housingStatus}
                   onChange={(value) => updateFilter('housingStatus', value)}
-                  placeholder="Выберите рынок"
-                  size="large"
+                  placeholder="Select market"
+                  size="small"
                   className="w-full"
-                  options={housingStatuses}
+                  options={[
+                    { value: "all", label: "All" },
+                    { value: "primary", label: "Off-plan" },
+                    { value: "secondary", label: "Ready" }
+                  ]}
                 />
               </Space>
             </Col>
           </Row>
 
-          <Divider className="my-4" />
+          <Divider className="my-2" />
 
           {/* Location & Property Type */}
-          <Row gutter={[12, 12]}>
+          <Row gutter={[8, 8]}>
             <Col xs={24}>
-              <Space direction="vertical" size="small" className="w-full">
-                <Text strong className="flex items-center gap-2 text-sm">
-                  <MapPin className="w-4 h-4 text-primary" />
-                  Район
+              <Space direction="vertical" size={4} className="w-full">
+                <Text strong className="flex items-center gap-1 text-xs">
+                  <MapPin className="w-3 h-3 text-primary" />
+                  Area
                 </Text>
                 <Select
                   value={filters.location}
                   onChange={(value) => updateFilter('location', value)}
-                  placeholder="Выберите район"
-                  size="large"
+                  placeholder="Select area"
+                  size="small"
                   className="w-full"
                   showSearch
                   filterOption={(input, option) =>
                     (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                   }
                   options={[
-                    { value: "all", label: "Любой район" },
+                    { value: "all", label: "All Areas" },
                     ...locations.slice(1).map(loc => ({ value: loc, label: loc }))
                   ]}
                 />
               </Space>
             </Col>
             <Col xs={24}>
-              <Space direction="vertical" size="small" className="w-full">
-                <Text strong className="flex items-center gap-2 text-sm">
-                  <Home className="w-4 h-4 text-primary" />
-                  Тип недвижимости
+              <Space direction="vertical" size={4} className="w-full">
+                <Text strong className="flex items-center gap-1 text-xs">
+                  <Home className="w-3 h-3 text-primary" />
+                  Property Type
                 </Text>
                 <Select
                   value={filters.propertyType}
                   onChange={(value) => updateFilter('propertyType', value)}
-                  placeholder="Выберите тип"
-                  size="large"
+                  placeholder="Select type"
+                  size="small"
                   className="w-full"
                   options={[
-                    { value: "all", label: "Любой тип" },
+                    { value: "all", label: "All Types" },
                     ...propertyTypes.slice(1).map(type => ({ value: type, label: type }))
                   ]}
                 />
@@ -168,21 +176,30 @@ export default function SearchFilters({
             </Col>
           </Row>
 
-          <Divider className="my-4" />
+          <Divider className="my-2" />
 
           {/* Bedrooms */}
-          <Space direction="vertical" size="small" className="w-full">
-            <Text strong className="flex items-center gap-2 text-sm">
-              <Bed className="w-4 h-4 text-primary" />
-              Количество спален
+          <Space direction="vertical" size={4} className="w-full">
+            <Text strong className="flex items-center gap-1 text-xs">
+              <Bed className="w-3 h-3 text-primary" />
+              Bedrooms
             </Text>
             <Space wrap className="w-full">
-              {bedroomOptions.map((bedroom) => (
+              {[
+                { value: "all", label: "Any" },
+                { value: "0", label: "Studio" },
+                { value: "1", label: "1" },
+                { value: "2", label: "2" },
+                { value: "3", label: "3" },
+                { value: "4", label: "4" },
+                { value: "5", label: "5" },
+                { value: "6+", label: "6+" }
+              ].map((bedroom) => (
                 <Tag.CheckableTag
                   key={bedroom.value}
                   checked={filters.bedrooms === bedroom.value}
                   onChange={() => handleBedroomsChange(bedroom.value)}
-                  className="px-3 py-1 rounded-full border-2 transition-all duration-200 hover:scale-105"
+                  className="px-2 py-0.5 rounded-md border transition-all duration-200 text-xs"
                   style={{
                     backgroundColor: filters.bedrooms === bedroom.value ? 'hsl(var(--primary))' : 'transparent',
                     borderColor: 'hsl(var(--primary))',
@@ -195,20 +212,20 @@ export default function SearchFilters({
             </Space>
           </Space>
 
-          <Divider className="my-4" />
+          <Divider className="my-2" />
 
           {/* Budget Range */}
-          <Space direction="vertical" size="small" className="w-full">
+          <Space direction="vertical" size={4} className="w-full">
             <div className="flex justify-between items-center">
-              <Text strong className="flex items-center gap-2 text-sm">
-                <DollarSign className="w-4 h-4 text-primary" />
-                Бюджет
+              <Text strong className="flex items-center gap-1 text-xs">
+                <DollarSign className="w-3 h-3 text-primary" />
+                Budget
               </Text>
-              <Text className="text-primary font-semibold">
+              <Text className="text-primary font-semibold text-xs">
                 {filters.budget[0].toLocaleString()} AED
               </Text>
             </div>
-            <div className="px-2">
+            <div className="px-1">
               <Slider
                 range={false}
                 value={filters.budget[0]}
@@ -222,31 +239,31 @@ export default function SearchFilters({
                 trackStyle={{ backgroundColor: 'hsl(var(--primary))' }}
                 handleStyle={{ borderColor: 'hsl(var(--primary))' }}
               />
-              <div className="flex justify-between text-xs text-muted-foreground mt-2">
+              <div className="flex justify-between text-xs text-muted-foreground mt-1">
                 <span>500K AED</span>
                 <span>10M+ AED</span>
               </div>
             </div>
           </Space>
 
-          <Divider className="my-4" />
+          <Divider className="my-2" />
 
           {/* Action Buttons */}
-          <Space className="w-full" size="middle">
+          <Space className="w-full" size="small">
             <Button 
               disabled={isLoading}
               onClick={onSearch}
-              className="flex-1 h-12 rounded-xl font-medium btn-primary"
+              className="flex-1 h-8 rounded-lg font-medium btn-primary text-sm"
             >
               {isLoading ? (
                 <>
-                  <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
-                  Поиск...
+                  <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
+                  Searching...
                 </>
               ) : (
                 <>
-                  <Search className="w-5 h-5 mr-2" />
-                  Найти недвижимость
+                  <Search className="w-3 h-3 mr-1" />
+                  Search Properties
                 </>
               )}
             </Button>
@@ -255,12 +272,12 @@ export default function SearchFilters({
               disabled={isRefreshing}
               onClick={onRefresh}
               variant="outline"
-              className="h-12 px-6 rounded-xl"
+              className="h-8 px-3 rounded-lg"
             >
               {isRefreshing ? (
-                <RefreshCw className="w-5 h-5 animate-spin" />
+                <RefreshCw className="w-3 h-3 animate-spin" />
               ) : (
-                <RefreshCw className="w-5 h-5" />
+                <RefreshCw className="w-3 h-3" />
               )}
             </Button>
           </Space>

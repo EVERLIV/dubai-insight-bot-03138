@@ -173,9 +173,24 @@
     @apply bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-200;
   }
 
-  /* Ant Design customizations */
+  /* Compact Design System - 14px base font */
+  .compact-text {
+    @apply text-sm leading-tight;
+  }
+  
+  .compact-button {
+    @apply text-sm px-3 py-1.5 h-8;
+  }
+  
+  .compact-input {
+    @apply text-sm px-3 py-1.5 h-8;
+  }
+
+  /* Ant Design customizations - Compact */
   .ant-select-selector {
-    @apply rounded-lg border-border;
+    @apply rounded-lg border-border text-sm;
+    min-height: 32px !important;
+    padding: 4px 8px !important;
   }
 
   .ant-select-selector:hover {
@@ -187,12 +202,23 @@
     box-shadow: 0 0 0 2px hsl(var(--primary) / 0.1) !important;
   }
 
+  .ant-select-selection-item {
+    @apply text-sm !important;
+    line-height: 24px !important;
+  }
+
+  .ant-slider {
+    margin: 8px 0 !important;
+  }
+
   .ant-slider-track {
     @apply bg-primary;
   }
 
   .ant-slider-handle {
     @apply border-primary;
+    width: 16px !important;
+    height: 16px !important;
   }
 
   .ant-slider-handle:hover {
@@ -202,6 +228,22 @@
   .ant-slider-handle:focus {
     @apply border-primary;
     box-shadow: 0 0 0 5px hsl(var(--primary) / 0.1);
+  }
+
+  .ant-tag {
+    @apply text-xs px-2 py-1;
+    border-radius: 6px;
+  }
+
+  .ant-button {
+    @apply text-sm;
+    height: 32px !important;
+    padding: 4px 12px !important;
+  }
+
+  .ant-input {
+    @apply text-sm;
+    padding: 6px 8px !important;
   }
 
   .ant-modal-content {
