@@ -15,24 +15,21 @@ interface MetricCardProps {
   value: string;
   change: number;
   trend: 'up' | 'down';
-  compact?: boolean;
 }
 
-const MetricCard = ({ title, value, change, trend, compact = false }: MetricCardProps) => (
-  <Card className={`${compact ? 'p-3' : 'p-4'} hover:shadow-md transition-shadow`}>
-    <CardContent className="p-0">
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <p className={`${compact ? 'text-xs' : 'text-sm'} text-muted-foreground font-medium`}>{title}</p>
-          <p className={`${compact ? 'text-lg' : 'text-xl'} font-bold`}>{value}</p>
-        </div>
-        <div className={`flex items-center gap-1 ${trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-          {trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-          <span className="text-xs font-medium">{change > 0 ? '+' : ''}{change}%</span>
-        </div>
+const MetricCard = ({ title, value, change, trend }: MetricCardProps) => (
+  <div className="bg-white border border-gray-200 p-4 hover:shadow-lg transition-shadow">
+    <div className="flex items-center justify-between mb-3">
+      <div className="flex-1">
+        <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">{title}</p>
+        <p className="text-xl font-bold text-gray-900">{value}</p>
       </div>
-    </CardContent>
-  </Card>
+      <div className={`flex items-center gap-1 ${trend === 'up' ? 'text-green-700' : 'text-red-700'}`}>
+        {trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+        <span className="text-xs font-semibold">{change > 0 ? '+' : ''}{change}%</span>
+      </div>
+    </div>
+  </div>
 );
 
 interface DistrictRowProps {
@@ -43,17 +40,17 @@ interface DistrictRowProps {
 }
 
 const DistrictRow = ({ name, avgPrice, growth, rank }: DistrictRowProps) => (
-  <div className="flex items-center justify-between py-2 px-3 hover:bg-muted/30 rounded-lg transition-colors">
+  <div className="flex items-center justify-between py-3 px-4 bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors">
     <div className="flex items-center gap-3">
-      <Badge variant="outline" className="w-6 h-6 text-xs rounded-full flex items-center justify-center">
+      <div className="w-6 h-6 bg-blue-900 text-white text-xs font-bold flex items-center justify-center">
         {rank}
-      </Badge>
+      </div>
       <div>
-        <div className="font-medium text-sm">{name}</div>
-        <div className="text-xs text-muted-foreground">${avgPrice.toLocaleString()}</div>
+        <div className="font-semibold text-sm text-gray-900">{name}</div>
+        <div className="text-xs text-gray-600">${avgPrice.toLocaleString()}</div>
       </div>
     </div>
-    <div className={`text-sm font-semibold ${growth > 10 ? 'text-green-600' : growth > 5 ? 'text-blue-600' : 'text-orange-600'}`}>
+    <div className={`text-sm font-bold ${growth > 10 ? 'text-green-700' : growth > 5 ? 'text-blue-900' : 'text-orange-600'}`}>
       +{growth}%
     </div>
   </div>
@@ -67,15 +64,15 @@ interface PropertyTypeRowProps {
 }
 
 const PropertyTypeRow = ({ type, avgPrice, count, color }: PropertyTypeRowProps) => (
-  <div className="flex items-center justify-between py-2 px-3 hover:bg-muted/30 rounded-lg transition-colors">
+  <div className="flex items-center justify-between py-3 px-4 bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors">
     <div className="flex items-center gap-3">
-      <div className="w-3 h-3 rounded" style={{ backgroundColor: color }} />
+      <div className="w-3 h-3" style={{ backgroundColor: color }} />
       <div>
-        <div className="font-medium text-sm">{type}</div>
-        <div className="text-xs text-muted-foreground">{count} properties</div>
+        <div className="font-semibold text-sm text-gray-900">{type}</div>
+        <div className="text-xs text-gray-600">{count} properties</div>
       </div>
     </div>
-    <div className="text-sm font-semibold">${(avgPrice / 1000).toFixed(0)}K</div>
+    <div className="text-sm font-bold text-gray-900">${(avgPrice / 1000).toFixed(0)}K</div>
   </div>
 );
 
@@ -84,10 +81,10 @@ export default function CompactAnalytics() {
   const [lastUpdate, setLastUpdate] = useState(new Date().toLocaleTimeString());
 
   const metrics = [
-    { title: "Total Value", value: "$2.8B", change: 8.5, trend: 'up' as const },
-    { title: "Avg. Price", value: "$1.2M", change: 12.3, trend: 'up' as const },
-    { title: "Transactions", value: "2,467", change: 15.7, trend: 'up' as const },
-    { title: "Yield", value: "7.2%", change: -2.1, trend: 'down' as const },
+    { title: "Total Market Value", value: "$2.8B", change: 8.5, trend: 'up' as const },
+    { title: "Average Price", value: "$1.2M", change: 12.3, trend: 'up' as const },
+    { title: "Monthly Transactions", value: "2,467", change: 15.7, trend: 'up' as const },
+    { title: "Average Yield", value: "7.2%", change: -2.1, trend: 'down' as const },
   ];
 
   const districts = [
@@ -99,11 +96,11 @@ export default function CompactAnalytics() {
   ];
 
   const propertyTypes = [
-    { type: "Apartments", avgPrice: 980000, count: 1250, color: "#3b82f6" },
-    { type: "Penthouses", avgPrice: 2850000, count: 180, color: "#ef4444" },
-    { type: "Villas", avgPrice: 2200000, count: 320, color: "#10b981" },
-    { type: "Studios", avgPrice: 650000, count: 890, color: "#f59e0b" },
-    { type: "Townhouses", avgPrice: 1750000, count: 260, color: "#8b5cf6" },
+    { type: "Apartments", avgPrice: 980000, count: 1250, color: "#1e40af" },
+    { type: "Penthouses", avgPrice: 2850000, count: 180, color: "#dc2626" },
+    { type: "Villas", avgPrice: 2200000, count: 320, color: "#059669" },
+    { type: "Studios", avgPrice: 650000, count: 890, color: "#d97706" },
+    { type: "Townhouses", avgPrice: 1750000, count: 260, color: "#7c3aed" },
   ];
 
   const chartData = [
@@ -124,168 +121,187 @@ export default function CompactAnalytics() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Advanced Analytics</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Real-time market insights • Last updated {lastUpdate}
-          </p>
+    <div className="bg-white border border-gray-200">
+      <div className="p-6">
+        {/* Professional Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-1 h-6 bg-blue-900"></div>
+              <h2 className="text-xl font-bold text-gray-900">Real-Time Market Intelligence</h2>
+            </div>
+            <p className="text-sm text-gray-600">
+              Professional analytics dashboard • Updated {lastUpdate}
+            </p>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isLoading}
+            className="border-gray-300 text-gray-700 hover:bg-gray-50"
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh Data
+          </Button>
         </div>
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={handleRefresh}
-          disabled={isLoading}
-        >
-          <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
-      </div>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {metrics.map((metric, index) => (
-          <MetricCard key={index} {...metric} compact />
-        ))}
-      </div>
+        {/* Key Metrics */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {metrics.map((metric, index) => (
+            <MetricCard key={index} {...metric} />
+          ))}
+        </div>
 
-      {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Distribution by Type */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Home className="w-5 h-5" />
-              Distribution by Type
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {propertyTypes.map((type, index) => (
-              <PropertyTypeRow key={index} {...type} />
-            ))}
-          </CardContent>
-        </Card>
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          {/* Property Types Distribution */}
+          <div className="bg-white border border-gray-200 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-6 h-6 bg-blue-900 flex items-center justify-center">
+                <Home className="w-4 h-4 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Property Distribution</h3>
+            </div>
+            <div className="space-y-2">
+              {propertyTypes.map((type, index) => (
+                <PropertyTypeRow key={index} {...type} />
+              ))}
+            </div>
+          </div>
 
-        {/* Average Price by Type */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <DollarSign className="w-5 h-5" />
-              Average Price by Type
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+          {/* Price Chart */}
+          <div className="bg-white border border-gray-200 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-6 h-6 bg-blue-900 flex items-center justify-center">
+                <DollarSign className="w-4 h-4 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Price Trends</h3>
+            </div>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={propertyTypes} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis 
                   dataKey="type" 
-                  tick={{ fontSize: 10 }}
+                  tick={{ fontSize: 10, fill: '#6b7280' }}
                   angle={-45}
                   textAnchor="end"
                   height={60}
                 />
-                <YAxis tick={{ fontSize: 10 }} />
+                <YAxis tick={{ fontSize: 10, fill: '#6b7280' }} />
                 <Tooltip 
                   formatter={(value: number) => [`$${(value / 1000).toFixed(0)}K`, 'Avg Price']}
                   labelFormatter={(label) => `Type: ${label}`}
+                  contentStyle={{ 
+                    backgroundColor: 'white', 
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0'
+                  }}
                 />
-                <Bar dataKey="avgPrice" fill="#3b82f6" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="avgPrice" fill="#1e40af" />
               </BarChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Top Growing Districts */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <MapPin className="w-5 h-5" />
-              Top Growing Districts
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {districts.map((district, index) => (
-              <DistrictRow key={index} {...district} />
-            ))}
-          </CardContent>
-        </Card>
-      </div>
+          {/* Top Districts */}
+          <div className="bg-white border border-gray-200 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-6 h-6 bg-blue-900 flex items-center justify-center">
+                <MapPin className="w-4 h-4 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Top Districts</h3>
+            </div>
+            <div className="space-y-2">
+              {districts.slice(0, 5).map((district, index) => (
+                <DistrictRow key={index} {...district} />
+              ))}
+            </div>
+          </div>
+        </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Price Trends */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <TrendingUp className="w-5 h-5" />
-              Price Trends
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Price Trends Chart */}
+          <div className="bg-white border border-gray-200 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-6 h-6 bg-blue-900 flex items-center justify-center">
+                <TrendingUp className="w-4 h-4 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">6-Month Price Trends</h3>
+            </div>
             <ResponsiveContainer width="100%" height={250}>
               <AreaChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#6b7280' }} />
+                <YAxis tick={{ fontSize: 12, fill: '#6b7280' }} />
                 <Tooltip 
                   formatter={(value: number) => [`$${(value / 1000).toFixed(0)}K`, 'Avg Price']}
+                  contentStyle={{ 
+                    backgroundColor: 'white', 
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0'
+                  }}
                 />
                 <Area 
                   type="monotone" 
                   dataKey="price" 
-                  stroke="#3b82f6" 
-                  fill="#3b82f6" 
-                  fillOpacity={0.2}
+                  stroke="#1e40af" 
+                  fill="#1e40af" 
+                  fillOpacity={0.1}
                 />
               </AreaChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Market Indicators */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Activity className="w-5 h-5" />
-              Market Indicators
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Market Activity</span>
-                <span className="font-semibold text-green-600">High</span>
+          {/* Market Performance Indicators */}
+          <div className="bg-white border border-gray-200 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-6 h-6 bg-blue-900 flex items-center justify-center">
+                <Activity className="w-4 h-4 text-white" />
               </div>
-              <Progress value={85} className="h-2" />
+              <h3 className="text-lg font-bold text-gray-900">Market Performance</h3>
             </div>
-            
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Investment Interest</span>
-                <span className="font-semibold text-blue-600">Very High</span>
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="font-medium text-gray-700">Market Activity</span>
+                  <span className="font-bold text-green-700">High</span>
+                </div>
+                <div className="w-full bg-gray-200 h-2">
+                  <div className="bg-green-700 h-2" style={{ width: '85%' }}></div>
+                </div>
               </div>
-              <Progress value={92} className="h-2" />
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Liquidity</span>
-                <span className="font-semibold text-orange-600">Medium</span>
+              
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="font-medium text-gray-700">Investment Interest</span>
+                  <span className="font-bold text-blue-900">Very High</span>
+                </div>
+                <div className="w-full bg-gray-200 h-2">
+                  <div className="bg-blue-900 h-2" style={{ width: '92%' }}></div>
+                </div>
               </div>
-              <Progress value={68} className="h-2" />
-            </div>
-            
-            <div className="mt-4 p-3 bg-muted/30 rounded-lg">
-              <div className="text-xs text-muted-foreground mb-1">💡 AI Insight</div>
-              <div className="text-sm font-medium">
-                Strong growth momentum expected in Q4 2024, particularly in premium segments.
+              
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="font-medium text-gray-700">Market Liquidity</span>
+                  <span className="font-bold text-orange-600">Medium</span>
+                </div>
+                <div className="w-full bg-gray-200 h-2">
+                  <div className="bg-orange-600 h-2" style={{ width: '68%' }}></div>
+                </div>
+              </div>
+              
+              <div className="mt-6 p-4 bg-gray-900 text-white">
+                <div className="text-xs text-gray-400 mb-2 uppercase tracking-wide">💡 Professional Analysis</div>
+                <div className="text-sm font-medium leading-relaxed">
+                  Strong fundamentals indicate sustained growth momentum across premium segments. 
+                  Institutional opportunities remain favorable with selective allocation strategies.
+                </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

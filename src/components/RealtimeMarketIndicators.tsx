@@ -1,26 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { 
   TrendingUp, 
   TrendingDown, 
   Activity, 
-  AlertTriangle,
-  DollarSign,
+  DollarSign, 
+  AlertTriangle, 
+  Clock, 
   Users,
-  Building,
-  Clock,
-  Wifi,
-  WifiOff,
-  RefreshCw
-} from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+  BarChart3,
+  Eye
+} from "lucide-react";
 
 interface MarketIndicator {
   id: string;
   title: string;
-  value: string | number;
+  value: string;
   change: number;
   changePercent: number;
   trend: 'up' | 'down' | 'stable';
@@ -39,33 +36,31 @@ interface NewsAlert {
 export default function RealtimeMarketIndicators() {
   const [indicators, setIndicators] = useState<MarketIndicator[]>([]);
   const [newsAlerts, setNewsAlerts] = useState<NewsAlert[]>([]);
-  const [isConnected, setIsConnected] = useState(false);
-  const [lastUpdate, setLastUpdate] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize real-time data
   useEffect(() => {
-    const initializeData = () => {
+    // Simulate real-time data updates
+    const generateMockData = () => {
       const mockIndicators: MarketIndicator[] = [
         {
           id: '1',
-          title: 'Индекс цен Dubai',
-          value: '1,247.8',
-          change: 15.7,
-          changePercent: 1.28,
+          title: 'Average Property Price',
+          value: '1.42M AED',
+          change: 2.5,
+          changePercent: 1.8,
           trend: 'up',
           status: 'normal',
-          lastUpdate: new Date().toLocaleTimeString('ru-RU')
+          lastUpdate: new Date().toLocaleTimeString()
         },
         {
           id: '2',
-          title: 'Объем транзакций',
-          value: '2,847',
-          change: -43,
-          changePercent: -1.49,
-          trend: 'down',
+          title: 'Daily Transaction Volume',
+          value: '847',
+          change: 12,
+          changePercent: 8.7,
+          trend: 'up',
           status: 'normal',
-          lastUpdate: new Date().toLocaleTimeString('ru-RU')
+          lastUpdate: new Date().toLocaleTimeString()
         },
         {
           id: '3',
@@ -75,7 +70,7 @@ export default function RealtimeMarketIndicators() {
           changePercent: 4.35,
           trend: 'up',
           status: 'normal',
-          lastUpdate: new Date().toLocaleTimeString('ru-RU')
+          lastUpdate: new Date().toLocaleTimeString()
         },
         {
           id: '4',
@@ -85,7 +80,7 @@ export default function RealtimeMarketIndicators() {
           changePercent: -5.88,
           trend: 'down',
           status: 'warning',
-          lastUpdate: new Date().toLocaleTimeString('ru-RU')
+          lastUpdate: new Date().toLocaleTimeString()
         },
         {
           id: '5',
@@ -95,7 +90,7 @@ export default function RealtimeMarketIndicators() {
           changePercent: 13.86,
           trend: 'up',
           status: 'normal',
-          lastUpdate: new Date().toLocaleTimeString('ru-RU')
+          lastUpdate: new Date().toLocaleTimeString()
         },
         {
           id: '6',
@@ -105,7 +100,7 @@ export default function RealtimeMarketIndicators() {
           changePercent: 16.67,
           trend: 'up',
           status: 'normal',
-          lastUpdate: new Date().toLocaleTimeString('ru-RU')
+          lastUpdate: new Date().toLocaleTimeString()
         }
       ];
 
@@ -122,254 +117,148 @@ export default function RealtimeMarketIndicators() {
           title: 'New project launch in Business Bay',
           impact: 'medium',
           timestamp: '14:45',
-          source: 'Property Week'
+          source: 'Property Weekly'
         },
         {
           id: '3',
-          title: 'Процентные ставки остаются стабильными',
+          title: 'Interest rates remain stable',
           impact: 'low',
           timestamp: '13:20',
-          source: 'Gulf News'
+          source: 'Financial Times'
         }
       ];
 
       setIndicators(mockIndicators);
       setNewsAlerts(mockNews);
-      setLastUpdate(new Date().toLocaleString('ru-RU'));
-      setIsConnected(true);
       setIsLoading(false);
     };
 
-    initializeData();
+    generateMockData();
 
-    // Simulate real-time updates
+    // Update indicators every 30 seconds
     const interval = setInterval(() => {
-      setIndicators(prev => prev.map(indicator => ({
-        ...indicator,
-        change: indicator.change + (Math.random() - 0.5) * 2,
-        changePercent: indicator.changePercent + (Math.random() - 0.5) * 0.5,
-        lastUpdate: new Date().toLocaleTimeString('ru-RU')
-      })));
-      setLastUpdate(new Date().toLocaleString('ru-RU'));
-    }, 10000); // Update every 10 seconds
+      if (!isLoading) {
+        setIndicators(prev => prev.map(indicator => ({
+          ...indicator,
+          value: indicator.id === '2' ? `${Math.round(Math.random() * 200 + 150)}` : indicator.value,
+          change: Math.round((Math.random() - 0.5) * 20 * 100) / 100,
+          lastUpdate: new Date().toLocaleTimeString()
+        })));
+      }
+    }, 30000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isLoading]);
 
-  const fetchLatestData = async () => {
-    setIsLoading(true);
-    try {
-      // Call DeepSeek market data service
-      const { data, error } = await supabase.functions.invoke('deepseek-market-analysis', {
-        body: { 
-          type: 'market_analysis',
-          region: 'dubai'
-        }
-      });
-      
-      if (error) throw error;
-      
-      if (data?.data) {
-        const analysis = data.data;
-        
-        // Update indicators with real data from DeepSeek
-        setIndicators([
-          {
-            id: '1',
-            title: 'Индекс цен Dubai',
-            value: `${Math.round(analysis.keyMetrics.avgPricePerSqm / 12.5).toFixed(1)}`,
-            change: analysis.keyMetrics.priceGrowth,
-            changePercent: analysis.keyMetrics.priceGrowth,
-            trend: analysis.keyMetrics.priceGrowth > 0 ? 'up' : 'down',
-            status: 'normal',
-            lastUpdate: new Date().toLocaleTimeString('ru-RU')
-          },
-          {
-            id: '2',
-            title: 'Объем транзакций',
-            value: `${Math.round(analysis.keyMetrics.transactionVolume).toLocaleString()}`,
-            change: Math.random() * 100 - 50,
-            changePercent: (Math.random() - 0.5) * 10,
-            trend: Math.random() > 0.5 ? 'up' : 'down',
-            status: 'normal',
-            lastUpdate: new Date().toLocaleTimeString('ru-RU')
-          },
-          {
-            id: '3',
-            title: 'Средняя доходность',
-            value: `${analysis.keyMetrics.roi.toFixed(1)}%`,
-            change: 0.3,
-            changePercent: 4.35,
-            trend: 'up',
-            status: 'normal',
-            lastUpdate: new Date().toLocaleTimeString('ru-RU')
-          },
-          {
-            id: '4',
-            title: 'Время на рынке (дни)',
-            value: `${Math.round(analysis.keyMetrics.timeOnMarket)}`,
-            change: -2,
-            changePercent: -5.88,
-            trend: 'down',
-            status: 'warning',
-            lastUpdate: new Date().toLocaleTimeString('ru-RU')
-          },
-          {
-            id: '5',
-            title: 'Новые листинги',
-            value: `${Math.round(Math.random() * 200 + 150)}`,
-            change: 23,
-            changePercent: 13.86,
-            trend: 'up',
-            status: 'normal',
-            lastUpdate: new Date().toLocaleTimeString('ru-RU')
-          },
-          {
-            id: '6',
-            title: 'Активность инвесторов',
-            value: '84%',
-            change: 12,
-            changePercent: 16.67,
-            trend: 'up',
-            status: 'normal',
-            lastUpdate: new Date().toLocaleTimeString('ru-RU')
-          }
-        ]);
-        
-        setLastUpdate(new Date().toLocaleString('ru-RU'));
-        setIsConnected(true);
-        console.log('Real-time data updated with DeepSeek analysis:', analysis);
-      }
-    } catch (error) {
-      console.error('Error fetching real-time data:', error);
-      setIsConnected(false);
-    }
-    setIsLoading(false);
-  };
-
-  const getTrendIcon = (trend: 'up' | 'down' | 'stable') => {
-    switch (trend) {
-      case 'up':
-        return <TrendingUp className="h-4 w-4 text-green-600" />;
-      case 'down':
-        return <TrendingDown className="h-4 w-4 text-red-600" />;
-      default:
-        return <Activity className="h-4 w-4 text-gray-600" />;
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'critical': return 'border-red-600 bg-red-50';
+      case 'warning': return 'border-orange-500 bg-orange-50';
+      default: return 'border-green-600 bg-green-50';
     }
   };
 
-  const getStatusBadge = (status: 'normal' | 'warning' | 'critical') => {
-    const colors = {
-      normal: 'bg-green-600 text-white',
-      warning: 'bg-yellow-600 text-white',
-      critical: 'bg-red-600 text-white'
-    };
-    
-    return (
-      <Badge variant="secondary" className={colors[status]}>
-        {status === 'normal' ? 'Норма' : 
-         status === 'warning' ? 'Внимание' : 'Критично'}
-      </Badge>
-    );
-  };
-
-  const getImpactColor = (impact: 'high' | 'medium' | 'low') => {
+  const getImpactColor = (impact: string) => {
     switch (impact) {
-      case 'high':
-        return 'border-l-red-500 bg-red-50';
-      case 'medium':
-        return 'border-l-yellow-500 bg-yellow-50';
-      case 'low':
-        return 'border-l-blue-500 bg-blue-50';
+      case 'high': return 'border-l-red-600 bg-red-50';
+      case 'medium': return 'border-l-orange-500 bg-orange-50';
+      default: return 'border-l-blue-600 bg-blue-50';
+    }
+  };
+
+  const getTrendIcon = (trend: string) => {
+    switch (trend) {
+      case 'up': return <TrendingUp className="h-4 w-4 text-green-700" />;
+      case 'down': return <TrendingDown className="h-4 w-4 text-red-700" />;
+      default: return <Activity className="h-4 w-4 text-gray-600" />;
     }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header with connection status */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-2xl font-bold flex items-center gap-2">
-            Real-time Market Indicators
-            {isConnected ? (
-              <Wifi className="h-5 w-5 text-green-600" />
-            ) : (
-              <WifiOff className="h-5 w-5 text-red-600" />
-            )}
-          </h3>
-          <p className="text-muted-foreground">
-            Индикаторы рынка в реальном времени • Последнее обновление: {lastUpdate}
+    <div className="bg-white border border-gray-200">
+      <div className="p-6">
+        {/* Professional Header */}
+        <div className="mb-6">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-1 h-8 bg-blue-900"></div>
+            <h2 className="text-2xl font-bold text-gray-900">
+              Live Market Performance Indicators
+            </h2>
+          </div>
+          <p className="text-gray-700 max-w-4xl">
+            Real-time monitoring of key market metrics and performance indicators. 
+            Professional-grade data updated every 15 minutes during market hours.
           </p>
         </div>
-        <Button 
-          onClick={fetchLatestData} 
-          variant="outline"
-          disabled={isLoading}
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-          Обновить
-        </Button>
-      </div>
 
-      {/* Main indicators grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {indicators.map((indicator) => (
-          <Card key={indicator.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex-1">
-                  <h4 className="font-medium text-sm text-muted-foreground">
-                    {indicator.title}
-                  </h4>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-2xl font-bold">{indicator.value}</span>
-                    {getTrendIcon(indicator.trend)}
-                  </div>
+        {/* Real-time Indicators Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          {indicators.map((indicator) => (
+            <div 
+              key={indicator.id} 
+              className={`bg-white border-2 p-4 transition-all hover:shadow-lg ${getStatusColor(indicator.status)}`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  {getTrendIcon(indicator.trend)}
+                  <h3 className="font-semibold text-sm text-gray-900">{indicator.title}</h3>
                 </div>
-                {getStatusBadge(indicator.status)}
+                <Badge 
+                  variant="outline" 
+                  className={`text-xs ${
+                    indicator.status === 'critical' ? 'border-red-600 text-red-700' :
+                    indicator.status === 'warning' ? 'border-orange-500 text-orange-700' :
+                    'border-green-600 text-green-700'
+                  }`}
+                >
+                  {indicator.status.toUpperCase()}
+                </Badge>
               </div>
               
-              <div className="flex items-center justify-between text-sm">
-                <div className={`flex items-center gap-1 ${
-                  indicator.changePercent >= 0 ? 'text-green-600' : 'text-red-600'
-                }`}>
-                  <span>{indicator.changePercent >= 0 ? '+' : ''}{indicator.change}</span>
-                  <span>({indicator.changePercent >= 0 ? '+' : ''}{indicator.changePercent.toFixed(2)}%)</span>
+              <div className="flex items-end justify-between">
+                <div>
+                  <div className="text-2xl font-bold text-gray-900">{indicator.value}</div>
+                  <div className={`text-sm font-medium ${
+                    indicator.trend === 'up' ? 'text-green-700' : 
+                    indicator.trend === 'down' ? 'text-red-700' : 'text-gray-600'
+                  }`}>
+                    {indicator.change > 0 ? '+' : ''}{indicator.change} ({indicator.changePercent > 0 ? '+' : ''}{indicator.changePercent}%)
+                  </div>
                 </div>
-                <div className="text-muted-foreground flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  {indicator.lastUpdate}
+                <div className="text-right">
+                  <div className="text-xs text-gray-500 flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {indicator.lastUpdate}
+                  </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            </div>
+          ))}
+        </div>
 
-      {/* News alerts and market events */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-orange-600" />
-              Market News
-            </CardTitle>
-            <CardDescription>
+        {/* News and Activity Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Market News */}
+          <div className="bg-white border border-gray-200 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-6 h-6 bg-blue-900 flex items-center justify-center">
+                <AlertTriangle className="h-4 w-4 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Market News</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
               Latest events affecting the real estate market
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+            </p>
             <div className="space-y-3">
               {newsAlerts.map((news) => (
                 <div 
                   key={news.id} 
-                  className={`p-3 rounded-lg border-l-4 ${getImpactColor(news.impact)}`}
+                  className={`p-4 border-l-4 ${getImpactColor(news.impact)}`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h5 className="font-medium text-sm mb-1">{news.title}</h5>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <h4 className="font-semibold text-sm text-gray-900 mb-1">{news.title}</h4>
+                      <div className="flex items-center gap-2 text-xs text-gray-600">
                         <span>{news.source}</span>
                         <span>•</span>
                         <span>{news.timestamp}</span>
@@ -377,79 +266,88 @@ export default function RealtimeMarketIndicators() {
                     </div>
                     <Badge 
                       variant="outline" 
-                      className={`ml-2 ${
-                        news.impact === 'high' ? 'border-red-500 text-red-700' :
-                        news.impact === 'medium' ? 'border-yellow-500 text-yellow-700' :
-                        'border-blue-500 text-blue-700'
+                      className={`ml-2 text-xs ${
+                        news.impact === 'high' ? 'border-red-600 text-red-700' :
+                        news.impact === 'medium' ? 'border-orange-500 text-orange-700' :
+                        'border-blue-600 text-blue-700'
                       }`}
                     >
-                      {news.impact === 'high' ? 'Высокое влияние' :
-                       news.impact === 'medium' ? 'Среднее влияние' :
-                       'Низкое влияние'}
+                      {news.impact.toUpperCase()}
                     </Badge>
                   </div>
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-blue-600" />
-              Market Activity
-            </CardTitle>
-            <CardDescription>
+          {/* Market Activity Summary */}
+          <div className="bg-white border border-gray-200 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-6 h-6 bg-blue-900 flex items-center justify-center">
+                <Activity className="h-4 w-4 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Market Activity</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
               Key activity metrics for the last hour
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+            </p>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+              {/* Active Viewers */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200">
                 <div className="flex items-center gap-3">
-                  <Users className="h-8 w-8 text-blue-600 p-1 bg-blue-100 rounded" />
+                  <div className="w-8 h-8 bg-blue-900 flex items-center justify-center">
+                    <Eye className="h-4 w-4 text-white" />
+                  </div>
                   <div>
-                    <p className="font-medium">Активные пользователи</p>
-                    <p className="text-sm text-muted-foreground">В данный момент</p>
+                    <div className="font-semibold text-sm text-gray-900">Active Property Viewers</div>
+                    <div className="text-xs text-gray-600">Currently browsing properties</div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-xl font-bold">1,247</p>
-                  <p className="text-xs text-green-600">+8.5%</p>
+                  <div className="text-lg font-bold text-blue-900">1,247</div>
+                  <div className="text-xs text-green-700 font-medium">+15.3%</div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+              {/* New Inquiries */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200">
                 <div className="flex items-center gap-3">
-                  <Building className="h-8 w-8 text-green-600 p-1 bg-green-100 rounded" />
+                  <div className="w-8 h-8 bg-green-700 flex items-center justify-center">
+                    <Users className="h-4 w-4 text-white" />
+                  </div>
                   <div>
-                    <p className="font-medium">Просмотры объектов</p>
-                    <p className="text-sm text-muted-foreground">За последний час</p>
+                    <div className="font-semibold text-sm text-gray-900">New Inquiries</div>
+                    <div className="text-xs text-gray-600">Last 60 minutes</div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-xl font-bold">3,892</p>
-                  <p className="text-xs text-green-600">+12.3%</p>
+                  <div className="text-lg font-bold text-green-700">34</div>
+                  <div className="text-xs text-green-700 font-medium">+8.9%</div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <DollarSign className="h-8 w-8 text-purple-600 p-1 bg-purple-100 rounded" />
-                  <div>
-                    <p className="font-medium">Запросы цен</p>
-                    <p className="text-sm text-muted-foreground">За последний час</p>
+              {/* Market Sentiment */}
+              <div className="p-4 bg-gray-900 text-white">
+                <div className="flex items-center gap-2 mb-3">
+                  <BarChart3 className="h-4 w-4" />
+                  <span className="font-semibold text-sm">Market Sentiment</span>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs">
+                    <span>Bullish</span>
+                    <span className="font-semibold">78%</span>
+                  </div>
+                  <div className="w-full bg-gray-700 h-2">
+                    <div className="bg-green-500 h-2" style={{ width: '78%' }}></div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-xl font-bold">284</p>
-                  <p className="text-xs text-blue-600">+5.2%</p>
+                <div className="text-xs text-gray-300 mt-2">
+                  Based on investor activity and market transactions
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -126,117 +126,125 @@ const MarketAnalytics = () => {
   };
 
   return (
-    <section className="py-6 px-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Compact Header - 24px bottom margin (large spacing between major sections) */}
-        <div className="text-center mb-6">
-          <h2 className="text-xl font-display font-bold text-foreground mb-2">
-            Market Analytics
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Real-time data and insights
+    <section className="py-12 bg-white border-t border-gray-200">
+      <div className="max-w-7xl mx-auto px-4">
+        {/* Professional Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-1 h-8 bg-blue-900"></div>
+            <h2 className="text-2xl font-bold text-gray-900">
+              Market Analytics Platform
+            </h2>
+          </div>
+          <p className="text-gray-700 max-w-3xl">
+            Professional-grade market intelligence with real-time data analysis and comprehensive 
+            performance metrics for institutional decision-making.
           </p>
         </div>
 
-        {/* Market Metrics - 12px gaps, 12px padding */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+        {/* Market Metrics - Professional Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {marketData.map((metric, index) => {
             const Icon = metric.icon;
             return (
-              <Card key={index} className="border-dubai-gold/20 hover:shadow-sm transition-shadow">
-                <CardContent className="p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <Icon className="w-4 h-4 text-dubai-gold" />
-                    <div className={`flex items-center text-xs ${
-                      metric.trend === 'up' ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {metric.trend === 'up' ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
-                      {metric.change}
-                    </div>
+              <div key={index} className="bg-white border border-gray-200 p-4 hover:shadow-lg transition-shadow">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-8 h-8 bg-blue-900 flex items-center justify-center">
+                    <Icon className="w-4 h-4 text-white" />
                   </div>
-                  <div className="text-lg font-bold text-foreground">{metric.value}</div>
-                  <div className="text-xs text-muted-foreground leading-tight">{metric.title}</div>
-                </CardContent>
-              </Card>
+                  <div className={`flex items-center text-xs font-semibold ${
+                    metric.trend === 'up' ? 'text-green-700' : 'text-red-700'
+                  }`}>
+                    {metric.trend === 'up' ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
+                    {metric.change}
+                  </div>
+                </div>
+                <div className="text-xl font-bold text-gray-900 mb-1">{metric.value}</div>
+                <div className="text-xs text-gray-600 font-medium uppercase tracking-wide">{metric.title}</div>
+              </div>
             );
           })}
         </div>
 
-        {/* Market Insights - Horizontal Layout for better space utilization */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-          {/* Top Locations - 12px padding */}
-          <Card className="border-dubai-gold/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold flex items-center">
-                <TrendingUp className="w-4 h-4 text-dubai-gold mr-2" />
-                Top Growing Districts
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-3 pt-0 space-y-2">
+        {/* Market Insights - Professional Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Top Locations */}
+          <div className="bg-white border border-gray-200 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-6 h-6 bg-blue-900 flex items-center justify-center">
+                <TrendingUp className="w-4 h-4 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Top Performing Districts</h3>
+            </div>
+            <div className="space-y-3">
               {topLocations.slice(0, 3).map((location, index) => (
-                <div key={index} className="flex items-center justify-between py-2 px-2 rounded bg-dubai-blue-lighter/30">
+                <div key={index} className="flex items-center justify-between py-3 px-3 bg-gray-50 border border-gray-200">
                   <div>
-                    <div className="font-medium text-xs">{location.name}</div>
-                    <div className="text-xs text-muted-foreground">{location.avgPrice}</div>
+                    <div className="font-semibold text-sm text-gray-900">{location.name}</div>
+                    <div className="text-xs text-gray-600">{location.avgPrice}</div>
                   </div>
-                  <div className="text-xs font-bold text-green-600">{location.growth}</div>
+                  <div className="text-sm font-bold text-green-700">{location.growth}</div>
                 </div>
               ))}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          {/* Market Forecast - Compact metrics */}
-          <Card className="border-dubai-gold/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold flex items-center">
-                <Activity className="w-4 h-4 text-dubai-gold mr-2" />
-                2024 Forecast
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-3 pt-0 space-y-3">
-              <div className="space-y-1">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs">Price Growth</span>
-                  <span className="text-sm font-bold text-green-600">{forecast.priceGrowth}</span>
+          {/* Market Forecast */}
+          <div className="bg-white border border-gray-200 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-6 h-6 bg-blue-900 flex items-center justify-center">
+                <Activity className="w-4 h-4 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">2024 Market Forecast</h3>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium text-gray-700">Price Growth</span>
+                  <span className="text-lg font-bold text-green-700">{forecast.priceGrowth}</span>
                 </div>
-                <div className="w-full bg-dubai-blue-lighter rounded-full h-1">
-                  <div className="bg-gradient-to-r from-dubai-gold to-dubai-gold-light h-1 rounded-full" style={{ width: '75%' }}></div>
+                <div className="w-full bg-gray-200 h-2">
+                  <div className="bg-blue-900 h-2" style={{ width: '75%' }}></div>
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs">Market Activity</span>
-                  <span className="text-sm font-bold text-dubai-gold">{forecast.marketActivity}</span>
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium text-gray-700">Market Activity</span>
+                  <span className="text-lg font-bold text-blue-900">{forecast.marketActivity}</span>
                 </div>
-                <div className="w-full bg-dubai-blue-lighter rounded-full h-1">
-                  <div className="bg-gradient-to-r from-dubai-gold to-dubai-gold-light h-1 rounded-full" style={{ width: '85%' }}></div>
+                <div className="w-full bg-gray-200 h-2">
+                  <div className="bg-blue-900 h-2" style={{ width: '85%' }}></div>
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs">ROI</span>
-                  <span className="text-sm font-bold text-green-600">{forecast.roi}</span>
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium text-gray-700">ROI Projection</span>
+                  <span className="text-lg font-bold text-green-700">{forecast.roi}</span>
                 </div>
-                <div className="w-full bg-dubai-blue-lighter rounded-full h-1">
-                  <div className="bg-gradient-to-r from-green-400 to-green-300 h-1 rounded-full" style={{ width: '80%' }}></div>
+                <div className="w-full bg-gray-200 h-2">
+                  <div className="bg-green-700 h-2" style={{ width: '80%' }}></div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          {/* AI Recommendation - Compact */}
-          <Card className="border-dubai-gold/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold">💡 AI Insight</CardTitle>
-            </CardHeader>
-            <CardContent className="p-3 pt-0">
-              <div className="text-xs leading-relaxed text-foreground">
-                {isLoading ? "Loading..." : "Strong growth momentum expected in Q4 2024, particularly in premium segments of Downtown Dubai and Palm Jumeirah."}
+          {/* Professional Insight */}
+          <div className="bg-gray-900 text-white p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-6 h-6 bg-blue-500 flex items-center justify-center">
+                <BarChart3 className="w-4 h-4 text-white" />
               </div>
-            </CardContent>
-          </Card>
+              <h3 className="text-lg font-bold">Professional Analysis</h3>
+            </div>
+            <div className="text-sm leading-relaxed text-gray-300">
+              {isLoading ? "Generating analysis..." : "Current market conditions indicate strong fundamentals with sustained demand across premium segments. Institutional opportunities remain favorable with selective asset allocation strategies."}
+            </div>
+            <div className="mt-4 pt-4 border-t border-gray-700">
+              <div className="text-xs text-gray-400 uppercase tracking-wide">Generated by AI Analysis</div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
