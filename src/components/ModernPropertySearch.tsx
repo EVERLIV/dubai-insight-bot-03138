@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import PropertyDetailModal from "./PropertyDetailModal";
 import { BarChart3, TrendingUp, MapPin, Building2 } from "lucide-react";
 
 export default function ModernPropertySearch() {
+  const navigate = useNavigate();
   const [filters, setFilters] = useState({
     budget: [1000000],
     propertyType: "all",
@@ -101,8 +103,7 @@ export default function ModernPropertySearch() {
   };
 
   const handleViewDetails = (property: any) => {
-    setSelectedProperty(property);
-    setIsDetailModalOpen(true);
+    navigate(`/property/${property.id || 'sample'}`, { state: { property } });
   };
 
   const handleCloseDetailModal = () => {
@@ -329,13 +330,6 @@ export default function ModernPropertySearch() {
           </div>
         </div>
       </div>
-      
-      {/* Property Detail Modal */}
-      <PropertyDetailModal
-        property={selectedProperty}
-        isOpen={isDetailModalOpen}
-        onClose={handleCloseDetailModal}
-      />
     </div>
   );
 }
