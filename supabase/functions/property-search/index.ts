@@ -20,6 +20,7 @@ interface SearchParams {
   location?: string;
   min_bedrooms?: number;
   max_bedrooms?: number;
+  housing_status?: string;
   limit?: number;
   telegram_user_id?: number;
   query?: string;
@@ -59,7 +60,7 @@ async function searchProperties(params: SearchParams): Promise<{
       location_param: params.location || null,
       min_bedrooms_param: params.min_bedrooms || null,
       max_bedrooms_param: params.max_bedrooms || null,
-      housing_status_param: null,
+      housing_status_param: params.housing_status || null,
       limit_param: params.limit || 50
     });
 
