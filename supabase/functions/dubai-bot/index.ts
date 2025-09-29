@@ -361,6 +361,7 @@ async function callMultiPlatformSearch(searchParams: any): Promise<any> {
     
     let allProperties: any[] = [];
     let totalCount = 0;
+    let sources: string[] = [];
     
     // Add API properties
     if (bayutResult.success && bayutResult.properties) {
@@ -451,7 +452,7 @@ async function callMultiPlatformSearch(searchParams: any): Promise<any> {
         const bDate = new Date(b.scraped_at || b.updated_at || b.created_at || 0);
         return bDate.getTime() - aDate.getTime();
       })
-      .slice(0, 10);
+      .slice(0, 20);
     
     return {
       success: true,
@@ -479,7 +480,7 @@ async function searchScrapedProperties(searchParams: any): Promise<any> {
       min_bedrooms_param: searchParams.bedrooms_min || null,
       max_bedrooms_param: searchParams.bedrooms_max || null,
       source_type_param: searchParams.source_type || null,
-      limit_param: searchParams.limit || 10
+      limit_param: searchParams.limit || 50
     });
 
     if (error) {

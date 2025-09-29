@@ -59,7 +59,7 @@ async function searchProperties(params: SearchParams): Promise<{
       location_param: params.location || null,
       min_bedrooms_param: params.min_bedrooms || null,
       max_bedrooms_param: params.max_bedrooms || null,
-      limit_param: params.limit || 10
+      limit_param: params.limit || 50
     });
 
     if (error) {
