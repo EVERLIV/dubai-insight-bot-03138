@@ -35,14 +35,26 @@ interface BayutProperty {
     completion_status?: string;
   };
   location?: {
-    area?: string;
-    city?: string;
+    city?: {
+      name?: string;
+    };
+    community?: {
+      name?: string;
+    };
+    sub_community?: {
+      name?: string;
+    };
   };
   amenities?: string[];
-  images?: string[];
+  media?: {
+    photos?: string[];
+  };
   agent?: {
     name?: string;
-    phone?: string;
+    contact?: {
+      mobile?: string;
+      phone?: string;
+    };
   };
 }
 
@@ -88,11 +100,12 @@ async function fetchBayutProperties(params: {
     }
 
     const data = await response.json();
-    console.log('Bayut API response received, properties count:', data?.result?.length || 0);
+    console.log('Bayut API response received, properties count:', data?.results?.length || 0);
+    console.log('Sample property structure:', data?.results?.[0] ? JSON.stringify(data.results[0], null, 2) : 'No properties');
     
     return {
       success: true,
-      data: data.result || []
+      data: data.results || []
     };
   } catch (error) {
     console.error('Error fetching from Bayut API:', error);
@@ -127,12 +140,12 @@ async function syncPropertyToDB(property: BayutProperty): Promise<boolean> {
       bedrooms: property.details?.bedrooms || null,
       bathrooms: property.details?.bathrooms || null,
       area_sqft: property.area?.built_up || null,
-      location_area: property.location?.area || null,
-      location_city: property.location?.city || 'Dubai',
+      location_area: property.location?.community?.name || property.location?.sub_community?.name || null,
+      location_city: property.location?.city?.name || 'Dubai',
       amenities: property.amenities || [],
-      images: property.images || [],
+      images: property.media?.photos || [],
       agent_name: property.agent?.name || null,
-      agent_phone: property.agent?.phone || null,
+      agent_phone: property.agent?.contact?.mobile || property.agent?.contact?.phone || null,
       completion_status: property.details?.completion_status || null,
       is_furnished: property.details?.is_furnished || false,
       raw_data: property,
