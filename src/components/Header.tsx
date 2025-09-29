@@ -2,16 +2,17 @@ import { useState } from 'react';
 import { Menu, X, Search, Building2, Heart, User, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Link } from 'react-router-dom';
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navigation = [
-    { name: 'Buy', href: '#buy' },
-    { name: 'Rent', href: '#rent' },
-    { name: 'Commercial', href: '#commercial' },
-    { name: 'Developers', href: '#developers' },
-    { name: 'Market Insights', href: '#insights' },
+    { name: 'Home', href: '/' },
+    { name: 'Properties', href: '/properties' },
+    { name: 'Buy', href: '/properties?purpose=for-sale' },
+    { name: 'Rent', href: '/properties?purpose=for-rent' },
+    { name: 'Market Insights', href: '/#analytics' },
   ];
 
   return (
@@ -19,7 +20,7 @@ export default function Header() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
-          <div className="flex items-center space-x-3">
+          <Link to="/" className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <Building2 className="w-5 h-5 text-white" />
             </div>
@@ -27,7 +28,7 @@ export default function Header() {
               <span className="text-sm font-bold text-foreground">Dubai Properties</span>
               <span className="text-xs text-muted-foreground">Real Estate Portal</span>
             </div>
-          </div>
+          </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center space-x-1">
@@ -38,7 +39,7 @@ export default function Header() {
                 className="text-sm px-3 py-1.5 h-auto"
                 asChild
               >
-                <a href={item.href}>{item.name}</a>
+                <Link to={item.href}>{item.name}</Link>
               </Button>
             ))}
           </nav>
@@ -87,7 +88,7 @@ export default function Header() {
                   className="justify-start text-sm h-8"
                   asChild
                 >
-                  <a href={item.href}>{item.name}</a>
+                  <Link to={item.href}>{item.name}</Link>
                 </Button>
               ))}
               <div className="pt-2 border-t border-border mt-2">
