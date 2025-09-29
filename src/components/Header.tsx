@@ -10,9 +10,9 @@ export default function Header() {
   const navigation = [
     { name: 'Home', href: '/' },
     { name: 'Properties', href: '/properties' },
-    { name: 'Buy', href: '/properties?purpose=for-sale' },
-    { name: 'Rent', href: '/properties?purpose=for-rent' },
-    { name: 'Market Insights', href: '/#analytics' },
+    { name: 'Buy', href: '/buy-services' },
+    { name: 'Rent', href: '/rent-services' },
+    { name: 'Market Insights', href: '/market-insights' },
   ];
 
   return (
