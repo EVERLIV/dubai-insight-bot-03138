@@ -51,8 +51,8 @@ export default function PropertyCard({ property, onViewDetails }: PropertyCardPr
   };
 
   const getPurposeBadge = () => {
-    if (property.purpose === 'for-sale') return 'Продажа';
-    if (property.purpose === 'for-rent') return 'Аренда';
+    if (property.purpose === 'for-sale') return 'For Sale';
+    if (property.purpose === 'for-rent') return 'For Rent';
     return property.purpose;
   };
 
@@ -87,7 +87,7 @@ export default function PropertyCard({ property, onViewDetails }: PropertyCardPr
         {property.housing_status && (
           <div className="absolute top-3 right-3">
             <Badge variant="secondary" className="bg-white/90 text-gray-700">
-              {property.housing_status === 'primary' ? 'Первичное' : 'Вторичное'}
+              {property.housing_status === 'primary' ? 'Off-plan' : 'Ready'}
             </Badge>
           </div>
         )}
@@ -120,7 +120,7 @@ export default function PropertyCard({ property, onViewDetails }: PropertyCardPr
         {/* Price */}
         <div className="flex items-center justify-between mb-2">
           <div className="text-2xl font-bold text-primary">
-            {property.price ? `${property.price.toLocaleString()} AED` : 'Цена по запросу'}
+            {property.price ? `${property.price.toLocaleString()} AED` : 'Price on request'}
           </div>
           <div className="flex items-center gap-1">
             {getSourceIcon()}
@@ -154,7 +154,7 @@ export default function PropertyCard({ property, onViewDetails }: PropertyCardPr
           {property.bedrooms && (
             <div className="flex items-center">
               <span className="font-medium">{property.bedrooms}</span>
-              <span className="ml-1">спален</span>
+              <span className="ml-1">beds</span>
             </div>
           )}
           {property.bathrooms && (
@@ -166,7 +166,7 @@ export default function PropertyCard({ property, onViewDetails }: PropertyCardPr
           {property.area_sqft && (
             <div className="flex items-center">
               <Maximize2 className="w-4 h-4 mr-1" />
-              <span>{property.area_sqft} кв.фт</span>
+              <span>{property.area_sqft} sq.ft</span>
             </div>
           )}
         </div>
@@ -174,7 +174,7 @@ export default function PropertyCard({ property, onViewDetails }: PropertyCardPr
         {/* Agent Info */}
         {(property.agent_name || property.agent_phone) && (
           <div className="text-xs text-muted-foreground mb-3">
-            {property.agent_name && <div>Агент: {property.agent_name}</div>}
+            {property.agent_name && <div>Agent: {property.agent_name}</div>}
             {property.agent_phone && <div>📞 {property.agent_phone}</div>}
           </div>
         )}
@@ -182,7 +182,7 @@ export default function PropertyCard({ property, onViewDetails }: PropertyCardPr
         {/* Last Updated */}
         {property.scraped_at && (
           <div className="text-xs text-muted-foreground mb-3">
-            Обновлено: {new Date(property.scraped_at).toLocaleDateString('ru-RU')}
+            Updated: {new Date(property.scraped_at).toLocaleDateString('en-US')}
           </div>
         )}
 
@@ -194,7 +194,7 @@ export default function PropertyCard({ property, onViewDetails }: PropertyCardPr
             onViewDetails?.(property);
           }}
         >
-          Подробнее
+          View Details
         </Button>
       </CardContent>
     </Card>
