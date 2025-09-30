@@ -87,12 +87,43 @@ async function sendTelegramMessage(chatId: number, text: string, replyMarkup?: a
   return response.json();
 }
 
+async function sendTelegramPhoto(
+  chatId: number, 
+  photoUrl: string, 
+  caption: string, 
+  replyMarkup?: any
+) {
+  const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
+  
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        chat_id: chatId,
+        photo: photoUrl,
+        caption: caption,
+        parse_mode: 'HTML',
+        reply_markup: replyMarkup,
+      }),
+    });
+
+    return response.json();
+  } catch (error) {
+    console.error('Error sending photo:', error);
+    // Fallback to text message if photo fails
+    return sendTelegramMessage(chatId, caption, replyMarkup);
+  }
+}
+
 async function performPropertySearch(
   chatId: number, 
   purpose: string, 
   propertyType?: string, 
   housingStatus?: string,
-  limit: number = 10,
+  limit: number = 5, // Reduced to 5 since we're sending with photos
   headerText?: string
 ): Promise<void> {
   console.log(`Searching for: purpose=${purpose}, type=${propertyType}, status=${housingStatus}`);
@@ -123,30 +154,55 @@ async function performPropertySearch(
 
   const properties = searchResponse?.properties || [];
   if (properties.length > 0) {
-    const propertiesWithIds = properties.map((property: any) => {
+    // Send header message
+    await sendTelegramMessage(chatId, 
+      `${headerText || '🏠 <b>Search Results</b>'}\n\n📋 Found ${properties.length} properties:\n\n💡 Data from Bayut API`
+    );
+
+    // Send each property as a separate message with photo
+    for (let i = 0; i < properties.length; i++) {
+      const property = properties[i];
       const uniqueId = generatePropertyID();
       const propertyWithId = { ...property, unique_id: uniqueId };
       propertyIdMapping.set(uniqueId, propertyWithId);
-      return propertyWithId;
-    });
 
-    let responseText = `${headerText || '🏠 <b>Search Results</b>'}\n\n📋 Found ${propertiesWithIds.length} properties:\n\n`;
-    propertiesWithIds.forEach((property: Property, index: number) => {
-      responseText += `${index + 1}. ${formatPropertyDisplay(property)}\n\n`;
-    });
-    responseText += '\n💡 Data from Bayut API';
-    
-    await sendTelegramMessage(chatId, responseText, {
-      inline_keyboard: [
-        [
-          { text: '📊 Analytics', callback_data: 'analytics_menu' },
-          { text: '🔍 New Search', callback_data: 'search_menu' }
-        ],
-        [
-          { text: '🏠 Main Menu', callback_data: 'main_menu' }
+      const caption = formatPropertyDisplay(propertyWithId);
+      const photoUrl = property.images && property.images.length > 0 
+        ? property.images[0] 
+        : 'https://via.placeholder.com/800x600.png?text=No+Image+Available';
+
+      await sendTelegramPhoto(
+        chatId,
+        photoUrl,
+        caption,
+        {
+          inline_keyboard: [
+            [{ text: '📊 View Details', callback_data: `view_${uniqueId}` }]
+          ]
+        }
+      );
+
+      // Small delay between messages to avoid flooding
+      if (i < properties.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+
+    // Send final menu message
+    await sendTelegramMessage(chatId, 
+      '🔍 What would you like to do next?',
+      {
+        inline_keyboard: [
+          [
+            { text: '📊 Analytics', callback_data: 'analytics_menu' },
+            { text: '🔍 New Search', callback_data: 'search_menu' }
+          ],
+          [
+            { text: '🏠 Main Menu', callback_data: 'main_menu' }
+          ]
         ]
-      ]
-    });
+      }
+    );
   } else {
     await sendTelegramMessage(chatId, 
       '❌ No properties found matching your criteria.\n\n💡 Try changing search parameters.',
@@ -609,24 +665,63 @@ serve(async (req) => {
       const chatId = callbackQuery.message.chat.id;
       const data = callbackQuery.data;
 
-      switch (data) {
-        case 'main_menu':
-          await sendTelegramMessage(chatId, 
-            '🏠 <b>Dubai Real Estate Bot</b>\n\nMain Menu:',
+      // Handle "View Details" button for specific property
+      if (data.startsWith('view_')) {
+        const propertyId = data.replace('view_', '');
+        const property = propertyIdMapping.get(propertyId);
+        
+        if (property) {
+          const detailsText = await getPropertyDetails(propertyId);
+          const photoUrl = property.images && property.images.length > 0 
+            ? property.images[0] 
+            : 'https://via.placeholder.com/800x600.png?text=No+Image+Available';
+
+          await sendTelegramPhoto(
+            chatId,
+            photoUrl,
+            detailsText,
             {
               inline_keyboard: [
                 [
-                  { text: '🔍 Search Properties', callback_data: 'search_menu' },
-                  { text: '📊 Market Analytics', callback_data: 'analytics_menu' }
+                  { text: '🔍 New Search', callback_data: 'search_menu' },
+                  { text: '📊 Analytics', callback_data: 'analytics_menu' }
                 ],
                 [
-                  { text: '💎 Premium Properties', callback_data: 'premium_properties' },
-                  { text: 'ℹ️ Help', callback_data: 'help' }
+                  { text: '🏠 Main Menu', callback_data: 'main_menu' }
                 ]
               ]
             }
           );
-          break;
+        } else {
+          await sendTelegramMessage(chatId, 
+            '❌ Property not found. Please search again.',
+            {
+              inline_keyboard: [
+                [{ text: '🔍 Search Menu', callback_data: 'search_menu' }],
+                [{ text: '🏠 Main Menu', callback_data: 'main_menu' }]
+              ]
+            }
+          );
+        }
+      } else {
+        switch (data) {
+          case 'main_menu':
+            await sendTelegramMessage(chatId, 
+              '🏠 <b>Dubai Real Estate Bot</b>\n\nMain Menu:',
+              {
+                inline_keyboard: [
+                  [
+                    { text: '🔍 Search Properties', callback_data: 'search_menu' },
+                    { text: '📊 Market Analytics', callback_data: 'analytics_menu' }
+                  ],
+                  [
+                    { text: '💎 Premium Properties', callback_data: 'premium_properties' },
+                    { text: 'ℹ️ Help', callback_data: 'help' }
+                  ]
+                ]
+              }
+            );
+            break;
 
         case 'search_menu':
           await sendTelegramMessage(chatId, 
@@ -650,18 +745,20 @@ serve(async (req) => {
           break;
 
         case 'search_sale':
-          await performPropertySearch(chatId, 'for-sale', undefined, undefined, 10, '🏠 <b>Properties for Sale</b>');
+          await performPropertySearch(chatId, 'for-sale', undefined, undefined, 5, '🏠 <b>Properties for Sale</b>');
           break;
 
         case 'search_rent':
-          await performPropertySearch(chatId, 'for-rent', undefined, undefined, 10, '🏡 <b>Properties for Rent</b>');
+          await performPropertySearch(chatId, 'for-rent', undefined, undefined, 5, '🏡 <b>Properties for Rent</b>');
           break;
 
         case 'search_primary':
-          await performPropertySearch(chatId, 'for-sale', undefined, 'primary', 10, '🆕 <b>New Projects</b>');
+          await performPropertySearch(chatId, 'for-sale', undefined, 'primary', 5, '🆕 <b>New Projects</b>');
           break;
 
         case 'search_secondary':
+          await performPropertySearch(chatId, 'for-sale', undefined, 'secondary', 5, '🏗️ <b>Ready Properties</b>');
+          break;
           await performPropertySearch(chatId, 'for-sale', undefined, 'secondary', 10, '🏗️ <b>Ready Properties</b>');
           break;
 
@@ -888,7 +985,7 @@ serve(async (req) => {
           break;
 
         case 'premium_properties':
-          await performPropertySearch(chatId, 'for-sale', 'Villa', undefined, 5, '💎 <b>Premium Villas</b>');
+          await performPropertySearch(chatId, 'for-sale', 'Villa', undefined, 3, '💎 <b>Premium Villas</b>');
           break;
 
         case 'help':
@@ -914,6 +1011,8 @@ serve(async (req) => {
               ]
             }
           );
+          break;
+        }
       }
     }
 
