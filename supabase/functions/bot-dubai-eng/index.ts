@@ -97,6 +97,8 @@ async function sendTelegramPhoto(
   const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
   
   try {
+    console.log(`Sending photo to chat ${chatId}, URL: ${photoUrl.substring(0, 100)}...`);
+    
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -111,7 +113,17 @@ async function sendTelegramPhoto(
       }),
     });
 
-    return response.json();
+    const result = await response.json();
+    
+    if (!result.ok) {
+      console.error('Telegram photo API error:', JSON.stringify(result));
+      // Fallback to text message if photo fails
+      console.log('Falling back to text message');
+      return sendTelegramMessage(chatId, caption, replyMarkup);
+    }
+    
+    console.log('Photo sent successfully');
+    return result;
   } catch (error) {
     console.error('Error sending photo:', error);
     // Fallback to text message if photo fails
@@ -154,6 +166,8 @@ async function performPropertySearch(
   }
 
   const properties = searchResponse?.properties || [];
+  console.log(`Processing ${properties.length} properties for display`);
+  
   if (properties.length > 0) {
     // Send header message
     await sendTelegramMessage(chatId, 
@@ -163,6 +177,8 @@ async function performPropertySearch(
     // Send each property as a separate message with photo
     for (let i = 0; i < properties.length; i++) {
       const property = properties[i];
+      console.log(`Processing property ${i + 1}/${properties.length}:`, property.title);
+      
       const uniqueId = generatePropertyID();
       const propertyWithId = { ...property, unique_id: uniqueId };
       propertyIdMapping.set(uniqueId, propertyWithId);
@@ -172,6 +188,8 @@ async function performPropertySearch(
         ? property.images[0] 
         : 'https://via.placeholder.com/800x600.png?text=No+Image+Available';
 
+      console.log(`Sending property ${i + 1} with photo: ${photoUrl}`);
+      
       await sendTelegramPhoto(
         chatId,
         photoUrl,
@@ -188,6 +206,8 @@ async function performPropertySearch(
         await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
+    
+    console.log('All properties sent successfully');
 
     // Send final menu message
     await sendTelegramMessage(chatId, 
