@@ -44,6 +44,9 @@ interface BayutProperty {
     sub_community?: {
       name?: string;
     };
+    cluster?: {
+      name?: string;
+    };
   };
   amenities?: string[];
   media?: {
@@ -60,35 +63,75 @@ interface BayutProperty {
 
 async function fetchBayutProperties(params: {
   purpose?: string;
-  location?: string;
-  property_type?: string;
+  category?: string;
+  locations_ids?: number[];
+  rooms?: number[];
+  baths?: number[];
+  price_min?: number;
+  price_max?: number;
+  area_min?: number;
+  area_max?: number;
+  is_completed?: boolean;
   page?: number;
-  limit?: number;
 }): Promise<{ success: boolean; data?: BayutProperty[]; error?: string }> {
   try {
     // Build request body according to Bayut API docs
-    const requestBody: any = {
-      page: (params.page || 1) - 1 // Bayut API uses 0-based pagination
-    };
+    const requestBody: any = {};
     
     if (params.purpose) {
-      requestBody.purpose = params.purpose;
+      requestBody.purpose = params.purpose; // 'for-sale' or 'for-rent'
     }
     
-    if (params.property_type) {
-      requestBody.category = params.property_type;
+    if (params.category) {
+      requestBody.category = params.category; // 'apartments', 'villas', etc.
     }
     
-    // For location search, we'll need to handle this differently
-    // For now, let's search without location filter if not specified
+    if (params.locations_ids && params.locations_ids.length > 0) {
+      requestBody.locations_ids = params.locations_ids;
+    }
     
-    console.log('Fetching from Bayut API with body:', requestBody);
+    if (params.rooms && params.rooms.length > 0) {
+      requestBody.rooms = params.rooms;
+    }
     
-    const response = await fetch('https://bayut-api1.p.rapidapi.com/properties_search?page=' + requestBody.page, {
+    if (params.baths && params.baths.length > 0) {
+      requestBody.baths = params.baths;
+    }
+    
+    if (params.price_min !== undefined) {
+      requestBody.price_min = params.price_min;
+    }
+    
+    if (params.price_max !== undefined) {
+      requestBody.price_max = params.price_max;
+    }
+    
+    if (params.area_min !== undefined) {
+      requestBody.area_min = params.area_min;
+    }
+    
+    if (params.area_max !== undefined) {
+      requestBody.area_max = params.area_max;
+    }
+    
+    if (params.is_completed !== undefined) {
+      requestBody.is_completed = params.is_completed;
+    }
+    
+    // Sort by popular listings
+    requestBody.index = 'popular';
+    
+    const page = (params.page || 0);
+    const url = `https://bayut-api1.p.rapidapi.com/properties_search?page=${page}`;
+    
+    console.log('Fetching from Bayut API:', url);
+    console.log('Request body:', JSON.stringify(requestBody, null, 2));
+    
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'X-RapidAPI-Key': RAPIDAPI_KEY!,
-        'X-RapidAPI-Host': 'bayut-api1.p.rapidapi.com',
+        'x-rapidapi-key': RAPIDAPI_KEY!,
+        'x-rapidapi-host': 'bayut-api1.p.rapidapi.com',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(requestBody)
@@ -100,8 +143,7 @@ async function fetchBayutProperties(params: {
     }
 
     const data = await response.json();
-    console.log('Bayut API response received, properties count:', data?.results?.length || 0);
-    console.log('Sample property structure:', data?.results?.[0] ? JSON.stringify(data.results[0], null, 2) : 'No properties');
+    console.log('Bayut API response received, properties count:', data?.count || 0);
     
     return {
       success: true,
@@ -122,12 +164,32 @@ async function syncPropertyToDB(property: BayutProperty): Promise<boolean> {
       .from('property_listings')
       .select('id')
       .eq('external_id', property.id.toString())
-      .single();
+      .maybeSingle();
 
-    if (selectError && selectError.code !== 'PGRST116') {
+    if (selectError) {
       console.error('Error checking existing property:', selectError);
       return false;
     }
+
+    // Map completion_status to housing_status
+    let housingStatus = null;
+    if (property.details?.completion_status === 'completed') {
+      housingStatus = 'secondary'; // Ready property
+    } else if (property.details?.completion_status === 'under-construction') {
+      housingStatus = 'primary'; // Off-plan/New project
+    }
+
+    // Build location string from nested location data
+    const locationParts = [
+      property.location?.cluster?.name,
+      property.location?.sub_community?.name,
+      property.location?.community?.name,
+      property.location?.city?.name
+    ].filter(Boolean);
+    
+    const locationArea = locationParts.length > 0 
+      ? locationParts.join(', ') 
+      : 'Dubai';
 
     const propertyData = {
       external_id: property.id.toString(),
@@ -137,14 +199,14 @@ async function syncPropertyToDB(property: BayutProperty): Promise<boolean> {
       price: property.price,
       property_type: property.type?.sub || property.type?.main || 'Unknown',
       purpose: property.purpose,
-      bedrooms: property.details?.bedrooms || null,
-      bathrooms: property.details?.bathrooms || null,
-      area_sqft: property.area?.built_up || null,
-      location_area: property.location?.community?.name || property.location?.sub_community?.name || null,
+      bedrooms: property.details?.bedrooms ?? null,
+      bathrooms: property.details?.bathrooms ?? null,
+      area_sqft: property.area?.built_up ?? null,
+      location_area: locationArea,
       images: property.media?.photos || [],
       agent_name: property.agent?.name || null,
       agent_phone: property.agent?.contact?.mobile || property.agent?.contact?.phone || null,
-      housing_status: property.details?.completion_status || null
+      housing_status: housingStatus
     };
 
     let result;
@@ -202,24 +264,43 @@ serve(async (req) => {
   const startTime = Date.now();
   
   try {
-    const { purpose, location, property_type, pages = 1 } = await req.json().catch(() => ({}));
+    const params = await req.json().catch(() => ({}));
+    const { 
+      purpose, 
+      category, 
+      locations_ids,
+      rooms,
+      baths,
+      price_min, 
+      price_max,
+      area_min,
+      area_max,
+      is_completed,
+      pages = 1 
+    } = params;
     
-    console.log('Starting property sync with params:', { purpose, location, property_type, pages });
+    console.log('Starting property sync with params:', params);
     
     let totalSynced = 0;
     let totalFetched = 0;
     
-    for (let page = 1; page <= pages; page++) {
+    for (let page = 0; page < pages; page++) {
       const apiResult = await fetchBayutProperties({
         purpose,
-        location,
-        property_type,
-        page,
-        limit: 50
+        category,
+        locations_ids,
+        rooms,
+        baths,
+        price_min,
+        price_max,
+        area_min,
+        area_max,
+        is_completed,
+        page
       });
 
       const executionTime = Date.now() - startTime;
-      await logAPIUsage('bayut', '/properties_search', { purpose, location, property_type, page }, 
+      await logAPIUsage('bayut', '/properties_search', params, 
                       apiResult.success ? 200 : 500, executionTime);
 
       if (!apiResult.success) {
@@ -240,7 +321,7 @@ serve(async (req) => {
       }
 
       // Add delay between requests to avoid rate limiting
-      if (page < pages) {
+      if (page < pages - 1) {
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
