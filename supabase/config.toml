@@ -23,6 +23,9 @@ pop3_port = 54326
 [functions.avm-valuation]
 verify_jwt = false
 
+[functions.bot-dubai-eng]
+verify_jwt = false
+
 [functions.dubai-bot]
 verify_jwt = false
 
