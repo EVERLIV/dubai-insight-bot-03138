@@ -172,13 +172,17 @@ async function performPropertySearch(
     for (let i = 0; i < properties.length; i++) {
       const property = properties[i];
       console.log(`Processing property ${i + 1}/${properties.length}:`, property.title);
+      console.log(`Property database ID: ${property.id}`);
+      console.log(`Property has unique_id?: ${property.unique_id}`);
 
       const caption = formatPropertyDisplay(property);
+      console.log(`Caption length: ${caption.length}, first 200 chars:`, caption.substring(0, 200));
+      
       const photoUrl = property.images && property.images.length > 0 
         ? property.images[0] 
         : 'https://via.placeholder.com/800x600.png?text=No+Image+Available';
 
-      console.log(`Sending property ${i + 1} with photo: ${photoUrl}`);
+      console.log(`Callback data will be: view_${property.id}`);
       
       // Use database ID directly in callback
       await sendTelegramPhoto(
