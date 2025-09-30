@@ -2,7 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
 
-const BAYUT_API_KEY = Deno.env.get('BAYUT_API_KEY');
+const RAPIDAPI_KEY = Deno.env.get('RAPIDAPI_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -87,7 +87,7 @@ async function fetchBayutProperties(params: {
     const response = await fetch('https://bayut-api1.p.rapidapi.com/properties_search?page=' + requestBody.page, {
       method: 'POST',
       headers: {
-        'X-RapidAPI-Key': BAYUT_API_KEY!,
+        'X-RapidAPI-Key': RAPIDAPI_KEY!,
         'X-RapidAPI-Host': 'bayut-api1.p.rapidapi.com',
         'Content-Type': 'application/json'
       },
@@ -131,9 +131,9 @@ async function syncPropertyToDB(property: BayutProperty): Promise<boolean> {
 
     const propertyData = {
       external_id: property.id.toString(),
-      source: 'bayut',
+      source_name: 'bayut_api',
+      source_category: 'api',
       title: property.title,
-      title_ar: property.title_ar || null,
       price: property.price,
       property_type: property.type?.sub || property.type?.main || 'Unknown',
       purpose: property.purpose,
@@ -141,15 +141,10 @@ async function syncPropertyToDB(property: BayutProperty): Promise<boolean> {
       bathrooms: property.details?.bathrooms || null,
       area_sqft: property.area?.built_up || null,
       location_area: property.location?.community?.name || property.location?.sub_community?.name || null,
-      location_city: property.location?.city?.name || 'Dubai',
-      amenities: property.amenities || [],
       images: property.media?.photos || [],
       agent_name: property.agent?.name || null,
       agent_phone: property.agent?.contact?.mobile || property.agent?.contact?.phone || null,
-      completion_status: property.details?.completion_status || null,
-      is_furnished: property.details?.is_furnished || false,
-      raw_data: property,
-      last_verified: new Date().toISOString()
+      housing_status: property.details?.completion_status || null
     };
 
     let result;
@@ -189,11 +184,10 @@ async function logAPIUsage(
     await supabase
       .from('api_usage_logs')
       .insert({
-        api_source: source,
+        function_name: source,
         endpoint,
-        request_params: params,
-        response_status: status,
-        execution_time_ms: executionTime
+        status_code: status,
+        response_time_ms: executionTime
       });
   } catch (error) {
     console.error('Error logging API usage:', error);

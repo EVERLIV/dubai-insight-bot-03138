@@ -53,15 +53,16 @@ async function searchProperties(params: SearchParams): Promise<{
 
     // Use the unified database function 
     const { data, error } = await supabase.rpc('search_properties_unified', {
-      search_purpose: params.purpose || null,
-      min_price_param: params.min_price || null,
-      max_price_param: params.max_price || null,
-      property_type_param: params.property_type || null,
-      location_param: params.location || null,
-      min_bedrooms_param: params.min_bedrooms || null,
-      max_bedrooms_param: params.max_bedrooms || null,
-      housing_status_param: params.housing_status || null,
-      limit_param: params.limit || 50
+      p_purpose: params.purpose || null,
+      p_min_price: params.min_price || null,
+      p_max_price: params.max_price || null,
+      p_property_type: params.property_type || null,
+      p_location: params.location || null,
+      p_min_bedrooms: params.min_bedrooms || null,
+      p_max_bedrooms: params.max_bedrooms || null,
+      p_housing_status: params.housing_status || null,
+      p_limit: params.limit || 50,
+      p_query: params.query || null
     });
 
     if (error) {
