@@ -91,8 +91,8 @@ async function saveSearchHistory(telegramUserId: number, query: string, filters:
       .from('search_history')
       .insert({
         telegram_user_id: telegramUserId,
-        search_query: query,
-        search_filters: filters,
+        query: query,
+        filters: filters,
         results_count: resultsCount
       });
   } catch (error) {
