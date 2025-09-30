@@ -61,13 +61,7 @@ interface Property {
   created_at?: string;
 }
 
-// Generate unique 5-digit property ID
-function generatePropertyID(): string {
-  return Math.floor(10000 + Math.random() * 90000).toString();
-}
-
-// Store property ID mapping in memory
-const propertyIdMapping = new Map<string, Property>();
+// No need for in-memory mapping - we'll use database IDs directly
 
 async function sendTelegramMessage(chatId: number, text: string, replyMarkup?: any) {
   const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
@@ -178,25 +172,22 @@ async function performPropertySearch(
     for (let i = 0; i < properties.length; i++) {
       const property = properties[i];
       console.log(`Processing property ${i + 1}/${properties.length}:`, property.title);
-      
-      const uniqueId = generatePropertyID();
-      const propertyWithId = { ...property, unique_id: uniqueId };
-      propertyIdMapping.set(uniqueId, propertyWithId);
 
-      const caption = formatPropertyDisplay(propertyWithId);
+      const caption = formatPropertyDisplay(property);
       const photoUrl = property.images && property.images.length > 0 
         ? property.images[0] 
         : 'https://via.placeholder.com/800x600.png?text=No+Image+Available';
 
       console.log(`Sending property ${i + 1} with photo: ${photoUrl}`);
       
+      // Use database ID directly in callback
       await sendTelegramPhoto(
         chatId,
         photoUrl,
         caption,
         {
           inline_keyboard: [
-            [{ text: '📊 View Details', callback_data: `view_${uniqueId}` }]
+            [{ text: '📊 View Details', callback_data: `view_${property.id}` }]
           ]
         }
       );
@@ -269,17 +260,7 @@ async function searchProperties(query: string): Promise<Property[]> {
     const data = response?.properties || [];
     console.log(`Found ${data?.length || 0} properties`);
 
-    const results = (data || []).map((property: any) => {
-      const uniqueId = generatePropertyID();
-      const propertyWithId = {
-        ...property,
-        unique_id: uniqueId
-      };
-      propertyIdMapping.set(uniqueId, propertyWithId);
-      return propertyWithId;
-    });
-
-    return results;
+    return data || [];
   } catch (error) {
     console.error('Error searching properties:', error);
     return [];
@@ -390,18 +371,32 @@ ${imageDisplay}
 ${areaDisplay ? `📐 ${areaDisplay}` : ''}
 ${dateDisplay}
 ${sourceDisplay}
-🆔 <b>ID: ${property.unique_id}</b>
   `.trim();
 }
 
 async function getPropertyDetails(propertyId: string): Promise<string> {
-  const property = propertyIdMapping.get(propertyId);
-  
-  if (!property) {
-    return '❌ Property with this ID not found. Please check the ID.';
-  }
-
   try {
+    // Fetch property from database
+    console.log(`Fetching property details for ID: ${propertyId}`);
+    
+    const { data: property, error } = await supabase
+      .from('property_listings')
+      .select('*')
+      .eq('id', propertyId)
+      .maybeSingle();
+    
+    if (error) {
+      console.error('Database error:', error);
+      return '❌ Error loading property details. Please try again.';
+    }
+    
+    if (!property) {
+      console.log('Property not found in database');
+      return '❌ Property not found. Please search again.';
+    }
+
+    console.log('Property found:', property.title);
+    
     const districtAnalysis = await getDistrictAnalysis(property.location_area);
     const investmentMetrics = calculateInvestmentMetrics(property);
     const aiDescription = await generatePropertyAnalysis(property);
@@ -437,13 +432,13 @@ ${aiDescription}
 ━━━━━━━━━━━━━━━━━━━━━━━━
 
 ${property.agent_name ? `👨‍💼 <b>AGENT:</b> ${property.agent_name}\n` : ''}${property.agent_phone ? `📞 <b>PHONE:</b> ${property.agent_phone}\n` : ''}
-🆔 <b>ID:</b> ${property.unique_id}
+🆔 <b>ID:</b> ${property.id}
 📊 <b>SOURCE:</b> ${property.source_name || 'Database'}
     `.trim();
 
   } catch (error) {
-    console.error('Error getting property details:', error);
-    return '❌ Error getting detailed information. Please try later.';
+    console.error('Error in getPropertyDetails:', error);
+    return '❌ Error loading property details. Please try again.';
   }
 }
 
@@ -695,9 +690,16 @@ serve(async (req) => {
       // Handle "View Details" button for specific property
       if (data.startsWith('view_')) {
         const propertyId = data.replace('view_', '');
-        const property = propertyIdMapping.get(propertyId);
+        console.log(`View details requested for property ID: ${propertyId}`);
         
-        if (property) {
+        // Fetch property from database
+        const { data: property, error } = await supabase
+          .from('property_listings')
+          .select('*')
+          .eq('id', propertyId)
+          .maybeSingle();
+        
+        if (property && !error) {
           const detailsText = await getPropertyDetails(propertyId);
           const photoUrl = property.images && property.images.length > 0 
             ? property.images[0] 
