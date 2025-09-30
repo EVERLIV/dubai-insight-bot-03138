@@ -686,6 +686,207 @@ serve(async (req) => {
           );
           break;
 
+        case 'district_analysis':
+          await sendTelegramMessage(chatId, '⏳ Generating district analysis...');
+          try {
+            const { data: analysisData, error: analysisError } = await supabase.functions.invoke('deepseek-market-analysis', {
+              body: {
+                type: 'district_info',
+                region: 'Dubai',
+                district: 'Downtown Dubai'
+              }
+            });
+
+            if (analysisError || !analysisData?.success) {
+              throw new Error('Failed to get analysis');
+            }
+
+            const analysis = analysisData.data;
+            let responseText = `🏙️ <b>District Analysis - Dubai</b>\n\n`;
+            responseText += `📊 ${analysis.summary}\n\n`;
+            responseText += `<b>Key Metrics:</b>\n`;
+            responseText += `💰 Avg Price: ${analysis.keyMetrics.avgPricePerSqm.toFixed(0)} AED/sqm\n`;
+            responseText += `📈 Price Growth: ${analysis.keyMetrics.priceGrowth.toFixed(1)}%\n`;
+            responseText += `📊 Transaction Volume: ${analysis.keyMetrics.transactionVolume.toFixed(0)}\n`;
+            responseText += `💹 ROI: ${analysis.keyMetrics.roi.toFixed(1)}%\n`;
+            responseText += `⏱️ Time on Market: ${analysis.keyMetrics.timeOnMarket.toFixed(0)} days\n\n`;
+            
+            responseText += `<b>Top Districts:</b>\n`;
+            analysis.districts.slice(0, 3).forEach((district: any, index: number) => {
+              responseText += `\n${index + 1}. <b>${district.name}</b>\n`;
+              responseText += `   📈 Growth: ${district.growth.toFixed(1)}%\n`;
+              responseText += `   💰 Avg: ${district.avgPrice.toFixed(0)} AED/sqm\n`;
+              responseText += `   💹 Yield: ${district.rentYield.toFixed(1)}%\n`;
+            });
+
+            await sendTelegramMessage(chatId, responseText, {
+              inline_keyboard: [
+                [
+                  { text: '📈 Price Trends', callback_data: 'price_trends' },
+                  { text: '🔮 Forecast', callback_data: 'market_forecast' }
+                ],
+                [
+                  { text: '📊 Analytics Menu', callback_data: 'analytics_menu' },
+                  { text: '🏠 Main Menu', callback_data: 'main_menu' }
+                ]
+              ]
+            });
+          } catch (error) {
+            console.error('District analysis error:', error);
+            await sendTelegramMessage(chatId, '❌ Error generating analysis. Please try again.', {
+              inline_keyboard: [[{ text: '🏠 Main Menu', callback_data: 'main_menu' }]]
+            });
+          }
+          break;
+
+        case 'price_trends':
+          await sendTelegramMessage(chatId, '⏳ Analyzing price trends...');
+          try {
+            const { data: trendsData, error: trendsError } = await supabase.functions.invoke('deepseek-market-analysis', {
+              body: {
+                type: 'price_trends',
+                region: 'Dubai',
+                timeframe: '12months'
+              }
+            });
+
+            if (trendsError || !trendsData?.success) {
+              throw new Error('Failed to get trends');
+            }
+
+            const trends = trendsData.data;
+            let responseText = `📈 <b>Price Trends - Dubai</b>\n\n`;
+            responseText += `${trends.summary}\n\n`;
+            responseText += `<b>Current Market:</b>\n`;
+            responseText += `📊 Avg Price: ${trends.keyMetrics.avgPricePerSqm.toFixed(0)} AED/sqm\n`;
+            responseText += `📈 YoY Growth: ${trends.keyMetrics.priceGrowth.toFixed(1)}%\n`;
+            responseText += `💹 Expected ROI: ${trends.keyMetrics.roi.toFixed(1)}%\n\n`;
+            
+            responseText += `<b>Top Growing Districts:</b>\n`;
+            const sortedDistricts = [...trends.districts].sort((a: any, b: any) => b.growth - a.growth);
+            sortedDistricts.slice(0, 3).forEach((district: any, index: number) => {
+              responseText += `${index + 1}. ${district.name}: +${district.growth.toFixed(1)}%\n`;
+            });
+
+            await sendTelegramMessage(chatId, responseText, {
+              inline_keyboard: [
+                [
+                  { text: '🏙️ Districts', callback_data: 'district_analysis' },
+                  { text: '💰 ROI Analysis', callback_data: 'roi_analysis' }
+                ],
+                [
+                  { text: '📊 Analytics Menu', callback_data: 'analytics_menu' },
+                  { text: '🏠 Main Menu', callback_data: 'main_menu' }
+                ]
+              ]
+            });
+          } catch (error) {
+            console.error('Price trends error:', error);
+            await sendTelegramMessage(chatId, '❌ Error generating trends. Please try again.', {
+              inline_keyboard: [[{ text: '🏠 Main Menu', callback_data: 'main_menu' }]]
+            });
+          }
+          break;
+
+        case 'roi_analysis':
+          await sendTelegramMessage(chatId, '⏳ Calculating investment returns...');
+          try {
+            const { data: roiData, error: roiError } = await supabase.functions.invoke('deepseek-market-analysis', {
+              body: {
+                type: 'investment_forecast',
+                region: 'Dubai',
+                timeframe: '12months'
+              }
+            });
+
+            if (roiError || !roiData?.success) {
+              throw new Error('Failed to get ROI analysis');
+            }
+
+            const roi = roiData.data;
+            let responseText = `💰 <b>Investment ROI Analysis - Dubai</b>\n\n`;
+            responseText += `${roi.summary}\n\n`;
+            responseText += `<b>Investment Metrics:</b>\n`;
+            responseText += `💹 Expected ROI: ${roi.keyMetrics.roi.toFixed(1)}%\n`;
+            responseText += `📈 Price Growth: ${roi.keyMetrics.priceGrowth.toFixed(1)}%\n`;
+            responseText += `⏱️ Avg Time to Sell: ${roi.keyMetrics.timeOnMarket.toFixed(0)} days\n\n`;
+            
+            responseText += `<b>Best ROI Districts:</b>\n`;
+            const sortedByYield = [...roi.districts].sort((a: any, b: any) => b.rentYield - a.rentYield);
+            sortedByYield.slice(0, 3).forEach((district: any, index: number) => {
+              responseText += `${index + 1}. ${district.name}: ${district.rentYield.toFixed(1)}% yield\n`;
+            });
+
+            responseText += `\n<b>Forecast:</b>\n${roi.forecast.recommendation}`;
+
+            await sendTelegramMessage(chatId, responseText, {
+              inline_keyboard: [
+                [
+                  { text: '🔮 Market Forecast', callback_data: 'market_forecast' },
+                  { text: '📈 Price Trends', callback_data: 'price_trends' }
+                ],
+                [
+                  { text: '📊 Analytics Menu', callback_data: 'analytics_menu' },
+                  { text: '🏠 Main Menu', callback_data: 'main_menu' }
+                ]
+              ]
+            });
+          } catch (error) {
+            console.error('ROI analysis error:', error);
+            await sendTelegramMessage(chatId, '❌ Error generating ROI analysis. Please try again.', {
+              inline_keyboard: [[{ text: '🏠 Main Menu', callback_data: 'main_menu' }]]
+            });
+          }
+          break;
+
+        case 'market_forecast':
+          await sendTelegramMessage(chatId, '⏳ Generating market forecast...');
+          try {
+            const { data: forecastData, error: forecastError } = await supabase.functions.invoke('deepseek-market-analysis', {
+              body: {
+                type: 'market_analysis',
+                region: 'Dubai'
+              }
+            });
+
+            if (forecastError || !forecastData?.success) {
+              throw new Error('Failed to get forecast');
+            }
+
+            const forecast = forecastData.data;
+            let responseText = `🔮 <b>Market Forecast - Dubai</b>\n\n`;
+            responseText += `${forecast.summary}\n\n`;
+            responseText += `<b>12-Month Forecast:</b>\n`;
+            responseText += `📈 Expected Growth: ${forecast.forecast.priceGrowthForecast.toFixed(1)}%\n`;
+            responseText += `💹 Expected ROI: ${forecast.forecast.roi.toFixed(1)}%\n`;
+            responseText += `📊 Market Activity: ${forecast.forecast.marketActivity}\n\n`;
+            
+            responseText += `<b>Key Metrics:</b>\n`;
+            responseText += `💰 Current Avg Price: ${forecast.keyMetrics.avgPricePerSqm.toFixed(0)} AED/sqm\n`;
+            responseText += `📊 Monthly Transactions: ${forecast.keyMetrics.transactionVolume.toFixed(0)}\n\n`;
+            
+            responseText += `<b>Investment Recommendation:</b>\n${forecast.forecast.recommendation}`;
+
+            await sendTelegramMessage(chatId, responseText, {
+              inline_keyboard: [
+                [
+                  { text: '🏙️ District Analysis', callback_data: 'district_analysis' },
+                  { text: '💰 ROI Analysis', callback_data: 'roi_analysis' }
+                ],
+                [
+                  { text: '📊 Analytics Menu', callback_data: 'analytics_menu' },
+                  { text: '🏠 Main Menu', callback_data: 'main_menu' }
+                ]
+              ]
+            });
+          } catch (error) {
+            console.error('Market forecast error:', error);
+            await sendTelegramMessage(chatId, '❌ Error generating forecast. Please try again.', {
+              inline_keyboard: [[{ text: '🏠 Main Menu', callback_data: 'main_menu' }]]
+            });
+          }
+          break;
+
         case 'premium_properties':
           await performPropertySearch(chatId, 'for-sale', 'Villa', undefined, 5, '💎 <b>Premium Villas</b>');
           break;
