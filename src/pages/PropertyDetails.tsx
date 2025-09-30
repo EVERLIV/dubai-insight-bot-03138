@@ -295,9 +295,7 @@ export default function PropertyDetails() {
 
               {/* Enhanced Price Trends */}
               <EnhancedPriceTrends 
-                location={property.location_area || 'Dubai Marina'}
-                propertyType={property.property_type}
-                bedrooms={property.bedrooms}
+                property={property}
               />
 
               {/* Property Report */}

@@ -30,12 +30,21 @@ interface MarketForecast {
 }
 
 interface PriceTrendsProps {
-  location: string;
-  propertyType?: string;
-  bedrooms?: number;
+  property: {
+    id?: string;
+    title: string;
+    price: number;
+    location_area?: string;
+    property_type?: string;
+    bedrooms?: number;
+    bathrooms?: number;
+    area_sqft?: number;
+    purpose?: string;
+    housing_status?: string;
+  };
 }
 
-export default function EnhancedPriceTrends({ location, propertyType, bedrooms }: PriceTrendsProps) {
+export default function EnhancedPriceTrends({ property }: PriceTrendsProps) {
   const [timeframe, setTimeframe] = useState('12months');
   const [viewType, setViewType] = useState('price');
   const [isLoading, setIsLoading] = useState(false);
@@ -50,20 +59,30 @@ export default function EnhancedPriceTrends({ location, propertyType, bedrooms }
 
   useEffect(() => {
     generateTrendData();
-  }, [location, timeframe, propertyType, bedrooms]);
+  }, [property.id, timeframe]);
 
   const generateTrendData = async () => {
     setIsLoading(true);
     
     try {
-      // Call DeepSeek for real market analysis
+      // Call DeepSeek for property-specific market analysis
       const { data, error } = await supabase.functions.invoke('deepseek-market-analysis', {
         body: {
-          type: 'price_trends',
-          region: location,
+          type: 'investment_forecast',
+          region: property.location_area || 'dubai',
           timeframe,
-          propertyType,
-          bedrooms
+          propertyData: {
+            id: property.id,
+            title: property.title,
+            price: property.price,
+            location_area: property.location_area,
+            property_type: property.property_type,
+            bedrooms: property.bedrooms,
+            bathrooms: property.bathrooms,
+            area_sqft: property.area_sqft,
+            purpose: property.purpose,
+            housing_status: property.housing_status
+          }
         }
       });
 
@@ -185,7 +204,7 @@ export default function EnhancedPriceTrends({ location, propertyType, bedrooms }
             <div className="w-6 h-6 bg-blue-900 flex items-center justify-center">
               <BarChart3 className="w-4 h-4 text-white" />
             </div>
-            Market Intelligence - {location}
+            Market Intelligence - {property.location_area || 'Dubai'}
           </CardTitle>
           <div className="flex items-center gap-3">
             <div className={`px-3 py-1 text-xs font-bold uppercase tracking-wider ${getMomentumColor(marketStats.momentum)}`}>
