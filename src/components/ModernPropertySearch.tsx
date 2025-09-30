@@ -46,31 +46,29 @@ export default function ModernPropertySearch() {
 
       // Search scraped properties
       const { data: scrapedData, error: scrapedError } = await supabase.rpc('search_scraped_properties', {
-        search_purpose: searchPurpose,
-        min_price_param: filters.budget[0] * 0.8,
-        max_price_param: filters.budget[0] * 1.2,
-        property_type_param: searchPropertyType,
-        location_param: searchLocation,
-        min_bedrooms_param: searchBedrooms,
-        max_bedrooms_param: null,
-        source_type_param: null,
-        housing_status_param: searchHousingStatus,
-        limit_param: 50
+        p_purpose: searchPurpose,
+        p_min_price: filters.budget[0] * 0.8,
+        p_max_price: filters.budget[0] * 1.2,
+        p_property_type: searchPropertyType,
+        p_location: searchLocation,
+        p_min_bedrooms: searchBedrooms,
+        p_max_bedrooms: null,
+        p_limit: 50
       });
 
       if (scrapedError) throw scrapedError;
 
       // Search API properties
       const { data: apiData, error: apiError } = await supabase.rpc('search_properties_unified', {
-        search_purpose: searchPurpose,
-        min_price_param: filters.budget[0] * 0.8,
-        max_price_param: filters.budget[0] * 1.2,
-        property_type_param: searchPropertyType,
-        location_param: searchLocation,
-        min_bedrooms_param: searchBedrooms,
-        max_bedrooms_param: null,
-        housing_status_param: searchHousingStatus,
-        limit_param: 25
+        p_purpose: searchPurpose,
+        p_min_price: filters.budget[0] * 0.8,
+        p_max_price: filters.budget[0] * 1.2,
+        p_property_type: searchPropertyType,
+        p_location: searchLocation,
+        p_min_bedrooms: searchBedrooms,
+        p_max_bedrooms: null,
+        p_housing_status: searchHousingStatus,
+        p_limit: 25
       });
 
       // Combine results - Bayut API first (with images), then scraped properties

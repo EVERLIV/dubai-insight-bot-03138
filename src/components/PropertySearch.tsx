@@ -33,15 +33,14 @@ const PropertySearch = () => {
 
       // Call the property search with scraped data integration
       const { data, error } = await supabase.rpc('search_scraped_properties', {
-        search_purpose: null,
-        min_price_param: budget[0] * 0.8, // 20% buffer
-        max_price_param: budget[0] * 1.2,
-        property_type_param: searchPropertyType,
-        location_param: searchLocation,
-        min_bedrooms_param: null,
-        max_bedrooms_param: null,
-        source_type_param: searchSourceType,
-        limit_param: 20
+        p_purpose: null,
+        p_min_price: budget[0] * 0.8,
+        p_max_price: budget[0] * 1.2,
+        p_property_type: searchPropertyType,
+        p_location: searchLocation,
+        p_min_bedrooms: null,
+        p_max_bedrooms: null,
+        p_limit: 20
       });
 
       if (error) {
@@ -50,14 +49,14 @@ const PropertySearch = () => {
 
       // Also get regular properties for comparison
       const { data: regularData, error: regularError } = await supabase.rpc('search_properties_unified', {
-        search_purpose: null,
-        min_price_param: budget[0] * 0.8,
-        max_price_param: budget[0] * 1.2,
-        property_type_param: searchPropertyType,
-        location_param: searchLocation,
-        min_bedrooms_param: null,
-        max_bedrooms_param: null,
-        limit_param: 10
+        p_purpose: null,
+        p_min_price: budget[0] * 0.8,
+        p_max_price: budget[0] * 1.2,
+        p_property_type: searchPropertyType,
+        p_location: searchLocation,
+        p_min_bedrooms: null,
+        p_max_bedrooms: null,
+        p_limit: 10
       });
 
       // Combine results

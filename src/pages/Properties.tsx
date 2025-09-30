@@ -43,29 +43,27 @@ const Properties = () => {
     try {
       // Load properties from Bayut API first
       const { data: apiData, error: apiError } = await supabase.rpc('search_properties_unified', {
-        search_purpose: null,
-        min_price_param: null,
-        max_price_param: null,
-        property_type_param: null,
-        location_param: null,
-        min_bedrooms_param: null,
-        max_bedrooms_param: null,
-        housing_status_param: null,
-        limit_param: 50
+        p_purpose: null,
+        p_min_price: null,
+        p_max_price: null,
+        p_property_type: null,
+        p_location: null,
+        p_min_bedrooms: null,
+        p_max_bedrooms: null,
+        p_housing_status: null,
+        p_limit: 50
       });
 
       // Load scraped properties
       const { data: scrapedData, error: scrapedError } = await supabase.rpc('search_scraped_properties', {
-        search_purpose: null,
-        min_price_param: null,
-        max_price_param: null,
-        property_type_param: null,
-        location_param: null,
-        min_bedrooms_param: null,
-        max_bedrooms_param: null,
-        source_type_param: null,
-        housing_status_param: null,
-        limit_param: 100
+        p_purpose: null,
+        p_min_price: null,
+        p_max_price: null,
+        p_property_type: null,
+        p_location: null,
+        p_min_bedrooms: null,
+        p_max_bedrooms: null,
+        p_limit: 100
       });
 
       if (apiError) throw apiError;
@@ -113,29 +111,27 @@ const Properties = () => {
 
       // Search API properties first
       const { data: apiData, error: apiError } = await supabase.rpc('search_properties_unified', {
-        search_purpose: searchPurpose,
-        min_price_param: filters.budget[0] * 0.7,
-        max_price_param: filters.budget[0] * 1.3,
-        property_type_param: searchPropertyType,
-        location_param: searchLocation,
-        min_bedrooms_param: searchBedrooms,
-        max_bedrooms_param: null,
-        housing_status_param: searchHousingStatus,
-        limit_param: 30
+        p_purpose: searchPurpose,
+        p_min_price: filters.budget[0] * 0.7,
+        p_max_price: filters.budget[0] * 1.3,
+        p_property_type: searchPropertyType,
+        p_location: searchLocation,
+        p_min_bedrooms: searchBedrooms,
+        p_max_bedrooms: null,
+        p_housing_status: searchHousingStatus,
+        p_limit: 30
       });
 
       // Search scraped properties
       const { data: scrapedData, error: scrapedError } = await supabase.rpc('search_scraped_properties', {
-        search_purpose: searchPurpose,
-        min_price_param: filters.budget[0] * 0.7,
-        max_price_param: filters.budget[0] * 1.3,
-        property_type_param: searchPropertyType,
-        location_param: searchLocation,
-        min_bedrooms_param: searchBedrooms,
-        max_bedrooms_param: null,
-        source_type_param: null,
-        housing_status_param: searchHousingStatus,
-        limit_param: 60
+        p_purpose: searchPurpose,
+        p_min_price: filters.budget[0] * 0.7,
+        p_max_price: filters.budget[0] * 1.3,
+        p_property_type: searchPropertyType,
+        p_location: searchLocation,
+        p_min_bedrooms: searchBedrooms,
+        p_max_bedrooms: null,
+        p_limit: 60
       });
 
       if (apiError) throw apiError;
