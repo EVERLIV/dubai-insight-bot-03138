@@ -58,6 +58,7 @@ interface Property {
   agent_phone?: string;
   housing_status?: string;
   unique_id?: string;
+  created_at?: string;
 }
 
 // Generate unique 5-digit property ID
@@ -156,7 +157,7 @@ async function performPropertySearch(
   if (properties.length > 0) {
     // Send header message
     await sendTelegramMessage(chatId, 
-      `${headerText || '🏠 <b>Search Results</b>'}\n\n📋 Found ${properties.length} properties:\n\n💡 Data from Bayut API`
+      `${headerText || '🏠 <b>Search Results</b>'}\n\n📋 Found ${properties.length} properties:`
     );
 
     // Send each property as a separate message with photo
@@ -346,10 +347,15 @@ function formatPropertyDisplay(property: Property): string {
   const areaDisplay = property.area_sqft ? 
     `${property.area_sqft} sq.ft` : '';
 
-  const sourceDisplay = property.source_category === 'api' ? '✅ Bayut API' : '📋 Verifying';
+  const sourceDisplay = property.source_category === 'api' ? '💡 Bayut API' : '📋 Verifying';
   
   const imageDisplay = property.images && property.images.length > 0 ? 
-    `📸 ${property.images.length} photos` : '';
+    `📸 ${property.images.length} photos` : '📸 No photos';
+  
+  // Format date
+  const dateDisplay = property.created_at 
+    ? `📅 ${new Date(property.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`
+    : '';
 
   const purposeDisplay = property.purpose === 'for-sale' ? 'Sale' : 'Rent';
   const statusDisplay = property.housing_status === 'primary' ? '🆕 Primary' : '🏗️ Secondary';
@@ -362,6 +368,7 @@ function formatPropertyDisplay(property: Property): string {
 🎯 Purpose: ${purposeDisplay} • ${statusDisplay}
 ${imageDisplay}
 ${areaDisplay ? `📐 ${areaDisplay}` : ''}
+${dateDisplay}
 ${sourceDisplay}
 🆔 <b>ID: ${property.unique_id}</b>
   `.trim();
