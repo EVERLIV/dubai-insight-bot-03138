@@ -394,18 +394,23 @@ async function callMultiPlatformSearch(searchParams: any): Promise<any> {
     
     let allProperties: any[] = [];
     let totalCount = 0;
-    let sources: string[] = [];
+    let sources: string[] = ['Bayut API'];
     
-    // Add API properties
+    // ПРИОРИТЕТ: Add Bayut API properties first (они с фото)
     if (bayutResult.success && bayutResult.properties) {
-      allProperties = [...bayutResult.properties];
+      // Фильтруем только свойства с изображениями из Bayut
+      const bayutProps = bayutResult.properties.filter((prop: any) => 
+        prop.images && prop.images.length > 0
+      );
+      allProperties = [...bayutProps];
       totalCount += bayutResult.count || 0;
     }
     
-    // Add scraped properties
-    if (scrapedResult.success && scrapedResult.data) {
+    // Add scraped properties ТОЛЬКО если Bayut не дал достаточно результатов
+    if (scrapedResult.success && scrapedResult.data && allProperties.length < (searchParams.limit || 10)) {
+      const remainingSlots = (searchParams.limit || 10) - allProperties.length;
       // Mark scraped properties with source info
-      const scrapedProps = scrapedResult.data.map((prop: any) => ({
+      const scrapedProps = scrapedResult.data.slice(0, remainingSlots).map((prop: any) => ({
         ...prop,
         source_type: 'scraped',
         source_name: prop.source_name || 'External Source'
@@ -436,26 +441,32 @@ async function callMultiPlatformSearch(searchParams: any): Promise<any> {
         searchScrapedProperties(expandedParams)
       ]);
       
+      // ПРИОРИТЕТ: Сначала Bayut с фото
       if (expandedBayut.success && expandedBayut.properties) {
-        allProperties = [...allProperties, ...expandedBayut.properties.slice(0, 10)];
+        const bayutWithImages = expandedBayut.properties.filter((prop: any) => 
+          prop.images && prop.images.length > 0
+        ).slice(0, 10);
+        allProperties = [...allProperties, ...bayutWithImages];
         totalCount += expandedBayut.count || 0;
       }
       
-        if (expandedScraped.success && expandedScraped.data) {
-          const scrapedProps = expandedScraped.data.slice(0, 10).map((prop: any) => ({
-            ...prop,
-            source_type: 'scraped'
-          }));
-          allProperties = [...allProperties, ...scrapedProps];
-          totalCount += expandedScraped.data.length;
-        }
+      // Scraped только если не хватает Bayut
+      if (expandedScraped.success && expandedScraped.data && allProperties.length < 10) {
+        const remaining = 10 - allProperties.length;
+        const scrapedProps = expandedScraped.data.slice(0, remaining).map((prop: any) => ({
+          ...prop,
+          source_type: 'scraped'
+        }));
+        allProperties = [...allProperties, ...scrapedProps];
+        totalCount += expandedScraped.data.length;
+      }
     }
     
     // Final fallback - get some general properties
     if (allProperties.length === 0) {
       const generalParams = {
         telegram_user_id: searchParams.telegram_user_id,
-        limit: 3
+        limit: 10
       };
       
       const [generalBayut, generalScraped] = await Promise.all([
@@ -463,24 +474,37 @@ async function callMultiPlatformSearch(searchParams: any): Promise<any> {
         searchScrapedProperties(generalParams)
       ]);
       
+      // ПРИОРИТЕТ: Bayut с фото
       if (generalBayut.success && generalBayut.properties) {
-        allProperties = [...allProperties, ...generalBayut.properties];
+        const bayutWithImages = generalBayut.properties.filter((prop: any) => 
+          prop.images && prop.images.length > 0
+        );
+        allProperties = [...allProperties, ...bayutWithImages];
         totalCount += generalBayut.count || 0;
       }
       
-        if (generalScraped.success && generalScraped.data) {
-          const scrapedProps = generalScraped.data.slice(0, 10).map((prop: any) => ({
-            ...prop,
-            source_type: 'scraped'
-          }));
-          allProperties = [...allProperties, ...scrapedProps];
-          totalCount += generalScraped.data.length;
-        }
+      // Scraped только если нет Bayut
+      if (generalScraped.success && generalScraped.data && allProperties.length === 0) {
+        const scrapedProps = generalScraped.data.slice(0, 10).map((prop: any) => ({
+          ...prop,
+          source_type: 'scraped'
+        }));
+        allProperties = [...allProperties, ...scrapedProps];
+        totalCount += generalScraped.data.length;
+      }
     }
     
-    // Sort by most recent and apply offset/limit
+    // Sort: Bayut API properties first (they have images), then by date
     allProperties = allProperties
       .sort((a: any, b: any) => {
+        // Приоритет: сначала Bayut API с фото
+        const aHasImages = a.images && a.images.length > 0;
+        const bHasImages = b.images && b.images.length > 0;
+        
+        if (aHasImages && !bHasImages) return -1;
+        if (!aHasImages && bHasImages) return 1;
+        
+        // Если оба с фото или оба без - сортируем по дате
         const aDate = new Date(a.scraped_at || a.updated_at || a.created_at || 0);
         const bDate = new Date(b.scraped_at || b.updated_at || b.created_at || 0);
         return bDate.getTime() - aDate.getTime();
