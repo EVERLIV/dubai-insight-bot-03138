@@ -353,23 +353,7 @@ serve(async (req) => {
       market_trends: marketTrends
     };
 
-    // Save valuation to database if property_listing_id provided
-    if (property_listing_id) {
-      try {
-        await supabase
-          .from('property_valuations')
-          .insert({
-            property_listing_id,
-            estimated_value: finalValuation.estimated_value,
-            confidence_score: finalValuation.confidence_score,
-            comparable_properties: finalValuation.comparable_properties,
-            valuation_factors: finalValuation.valuation_factors,
-            market_trends: finalValuation.market_trends
-          });
-      } catch (dbError) {
-        console.error('Error saving valuation to database:', dbError);
-      }
-    }
+    // Note: Valuation results are returned directly without database storage
 
     const response = {
       success: true,
