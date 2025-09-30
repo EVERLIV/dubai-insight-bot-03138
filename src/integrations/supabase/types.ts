@@ -14,13 +14,296 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      api_usage_logs: {
+        Row: {
+          created_at: string | null
+          endpoint: string | null
+          function_name: string | null
+          id: number
+          response_time_ms: number | null
+          status_code: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          endpoint?: string | null
+          function_name?: string | null
+          id?: number
+          response_time_ms?: number | null
+          status_code?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          endpoint?: string | null
+          function_name?: string | null
+          id?: number
+          response_time_ms?: number | null
+          status_code?: number | null
+        }
+        Relationships: []
+      }
+      market_analysis: {
+        Row: {
+          analysis_data: Json | null
+          created_at: string | null
+          id: number
+          news_articles: Json | null
+        }
+        Insert: {
+          analysis_data?: Json | null
+          created_at?: string | null
+          id?: number
+          news_articles?: Json | null
+        }
+        Update: {
+          analysis_data?: Json | null
+          created_at?: string | null
+          id?: number
+          news_articles?: Json | null
+        }
+        Relationships: []
+      }
+      property_listings: {
+        Row: {
+          agent_name: string | null
+          agent_phone: string | null
+          area_sqft: number | null
+          bathrooms: number | null
+          bedrooms: number | null
+          created_at: string | null
+          external_id: string | null
+          housing_status: string | null
+          id: number
+          images: string[] | null
+          location_area: string | null
+          price: number | null
+          property_type: string | null
+          purpose: string | null
+          source_category: string | null
+          source_name: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          agent_name?: string | null
+          agent_phone?: string | null
+          area_sqft?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          created_at?: string | null
+          external_id?: string | null
+          housing_status?: string | null
+          id?: number
+          images?: string[] | null
+          location_area?: string | null
+          price?: number | null
+          property_type?: string | null
+          purpose?: string | null
+          source_category?: string | null
+          source_name?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          agent_name?: string | null
+          agent_phone?: string | null
+          area_sqft?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          created_at?: string | null
+          external_id?: string | null
+          housing_status?: string | null
+          id?: number
+          images?: string[] | null
+          location_area?: string | null
+          price?: number | null
+          property_type?: string | null
+          purpose?: string | null
+          source_category?: string | null
+          source_name?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      scraped_properties: {
+        Row: {
+          agent_name: string | null
+          agent_phone: string | null
+          area_sqft: number | null
+          bathrooms: number | null
+          bedrooms: number | null
+          created_at: string | null
+          housing_status: string | null
+          id: number
+          images: string[] | null
+          location_area: string | null
+          price: number | null
+          property_type: string | null
+          purpose: string | null
+          source_category: string | null
+          source_name: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          agent_name?: string | null
+          agent_phone?: string | null
+          area_sqft?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          created_at?: string | null
+          housing_status?: string | null
+          id?: number
+          images?: string[] | null
+          location_area?: string | null
+          price?: number | null
+          property_type?: string | null
+          purpose?: string | null
+          source_category?: string | null
+          source_name?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          agent_name?: string | null
+          agent_phone?: string | null
+          area_sqft?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          created_at?: string | null
+          housing_status?: string | null
+          id?: number
+          images?: string[] | null
+          location_area?: string | null
+          price?: number | null
+          property_type?: string | null
+          purpose?: string | null
+          source_category?: string | null
+          source_name?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      search_history: {
+        Row: {
+          created_at: string | null
+          filters: Json | null
+          id: number
+          query: string | null
+          results_count: number | null
+          telegram_user_id: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          filters?: Json | null
+          id?: number
+          query?: string | null
+          results_count?: number | null
+          telegram_user_id?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          filters?: Json | null
+          id?: number
+          query?: string | null
+          results_count?: number | null
+          telegram_user_id?: number | null
+        }
+        Relationships: []
+      }
+      user_preferences: {
+        Row: {
+          created_at: string | null
+          id: number
+          preferences: Json | null
+          telegram_user_id: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          preferences?: Json | null
+          telegram_user_id?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          preferences?: Json | null
+          telegram_user_id?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      search_properties_unified: {
+        Args: {
+          p_housing_status?: string
+          p_limit?: number
+          p_location?: string
+          p_max_bedrooms?: number
+          p_max_price?: number
+          p_min_bedrooms?: number
+          p_min_price?: number
+          p_property_type?: string
+          p_purpose?: string
+          p_query?: string
+        }
+        Returns: {
+          agent_name: string
+          agent_phone: string
+          area_sqft: number
+          bathrooms: number
+          bedrooms: number
+          created_at: string
+          housing_status: string
+          id: number
+          images: string[]
+          location_area: string
+          price: number
+          property_type: string
+          purpose: string
+          source_category: string
+          source_name: string
+          title: string
+        }[]
+      }
+      search_scraped_properties: {
+        Args: {
+          p_limit?: number
+          p_location?: string
+          p_max_bedrooms?: number
+          p_max_price?: number
+          p_min_bedrooms?: number
+          p_min_price?: number
+          p_property_type?: string
+          p_purpose?: string
+          p_query?: string
+        }
+        Returns: {
+          agent_name: string
+          agent_phone: string
+          area_sqft: number
+          bathrooms: number
+          bedrooms: number
+          created_at: string
+          housing_status: string
+          id: number
+          images: string[]
+          location_area: string
+          price: number
+          property_type: string
+          purpose: string
+          source_category: string
+          source_name: string
+          title: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
