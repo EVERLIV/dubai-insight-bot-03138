@@ -533,16 +533,16 @@ async function callMultiPlatformSearch(searchParams: any): Promise<any> {
 async function searchScrapedProperties(searchParams: any): Promise<any> {
   try {
     const { data, error } = await supabase.rpc('search_scraped_properties', {
-      search_purpose: searchParams.purpose || null,
-      min_price_param: searchParams.min_price || null,
-      max_price_param: searchParams.max_price || null,
-      property_type_param: searchParams.property_type || null,
-      location_param: searchParams.location || null,
-      min_bedrooms_param: searchParams.bedrooms_min || null,
-      max_bedrooms_param: searchParams.bedrooms_max || null,
-      source_type_param: searchParams.source_type || null,
-      housing_status_param: searchParams.housing_status || null,
-      limit_param: searchParams.limit || 50
+      p_purpose: searchParams.purpose || null,
+      p_min_price: searchParams.min_price || null,
+      p_max_price: searchParams.max_price || null,
+      p_property_type: searchParams.property_type || null,
+      p_location: searchParams.location || null,
+      p_min_bedrooms: searchParams.bedrooms_min || null,
+      p_max_bedrooms: searchParams.bedrooms_max || null,
+      p_housing_status: searchParams.housing_status || null,
+      p_limit: searchParams.limit || 50,
+      p_query: searchParams.query || null
     });
 
     if (error) {
