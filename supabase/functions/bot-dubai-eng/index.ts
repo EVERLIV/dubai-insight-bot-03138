@@ -125,6 +125,38 @@ async function sendTelegramPhoto(
   }
 }
 
+async function deleteTelegramMessage(chatId: number, messageId: number) {
+  const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/deleteMessage`;
+  
+  try {
+    console.log(`Deleting message ${messageId} from chat ${chatId}`);
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        chat_id: chatId,
+        message_id: messageId,
+      }),
+    });
+
+    const result = await response.json();
+    
+    if (!result.ok) {
+      console.error('Failed to delete message:', JSON.stringify(result));
+    } else {
+      console.log('Message deleted successfully');
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Error deleting message:', error);
+    return null;
+  }
+}
+
 async function performPropertySearch(
   chatId: number, 
   purpose: string, 
@@ -689,7 +721,11 @@ serve(async (req) => {
     } else if (update.callback_query) {
       const callbackQuery = update.callback_query;
       const chatId = callbackQuery.message.chat.id;
+      const messageId = callbackQuery.message.message_id;
       const data = callbackQuery.data;
+
+      // Delete the old message first
+      await deleteTelegramMessage(chatId, messageId);
 
       // Handle "View Details" button for specific property
       if (data.startsWith('view_')) {
