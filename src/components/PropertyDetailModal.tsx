@@ -145,12 +145,6 @@ export default function PropertyDetailModal({ property, isOpen, onClose }: Prope
                     <Title level={2} className="m-0 flex-1 pr-4">
                       {property.title}
                     </Title>
-                    <div className="flex items-center gap-2">
-                      {getSourceIcon()}
-                      <Text type="secondary" className="text-xs">
-                        {property.source_name || 'API'}
-                      </Text>
-                    </div>
                   </div>
                   
                   <div className="flex items-center gap-3 mb-4">
@@ -294,51 +288,35 @@ export default function PropertyDetailModal({ property, isOpen, onClose }: Prope
             <Col xs={24} lg={8}>
               <Space direction="vertical" size="middle" className="w-full">
                 {/* Agent Card */}
-                {(property.agent_name || property.agent_phone) && (
-                  <Card className="shadow-medium">
-                    <CardContent className="p-6">
-                      <Title level={4} className="mb-4">Agent Contact</Title>
-                      
-                      {property.agent_name && (
-                        <div className="flex items-center mb-3">
-                          <User className="w-4 h-4 text-primary mr-2" />
-                          <Text strong>{property.agent_name}</Text>
-                        </div>
-                      )}
-                      
-                      {property.agent_phone && (
-                        <div className="flex items-center mb-4">
-                          <Phone className="w-4 h-4 text-primary mr-2" />
-                          <Text>{property.agent_phone}</Text>
-                        </div>
-                      )}
-                      
-                      <Space className="w-full" direction="vertical" size="small">
-                        <Button 
-                          htmlType="button"
-                          size="large" 
-                          className="w-full rounded-xl"
-                          style={{ 
-                            backgroundColor: 'hsl(var(--primary))',
-                            borderColor: 'hsl(var(--primary))',
-                            color: 'white'
-                          }}
-                        >
-                          <Phone className="w-4 h-4 mr-2" />
-                          Call Now
-                        </Button>
-                        <Button 
-                          htmlType="button"
-                          size="large" 
-                          className="w-full rounded-xl border-primary text-primary"
-                        >
-                          <MessageCircle className="w-4 h-4 mr-2" />
-                          Message
-                        </Button>
-                      </Space>
-                    </CardContent>
-                  </Card>
-                )}
+                <Card className="shadow-medium">
+                  <CardContent className="p-6">
+                    <Title level={4} className="mb-4">DUBAI Invest Agent</Title>
+                    
+                    <Space className="w-full" direction="vertical" size="small">
+                      <Button 
+                        htmlType="button"
+                        size="large" 
+                        className="w-full rounded-xl"
+                        style={{ 
+                          backgroundColor: 'hsl(var(--primary))',
+                          borderColor: 'hsl(var(--primary))',
+                          color: 'white'
+                        }}
+                      >
+                        <Phone className="w-4 h-4 mr-2" />
+                        Call Now
+                      </Button>
+                      <Button 
+                        htmlType="button"
+                        size="large" 
+                        className="w-full rounded-xl border-primary text-primary"
+                      >
+                        <MessageCircle className="w-4 h-4 mr-2" />
+                        Message
+                      </Button>
+                    </Space>
+                  </CardContent>
+                </Card>
 
                 {/* Property Info */}
                 <Card className="shadow-medium">
@@ -359,14 +337,6 @@ export default function PropertyDetailModal({ property, isOpen, onClose }: Prope
                           </Text>
                         </div>
                       )}
-                      
-                      <div className="flex justify-between">
-                        <Text type="secondary">Source:</Text>
-                        <div className="flex items-center gap-1">
-                          {getSourceIcon()}
-                          <Text strong>{property.source_name || 'API'}</Text>
-                        </div>
-                      </div>
                     </Space>
                   </CardContent>
                 </Card>

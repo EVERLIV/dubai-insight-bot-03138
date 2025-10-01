@@ -307,33 +307,22 @@ export default function PropertyDetails() {
               <PremiumSidebar property={property} />
               
               {/* Professional Agent Contact */}
-              {property.agent_name && (
-                <Card className="border-gray-100">
-                  <CardContent className="p-6">
-                    <h3 className="text-sm font-bold mb-4 text-gray-900 uppercase tracking-wider border-b border-gray-300 pb-2">Licensed Agent</h3>
-                    <div className="flex items-center gap-4 mb-6">
-                      <div className="w-12 h-12 bg-blue-900 flex items-center justify-center">
-                        <User className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <div className="font-bold text-lg text-gray-900">{property.agent_name}</div>
-                        <div className="text-xs text-gray-600 font-semibold uppercase tracking-wide">Certified Real Estate Professional</div>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <Button className="w-full h-12 text-sm bg-blue-900 hover:bg-blue-800 text-white font-bold uppercase tracking-wider">
-                        <Phone className="w-4 h-4 mr-2" />
-                        Call Agent
-                      </Button>
-                      <Button variant="outline" className="w-full h-12 text-sm border-gray-300 text-gray-900 font-bold uppercase tracking-wider">
-                        <MessageCircle className="w-4 h-4 mr-2" />
-                        Send Message
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+              <Card className="border-gray-100">
+                <CardContent className="p-6">
+                  <h3 className="text-sm font-bold mb-4 text-gray-900 uppercase tracking-wider border-b border-gray-300 pb-2">DUBAI Invest Agent</h3>
+                  
+                  <div className="space-y-3">
+                    <Button className="w-full h-12 text-sm bg-blue-900 hover:bg-blue-800 text-white font-bold uppercase tracking-wider">
+                      <Phone className="w-4 h-4 mr-2" />
+                      Call Agent
+                    </Button>
+                    <Button variant="outline" className="w-full h-12 text-sm border-gray-300 text-gray-900 font-bold uppercase tracking-wider">
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Send Message
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>
