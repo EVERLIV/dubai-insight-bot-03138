@@ -174,6 +174,57 @@ serve(async (req) => {
       }
     }
 
+    // Morning digest - generate and publish
+    if (action === 'morning_digest') {
+      console.log('Generating morning digest...');
+      
+      // Call generate-channel-content function
+      const generateResponse = await fetch(`${supabaseUrl}/functions/v1/generate-channel-content`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+        },
+        body: JSON.stringify({ postType: 'morning_digest' }),
+      });
+
+      if (!generateResponse.ok) {
+        throw new Error('Failed to generate morning digest');
+      }
+
+      const generateData = await generateResponse.json();
+      
+      if (!generateData.success || !generateData.content) {
+        throw new Error('No content generated');
+      }
+
+      console.log('Morning digest generated, publishing...');
+      
+      // Send to channel (plain text, no HTML)
+      const success = await sendToChannel(generateData.content, 'Markdown');
+
+      if (success) {
+        // Save to channel_posts
+        await supabase.from('channel_posts').insert({
+          post_type: 'morning_digest',
+          title: 'Утренний дайджест ' + new Date().toLocaleDateString('ru'),
+          content: generateData.content,
+          status: 'published',
+          published_at: new Date().toISOString(),
+          ai_generated: true,
+        });
+
+        return new Response(JSON.stringify({
+          success: true,
+          message: 'Утренний дайджест опубликован',
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } else {
+        throw new Error('Failed to send morning digest to channel');
+      }
+    }
+
     // Get publishing stats
     if (action === 'stats') {
       const { count: totalCount } = await supabase
