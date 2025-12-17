@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.parse-property]
 verify_jwt = false
+
+[functions.scrape-batdongsan]
+verify_jwt = false
