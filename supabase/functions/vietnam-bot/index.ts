@@ -64,6 +64,52 @@ async function sendTelegramMessage(chatId: number | string, text: string, option
   }
 }
 
+// Send single photo
+async function sendTelegramPhoto(chatId: number | string, photoUrl: string, caption?: string, options: any = {}) {
+  if (!TELEGRAM_BOT_TOKEN) return;
+  const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        chat_id: chatId, 
+        photo: photoUrl, 
+        caption, 
+        parse_mode: 'HTML',
+        ...options 
+      })
+    });
+    return await response.json();
+  } catch (error) {
+    console.error('Error sending photo:', error);
+  }
+}
+
+// Send media group (multiple photos)
+async function sendTelegramMediaGroup(chatId: number | string, images: string[], caption?: string) {
+  if (!TELEGRAM_BOT_TOKEN || !images.length) return;
+  const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMediaGroup`;
+  
+  const media = images.slice(0, 10).map((img, idx) => ({
+    type: 'photo',
+    media: img,
+    caption: idx === 0 ? caption : undefined,
+    parse_mode: idx === 0 ? 'HTML' : undefined
+  }));
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, media })
+    });
+    return await response.json();
+  } catch (error) {
+    console.error('Error sending media group:', error);
+  }
+}
+
 async function editTelegramMessage(chatId: number, messageId: number, text: string, options: any = {}) {
   if (!TELEGRAM_BOT_TOKEN) return;
   const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/editMessageText`;
@@ -491,7 +537,7 @@ ${getFilterSummary(filters)}
       const pets = p.pets_allowed === true ? '🐾 Можно с животными' : p.pets_allowed === false ? '🚫 Без животных' : '❓ Не указано';
       const period = p.rental_period === 'short-term' ? '⏱️ Краткосрочная' : p.rental_period === 'long-term' ? '📅 Долгосрочная' : '📅 Любой срок';
 
-      await editTelegramMessage(chatId, messageId, `
+      const detailText = `
 🏠 <b>${p.title}</b>
 
 💰 <b>Цена:</b> ${price}
@@ -505,16 +551,40 @@ ${pets}
 ${period}
 
 ${p.agent_name ? `👤 Агент: ${p.agent_name}` : ''}
-${p.agent_phone ? `📞 Телефон: ${p.agent_phone}` : ''}
-`, {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: '📞 Связаться', callback_data: 'contact_agent' }],
-            [{ text: '🔍 Ещё объявления', callback_data: 'filter_search' }],
-            [{ text: '🔙 Главное меню', callback_data: 'back_main' }]
-          ]
-        }
-      });
+${p.agent_phone ? `📞 Телефон: ${p.agent_phone}` : ''}`;
+
+      const keyboard = {
+        inline_keyboard: [
+          [{ text: '📞 Связаться', callback_data: 'contact_agent' }],
+          [{ text: '🔍 Ещё объявления', callback_data: 'filter_search' }],
+          [{ text: '🔙 Главное меню', callback_data: 'back_main' }]
+        ]
+      };
+
+      // Delete the old message
+      try {
+        await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/deleteMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id: chatId, message_id: messageId })
+        });
+      } catch {}
+
+      // Send photos if available
+      const images = p.images?.filter((img: string) => img && img.startsWith('http')) || [];
+      
+      if (images.length > 1) {
+        // Send multiple photos as media group
+        await sendTelegramMediaGroup(chatId, images.slice(0, 5), `📸 Фото объекта #${p.id}`);
+        // Then send details with buttons
+        await sendTelegramMessage(chatId, detailText, { reply_markup: keyboard });
+      } else if (images.length === 1) {
+        // Send single photo with caption and buttons
+        await sendTelegramPhoto(chatId, images[0], detailText, { reply_markup: keyboard });
+      } else {
+        // No photos - just send text
+        await sendTelegramMessage(chatId, `📷 <i>Фото отсутствует</i>\n${detailText}`, { reply_markup: keyboard });
+      }
     }
   }
 
