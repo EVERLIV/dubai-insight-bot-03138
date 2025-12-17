@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { 
   Bot, 
   Users, 
@@ -20,7 +21,9 @@ import {
   Bell,
   Sparkles,
   Plus,
-  Globe
+  Globe,
+  Pencil,
+  Trash2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -28,6 +31,7 @@ import { PropertyImporter } from "@/components/admin/PropertyImporter";
 import { ManualPropertyForm } from "@/components/admin/ManualPropertyForm";
 import { BatdongsanScraper } from "@/components/admin/BatdongsanScraper";
 import { ChannelMonitor } from "@/components/admin/ChannelMonitor";
+import { PropertyEditDialog } from "@/components/admin/PropertyEditDialog";
 
 interface Property {
   id: number;
@@ -63,6 +67,9 @@ const Admin = () => {
   const [groupMessage, setGroupMessage] = useState('');
   const [messageType, setMessageType] = useState('info');
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [editingProperty, setEditingProperty] = useState<Property | null>(null);
+  const [deleteProperty, setDeleteProperty] = useState<Property | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -194,6 +201,28 @@ const Admin = () => {
       currency: 'VND',
       maximumFractionDigits: 0
     }).format(price);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteProperty) return;
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('property_listings')
+        .delete()
+        .eq('id', deleteProperty.id);
+      
+      if (error) throw error;
+      
+      toast({ title: "Deleted", description: `Property #${deleteProperty.id} deleted` });
+      setDeleteProperty(null);
+      fetchProperties();
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast({ title: "Error", description: "Failed to delete property", variant: "destructive" });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -535,7 +564,7 @@ const Admin = () => {
                       <p className="text-sm text-muted-foreground mb-3">
                         {property.location_area || 'Ho Chi Minh City'}
                       </p>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
                         {property.bedrooms && (
                           <span>{property.bedrooms} bed</span>
                         )}
@@ -546,6 +575,14 @@ const Admin = () => {
                           <span>{property.area_sqft} m²</span>
                         )}
                       </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" className="flex-1" onClick={() => setEditingProperty(property)}>
+                          <Pencil className="w-3 h-3 mr-1" /> Edit
+                        </Button>
+                        <Button size="sm" variant="destructive" className="flex-1" onClick={() => setDeleteProperty(property)}>
+                          <Trash2 className="w-3 h-3 mr-1" /> Delete
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
@@ -554,6 +591,32 @@ const Admin = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Edit Dialog */}
+      <PropertyEditDialog
+        property={editingProperty}
+        open={!!editingProperty}
+        onOpenChange={(open) => !open && setEditingProperty(null)}
+        onSaved={fetchProperties}
+      />
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteProperty} onOpenChange={(open) => !open && setDeleteProperty(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Property</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deleteProperty?.title}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
