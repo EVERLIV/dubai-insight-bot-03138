@@ -35,3 +35,6 @@ verify_jwt = false
 
 [functions.parse-vnexpress]
 verify_jwt = false
+
+[functions.publish-to-channel]
+verify_jwt = false

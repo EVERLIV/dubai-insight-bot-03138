@@ -250,6 +250,59 @@ export const ChannelMonitor = () => {
     }
   };
 
+  const publishToChannel = async (articleId: number) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('publish-to-channel', {
+        body: { 
+          action: 'publish_article',
+          article_id: articleId,
+        }
+      });
+
+      if (error) throw error;
+
+      toast({ title: 'Опубликовано в канал!' });
+      fetchData();
+    } catch (error) {
+      console.error('Error publishing:', error);
+      toast({
+        title: 'Ошибка публикации',
+        description: 'Проверьте настройки канала',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const autoPublish = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('publish-to-channel', {
+        body: { action: 'auto_publish' }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast({ 
+          title: 'Автопубликация', 
+          description: data.title || 'Новость опубликована' 
+        });
+        fetchData();
+      } else {
+        toast({ 
+          title: 'Нет новостей', 
+          description: data.message,
+          variant: 'destructive' 
+        });
+      }
+    } catch (error) {
+      console.error('Error auto-publishing:', error);
+      toast({
+        title: 'Ошибка',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const savePost = async (status: 'draft' | 'scheduled') => {
     if (!generatedContent) return;
 
@@ -459,11 +512,17 @@ export const ChannelMonitor = () => {
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Languages className="h-5 w-5" />
-                Загруженные новости ({newsArticles.length})
-              </CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Languages className="h-5 w-5" />
+                  Загруженные новости ({newsArticles.length})
+                </CardTitle>
+              </div>
+              <Button onClick={autoPublish} variant="default" size="sm">
+                <Send className="h-4 w-4 mr-2" />
+                Автопубликация
+              </Button>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[400px]">
@@ -527,6 +586,18 @@ export const ChannelMonitor = () => {
                                 : new Date(article.created_at).toLocaleString('ru')}
                             </span>
                             <div className="flex items-center gap-2">
+                              {article.is_posted ? (
+                                <Badge className="bg-green-500 text-xs">✓ В канале</Badge>
+                              ) : article.is_processed ? (
+                                <Button
+                                  size="sm"
+                                  variant="default"
+                                  onClick={() => publishToChannel(article.id)}
+                                >
+                                  <Send className="h-3 w-3 mr-1" />
+                                  В канал
+                                </Button>
+                              ) : null}
                               {article.original_url && (
                                 <a 
                                   href={article.original_url} 
