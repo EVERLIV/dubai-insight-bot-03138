@@ -70,14 +70,17 @@ export type Database = {
           bathrooms: number | null
           bedrooms: number | null
           created_at: string | null
+          district: string | null
           external_id: string | null
           housing_status: string | null
           id: number
           images: string[] | null
           location_area: string | null
+          pets_allowed: boolean | null
           price: number | null
           property_type: string | null
           purpose: string | null
+          rental_period: string | null
           source_category: string | null
           source_name: string | null
           title: string
@@ -90,14 +93,17 @@ export type Database = {
           bathrooms?: number | null
           bedrooms?: number | null
           created_at?: string | null
+          district?: string | null
           external_id?: string | null
           housing_status?: string | null
           id?: number
           images?: string[] | null
           location_area?: string | null
+          pets_allowed?: boolean | null
           price?: number | null
           property_type?: string | null
           purpose?: string | null
+          rental_period?: string | null
           source_category?: string | null
           source_name?: string | null
           title: string
@@ -110,14 +116,17 @@ export type Database = {
           bathrooms?: number | null
           bedrooms?: number | null
           created_at?: string | null
+          district?: string | null
           external_id?: string | null
           housing_status?: string | null
           id?: number
           images?: string[] | null
           location_area?: string | null
+          pets_allowed?: boolean | null
           price?: number | null
           property_type?: string | null
           purpose?: string | null
+          rental_period?: string | null
           source_category?: string | null
           source_name?: string | null
           title?: string
@@ -133,13 +142,16 @@ export type Database = {
           bathrooms: number | null
           bedrooms: number | null
           created_at: string | null
+          district: string | null
           housing_status: string | null
           id: number
           images: string[] | null
           location_area: string | null
+          pets_allowed: boolean | null
           price: number | null
           property_type: string | null
           purpose: string | null
+          rental_period: string | null
           source_category: string | null
           source_name: string | null
           title: string
@@ -152,13 +164,16 @@ export type Database = {
           bathrooms?: number | null
           bedrooms?: number | null
           created_at?: string | null
+          district?: string | null
           housing_status?: string | null
           id?: number
           images?: string[] | null
           location_area?: string | null
+          pets_allowed?: boolean | null
           price?: number | null
           property_type?: string | null
           purpose?: string | null
+          rental_period?: string | null
           source_category?: string | null
           source_name?: string | null
           title: string
@@ -171,13 +186,16 @@ export type Database = {
           bathrooms?: number | null
           bedrooms?: number | null
           created_at?: string | null
+          district?: string | null
           housing_status?: string | null
           id?: number
           images?: string[] | null
           location_area?: string | null
+          pets_allowed?: boolean | null
           price?: number | null
           property_type?: string | null
           purpose?: string | null
+          rental_period?: string | null
           source_category?: string | null
           source_name?: string | null
           title?: string

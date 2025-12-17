@@ -8,17 +8,34 @@ import { Loader2, Save, X, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+const HCMC_DISTRICTS = [
+  "District 1", "District 2", "District 3", "District 4", "District 5",
+  "District 6", "District 7", "District 8", "District 9", "District 10",
+  "District 11", "District 12", "Binh Thanh", "Go Vap", "Phu Nhuan",
+  "Tan Binh", "Tan Phu", "Thu Duc", "Binh Tan", "Nha Be",
+  "Can Gio", "Cu Chi", "Hoc Mon", "Binh Chanh"
+];
+
+const RENTAL_PERIODS = [
+  { value: "short-term", label: "Краткосрочная" },
+  { value: "long-term", label: "Долгосрочная" },
+  { value: "both", label: "Любая" }
+];
+
 interface Property {
   id: number;
   title: string;
   price: number | null;
   location_area: string | null;
+  district?: string | null;
   bedrooms: number | null;
   bathrooms: number | null;
   area_sqft: number | null;
   property_type: string | null;
   purpose: string | null;
   images: string[] | null;
+  pets_allowed?: boolean | null;
+  rental_period?: string | null;
   agent_name?: string | null;
   agent_phone?: string | null;
 }
@@ -39,11 +56,14 @@ export const PropertyEditDialog = ({ property, open, onOpenChange, onSaved }: Pr
   const [formData, setFormData] = useState({
     title: '',
     price: '',
+    district: '',
     location_area: '',
     property_type: 'Apartment',
     bedrooms: '',
     bathrooms: '',
     area_sqft: '',
+    pets_allowed: '',
+    rental_period: '',
     agent_name: '',
     agent_phone: ''
   });
@@ -53,11 +73,14 @@ export const PropertyEditDialog = ({ property, open, onOpenChange, onSaved }: Pr
       setFormData({
         title: property.title || '',
         price: property.price?.toString() || '',
+        district: property.district || '',
         location_area: property.location_area || '',
         property_type: property.property_type || 'Apartment',
         bedrooms: property.bedrooms?.toString() || '',
         bathrooms: property.bathrooms?.toString() || '',
         area_sqft: property.area_sqft?.toString() || '',
+        pets_allowed: property.pets_allowed === true ? 'yes' : property.pets_allowed === false ? 'no' : '',
+        rental_period: property.rental_period || '',
         agent_name: property.agent_name || '',
         agent_phone: property.agent_phone || ''
       });
@@ -120,11 +143,14 @@ export const PropertyEditDialog = ({ property, open, onOpenChange, onSaved }: Pr
         .update({
           title: formData.title,
           price: formData.price ? parseFloat(formData.price) : null,
+          district: formData.district || null,
           location_area: formData.location_area || null,
           property_type: formData.property_type,
           bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
           bathrooms: formData.bathrooms ? parseInt(formData.bathrooms) : null,
           area_sqft: formData.area_sqft ? parseInt(formData.area_sqft) : null,
+          pets_allowed: formData.pets_allowed === 'yes' ? true : formData.pets_allowed === 'no' ? false : null,
+          rental_period: formData.rental_period || null,
           images: imageUrls.length > 0 ? imageUrls : null,
           agent_name: formData.agent_name || null,
           agent_phone: formData.agent_phone || null,
@@ -152,20 +178,32 @@ export const PropertyEditDialog = ({ property, open, onOpenChange, onSaved }: Pr
           <DialogTitle>Edit Property #{property?.id}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2 space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="md:col-span-2 lg:col-span-3 space-y-2">
               <Label>Title *</Label>
               <Input value={formData.title} onChange={(e) => handleChange('title', e.target.value)} required />
             </div>
 
             <div className="space-y-2">
-              <Label>Price (VND/month)</Label>
-              <Input type="number" value={formData.price} onChange={(e) => handleChange('price', e.target.value)} />
+              <Label>District</Label>
+              <Select value={formData.district} onValueChange={(v) => handleChange('district', v)}>
+                <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectContent>
+                  {HCMC_DISTRICTS.map(d => (
+                    <SelectItem key={d} value={d}>{d}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
-              <Label>Location</Label>
+              <Label>Address</Label>
               <Input value={formData.location_area} onChange={(e) => handleChange('location_area', e.target.value)} />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Price (VND)</Label>
+              <Input type="number" value={formData.price} onChange={(e) => handleChange('price', e.target.value)} />
             </div>
 
             <div className="space-y-2">
@@ -183,8 +221,26 @@ export const PropertyEditDialog = ({ property, open, onOpenChange, onSaved }: Pr
             </div>
 
             <div className="space-y-2">
-              <Label>Area (m²)</Label>
-              <Input type="number" value={formData.area_sqft} onChange={(e) => handleChange('area_sqft', e.target.value)} />
+              <Label>Rental Period</Label>
+              <Select value={formData.rental_period} onValueChange={(v) => handleChange('rental_period', v)}>
+                <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectContent>
+                  {RENTAL_PERIODS.map(p => (
+                    <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Pets Allowed</Label>
+              <Select value={formData.pets_allowed} onValueChange={(v) => handleChange('pets_allowed', v)}>
+                <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="yes">🐾 Yes</SelectItem>
+                  <SelectItem value="no">🚫 No</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
@@ -195,6 +251,11 @@ export const PropertyEditDialog = ({ property, open, onOpenChange, onSaved }: Pr
             <div className="space-y-2">
               <Label>Bathrooms</Label>
               <Input type="number" value={formData.bathrooms} onChange={(e) => handleChange('bathrooms', e.target.value)} />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Area (m²)</Label>
+              <Input type="number" value={formData.area_sqft} onChange={(e) => handleChange('area_sqft', e.target.value)} />
             </div>
 
             <div className="space-y-2">
