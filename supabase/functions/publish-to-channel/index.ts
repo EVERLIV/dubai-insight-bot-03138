@@ -18,8 +18,11 @@ interface NewsArticle {
   original_url: string | null;
   translated_title: string | null;
   translated_content: string | null;
+  full_content: string | null;
   relevance_score: number | null;
   is_posted: boolean;
+  images: string[] | null;
+  telegraph_url: string | null;
 }
 
 // Send message to Telegram channel
@@ -56,27 +59,73 @@ async function sendToChannel(text: string, parseMode: string = 'HTML'): Promise<
   }
 }
 
-// Format news article for Telegram
-function formatNewsPost(article: NewsArticle): string {
+// Send photo with caption to channel
+async function sendPhotoToChannel(photoUrl: string, caption: string): Promise<boolean> {
+  if (!botToken) {
+    console.error('No bot token configured');
+    return false;
+  }
+
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: CHANNEL_ID,
+        photo: photoUrl,
+        caption: caption.slice(0, 1024), // Telegram caption limit
+        parse_mode: 'HTML',
+      }),
+    });
+
+    const result = await response.json();
+    
+    if (!result.ok) {
+      console.error('Telegram photo error:', result);
+      return false;
+    }
+    
+    console.log('Photo sent to channel:', result.result?.message_id);
+    return true;
+  } catch (error) {
+    console.error('Error sending photo:', error);
+    return false;
+  }
+}
+
+// Format news article for Telegram (with Telegraph link for long content)
+function formatNewsPost(article: NewsArticle): { text: string; hasPhoto: boolean; photoUrl: string | null } {
   const title = article.translated_title || article.original_title;
   const content = article.translated_content || article.original_content || '';
-  
-  // Truncate content if too long
-  const maxContentLength = 800;
-  const truncatedContent = content.length > maxContentLength 
-    ? content.substring(0, maxContentLength) + '...' 
-    : content;
+  const hasTelegraph = !!article.telegraph_url;
+  const hasImages = article.images && article.images.length > 0;
   
   let post = `📰 <b>${escapeHtml(title)}</b>\n\n`;
-  post += `${escapeHtml(truncatedContent)}\n\n`;
   
-  if (article.original_url) {
-    post += `🔗 <a href="${article.original_url}">Читать оригинал</a>\n\n`;
+  if (hasTelegraph) {
+    // Short preview + Telegraph link
+    const preview = content.slice(0, 300);
+    post += `${escapeHtml(preview)}...\n\n`;
+    post += `📖 <a href="${article.telegraph_url}">Читать полностью</a>\n\n`;
+  } else {
+    // Full content (truncated)
+    const truncatedContent = content.length > 800 
+      ? content.substring(0, 800) + '...' 
+      : content;
+    post += `${escapeHtml(truncatedContent)}\n\n`;
+  }
+  
+  if (article.original_url && !hasTelegraph) {
+    post += `🔗 <a href="${article.original_url}">Источник</a>\n\n`;
   }
   
   post += `#новости #вьетнам #сайгон`;
   
-  return post;
+  return {
+    text: post,
+    hasPhoto: !!(hasImages),
+    photoUrl: hasImages ? article.images![0] : null,
+  };
 }
 
 function escapeHtml(text: string): string {
@@ -107,8 +156,10 @@ serve(async (req) => {
         throw new Error('Article not found');
       }
 
-      const text = formatNewsPost(article as NewsArticle);
-      const success = await sendToChannel(text);
+      const { text, hasPhoto, photoUrl } = formatNewsPost(article as NewsArticle);
+      const success = hasPhoto && photoUrl 
+        ? await sendPhotoToChannel(photoUrl, text)
+        : await sendToChannel(text);
 
       if (success) {
         await supabase
@@ -152,8 +203,10 @@ serve(async (req) => {
       }
 
       const article = articles[0] as NewsArticle;
-      const text = formatNewsPost(article);
-      const success = await sendToChannel(text);
+      const { text, hasPhoto, photoUrl } = formatNewsPost(article);
+      const success = hasPhoto && photoUrl 
+        ? await sendPhotoToChannel(photoUrl, text)
+        : await sendToChannel(text);
 
       if (success) {
         await supabase

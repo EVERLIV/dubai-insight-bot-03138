@@ -9,12 +9,15 @@ const corsHeaders = {
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
 
 interface NewsItem {
   title: string;
   link: string;
   description: string;
   pubDate: string;
+  images?: string[];
+  fullContent?: string;
 }
 
 // Parse RSS feed from VNExpress
@@ -28,13 +31,10 @@ async function fetchVNExpressNews(category: string = 'tin-tuc-24h'): Promise<New
   };
 
   const rssUrl = rssUrls[category] || rssUrls['tin-tuc-24h'];
-  
   console.log(`Fetching RSS from: ${rssUrl}`);
   
   const response = await fetch(rssUrl, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0)',
-    },
+    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0)' },
   });
 
   if (!response.ok) {
@@ -42,19 +42,21 @@ async function fetchVNExpressNews(category: string = 'tin-tuc-24h'): Promise<New
   }
 
   const xml = await response.text();
-  console.log(`Received XML length: ${xml.length}`);
-  
-  // Simple XML parsing for RSS items
   const items: NewsItem[] = [];
   const itemMatches = xml.match(/<item>[\s\S]*?<\/item>/g) || [];
   
-  for (const itemXml of itemMatches.slice(0, 10)) { // Limit to 10 items
+  for (const itemXml of itemMatches.slice(0, 10)) {
     const title = itemXml.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/)?.[1] || 
                   itemXml.match(/<title>(.*?)<\/title>/)?.[1] || '';
     const link = itemXml.match(/<link>(.*?)<\/link>/)?.[1] || '';
     const description = itemXml.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>/)?.[1] ||
                         itemXml.match(/<description>(.*?)<\/description>/)?.[1] || '';
     const pubDate = itemXml.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] || '';
+    
+    // Extract image from description or enclosure
+    const imgMatch = description.match(/<img[^>]+src="([^"]+)"/i) || 
+                     itemXml.match(/<enclosure[^>]+url="([^"]+)"/i);
+    const images = imgMatch ? [imgMatch[1]] : [];
 
     if (title && link) {
       items.push({
@@ -62,6 +64,7 @@ async function fetchVNExpressNews(category: string = 'tin-tuc-24h'): Promise<New
         link: link.trim(),
         description: description.replace(/<[^>]*>/g, '').trim().slice(0, 500),
         pubDate: pubDate.trim(),
+        images,
       });
     }
   }
@@ -70,16 +73,65 @@ async function fetchVNExpressNews(category: string = 'tin-tuc-24h'): Promise<New
   return items;
 }
 
-// Translate text using Lovable AI
-async function translateToRussian(text: string, type: 'title' | 'content'): Promise<string> {
-  if (!lovableApiKey) {
-    console.log('No LOVABLE_API_KEY, returning original text');
-    return text;
+// Scrape full article with Firecrawl
+async function scrapeFullArticle(url: string): Promise<{ content: string; images: string[] }> {
+  if (!firecrawlApiKey) {
+    console.log('No Firecrawl API key');
+    return { content: '', images: [] };
   }
 
-  const systemPrompt = type === 'title' 
-    ? 'Ты профессиональный переводчик с вьетнамского на русский. Переводи заголовки новостей кратко и понятно. Отвечай только переводом, без пояснений.'
-    : 'Ты профессиональный переводчик с вьетнамского на русский. Переводи текст новостей грамотно, сохраняя смысл. Отвечай только переводом.';
+  try {
+    console.log(`Scraping article: ${url}`);
+    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${firecrawlApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url,
+        formats: ['markdown', 'html'],
+        onlyMainContent: true,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('Firecrawl error:', response.status);
+      return { content: '', images: [] };
+    }
+
+    const data = await response.json();
+    const markdown = data.data?.markdown || '';
+    const html = data.data?.html || '';
+    
+    // Extract images from HTML
+    const imgRegex = /<img[^>]+src="([^"]+)"/gi;
+    const images: string[] = [];
+    let match;
+    while ((match = imgRegex.exec(html)) !== null) {
+      const imgUrl = match[1];
+      if (imgUrl.startsWith('http') && !imgUrl.includes('icon') && !imgUrl.includes('logo')) {
+        images.push(imgUrl);
+      }
+    }
+
+    console.log(`Scraped ${markdown.length} chars, ${images.length} images`);
+    return { content: markdown, images: images.slice(0, 5) };
+  } catch (error) {
+    console.error('Scrape error:', error);
+    return { content: '', images: [] };
+  }
+}
+
+// Translate text using Lovable AI
+async function translateToRussian(text: string, type: 'title' | 'content' | 'full'): Promise<string> {
+  if (!lovableApiKey || !text) return text;
+
+  const systemPrompts: Record<string, string> = {
+    title: 'Ты профессиональный переводчик с вьетнамского на русский. Переводи заголовки новостей кратко и понятно. Отвечай только переводом.',
+    content: 'Ты профессиональный переводчик с вьетнамского на русский. Переводи текст кратко, сохраняя смысл. Отвечай только переводом.',
+    full: 'Ты профессиональный переводчик с вьетнамского на русский. Переводи полный текст статьи, сохраняя структуру и форматирование (заголовки, абзацы). Отвечай только переводом.',
+  };
 
   try {
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -91,10 +143,9 @@ async function translateToRussian(text: string, type: 'title' | 'content'): Prom
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Переведи на русский: ${text}` }
+          { role: 'system', content: systemPrompts[type] || systemPrompts.content },
+          { role: 'user', content: `Переведи на русский:\n\n${text.slice(0, type === 'full' ? 8000 : 2000)}` }
         ],
-        max_tokens: type === 'title' ? 200 : 1000,
       }),
     });
 
@@ -111,7 +162,90 @@ async function translateToRussian(text: string, type: 'title' | 'content'): Prom
   }
 }
 
-// Calculate relevance score for expats/real estate
+// Create Telegraph page for long articles
+async function createTelegraphPage(title: string, content: string, images: string[]): Promise<string | null> {
+  try {
+    // Create Telegraph account token (or use existing)
+    const accountResponse = await fetch('https://api.telegra.ph/createAccount', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        short_name: 'SaigonNews',
+        author_name: 'Saigon Properties',
+        author_url: 'https://t.me/saigon_realty_vn',
+      }),
+    });
+    
+    const accountData = await accountResponse.json();
+    const accessToken = accountData.result?.access_token;
+    
+    if (!accessToken) {
+      console.error('Failed to create Telegraph account');
+      return null;
+    }
+
+    // Build content with images
+    const nodes: any[] = [];
+    
+    // Add first image as header
+    if (images.length > 0) {
+      nodes.push({ tag: 'figure', children: [
+        { tag: 'img', attrs: { src: images[0] } }
+      ]});
+    }
+    
+    // Split content into paragraphs
+    const paragraphs = content.split('\n\n').filter(p => p.trim());
+    let imageIndex = 1;
+    
+    for (const para of paragraphs) {
+      if (para.startsWith('#')) {
+        // Header
+        const level = para.match(/^#+/)?.[0].length || 1;
+        const text = para.replace(/^#+\s*/, '');
+        nodes.push({ tag: level <= 2 ? 'h3' : 'h4', children: [text] });
+      } else if (para.trim()) {
+        nodes.push({ tag: 'p', children: [para] });
+      }
+      
+      // Insert image every few paragraphs
+      if (imageIndex < images.length && nodes.length % 4 === 0) {
+        nodes.push({ tag: 'figure', children: [
+          { tag: 'img', attrs: { src: images[imageIndex] } }
+        ]});
+        imageIndex++;
+      }
+    }
+    
+    // Add source link
+    nodes.push({ tag: 'p', children: [
+      { tag: 'i', children: ['Источник: VNExpress | @saigon_realty_vn'] }
+    ]});
+
+    // Create page
+    const pageResponse = await fetch('https://api.telegra.ph/createPage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        access_token: accessToken,
+        title: title.slice(0, 256),
+        author_name: 'Saigon Properties',
+        author_url: 'https://t.me/saigon_realty_vn',
+        content: nodes,
+        return_content: false,
+      }),
+    });
+
+    const pageData = await pageResponse.json();
+    console.log('Telegraph page created:', pageData.result?.url);
+    return pageData.result?.url || null;
+  } catch (error) {
+    console.error('Telegraph error:', error);
+    return null;
+  }
+}
+
+// Calculate relevance score
 function calculateRelevanceScore(title: string, description: string): number {
   const keywords = {
     high: ['bất động sản', 'căn hộ', 'nhà', 'thuê', 'mua', 'giá', 'quận', 'tp.hcm', 'sài gòn', 'expat', 'nước ngoài', 'visa', 'cư trú'],
@@ -141,13 +275,12 @@ serve(async (req) => {
   }
 
   try {
-    const { action, category, translate = true, limit = 5 } = await req.json();
+    const { action, category, translate = true, limit = 5, detailed = true, article_id } = await req.json();
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     if (action === 'fetch_and_translate') {
-      console.log(`Starting news fetch for category: ${category}`);
+      console.log(`Starting news fetch: category=${category}, detailed=${detailed}`);
       
-      // Fetch news from VNExpress
       const newsItems = await fetchVNExpressNews(category);
       
       // Get or create news source
@@ -174,21 +307,46 @@ serve(async (req) => {
           .single();
 
         if (existing) {
-          console.log(`Article already exists: ${item.title.slice(0, 50)}...`);
+          console.log(`Article exists: ${item.title.slice(0, 40)}...`);
           continue;
         }
 
         // Calculate relevance
         const relevanceScore = calculateRelevanceScore(item.title, item.description);
         
-        // Translate if enabled
+        // Scrape full article if detailed mode and high relevance
+        let fullContent = item.description;
+        let images = item.images || [];
+        
+        if (detailed && relevanceScore >= 50 && firecrawlApiKey) {
+          const scraped = await scrapeFullArticle(item.link);
+          if (scraped.content) {
+            fullContent = scraped.content;
+            images = [...new Set([...images, ...scraped.images])];
+          }
+          await new Promise(r => setTimeout(r, 1000)); // Rate limit
+        }
+
+        // Translate
         let translatedTitle = item.title;
         let translatedContent = item.description;
+        let translatedFullContent = '';
         
         if (translate && relevanceScore >= 50) {
-          console.log(`Translating: ${item.title.slice(0, 50)}...`);
+          console.log(`Translating: ${item.title.slice(0, 40)}...`);
           translatedTitle = await translateToRussian(item.title, 'title');
           translatedContent = await translateToRussian(item.description, 'content');
+          
+          if (detailed && fullContent.length > 500) {
+            translatedFullContent = await translateToRussian(fullContent, 'full');
+          }
+          await new Promise(r => setTimeout(r, 500));
+        }
+
+        // Create Telegraph page for detailed articles
+        let telegraphUrl = null;
+        if (detailed && translatedFullContent && images.length > 0) {
+          telegraphUrl = await createTelegraphPage(translatedTitle, translatedFullContent, images);
         }
 
         // Save to database
@@ -201,6 +359,9 @@ serve(async (req) => {
             original_url: item.link,
             translated_title: translatedTitle,
             translated_content: translatedContent,
+            full_content: translatedFullContent || null,
+            images: images,
+            telegraph_url: telegraphUrl,
             published_date: item.pubDate ? new Date(item.pubDate).toISOString() : null,
             relevance_score: relevanceScore,
             is_processed: translate,
@@ -213,14 +374,9 @@ serve(async (req) => {
         } else {
           results.push(article);
         }
-
-        // Small delay between translations to avoid rate limiting
-        if (translate) {
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
       }
 
-      // Update source article count
+      // Update source count
       if (source) {
         await supabase
           .from('news_sources')
@@ -250,35 +406,50 @@ serve(async (req) => {
 
       if (error) throw error;
 
-      return new Response(JSON.stringify({
-        success: true,
-        articles,
-      }), {
+      return new Response(JSON.stringify({ success: true, articles }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     if (action === 'translate_article') {
-      const { article_id } = await req.json();
-      
       const { data: article } = await supabase
         .from('news_articles')
         .select('*')
         .eq('id', article_id)
         .single();
 
-      if (!article) {
-        throw new Error('Article not found');
+      if (!article) throw new Error('Article not found');
+
+      // Scrape full content if not already done
+      let fullContent = article.full_content || article.original_content || '';
+      let images = article.images || [];
+      
+      if (!article.full_content && firecrawlApiKey && article.original_url) {
+        const scraped = await scrapeFullArticle(article.original_url);
+        if (scraped.content) {
+          fullContent = scraped.content;
+          images = [...new Set([...images, ...scraped.images])];
+        }
       }
 
       const translatedTitle = await translateToRussian(article.original_title, 'title');
       const translatedContent = await translateToRussian(article.original_content || '', 'content');
+      const translatedFullContent = fullContent ? await translateToRussian(fullContent, 'full') : '';
+
+      // Create Telegraph page
+      let telegraphUrl = null;
+      if (translatedFullContent && images.length > 0) {
+        telegraphUrl = await createTelegraphPage(translatedTitle, translatedFullContent, images);
+      }
 
       const { data: updated, error } = await supabase
         .from('news_articles')
         .update({
           translated_title: translatedTitle,
           translated_content: translatedContent,
+          full_content: translatedFullContent,
+          images: images,
+          telegraph_url: telegraphUrl,
           is_processed: true,
         })
         .eq('id', article_id)
@@ -287,10 +458,7 @@ serve(async (req) => {
 
       if (error) throw error;
 
-      return new Response(JSON.stringify({
-        success: true,
-        article: updated,
-      }), {
+      return new Response(JSON.stringify({ success: true, article: updated }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }

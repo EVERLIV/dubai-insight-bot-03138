@@ -200,7 +200,9 @@ export type Database = {
       news_articles: {
         Row: {
           created_at: string | null
+          full_content: string | null
           id: number
+          images: string[] | null
           is_posted: boolean | null
           is_processed: boolean | null
           original_content: string | null
@@ -209,12 +211,15 @@ export type Database = {
           published_date: string | null
           relevance_score: number | null
           source_id: number | null
+          telegraph_url: string | null
           translated_content: string | null
           translated_title: string | null
         }
         Insert: {
           created_at?: string | null
+          full_content?: string | null
           id?: number
+          images?: string[] | null
           is_posted?: boolean | null
           is_processed?: boolean | null
           original_content?: string | null
@@ -223,12 +228,15 @@ export type Database = {
           published_date?: string | null
           relevance_score?: number | null
           source_id?: number | null
+          telegraph_url?: string | null
           translated_content?: string | null
           translated_title?: string | null
         }
         Update: {
           created_at?: string | null
+          full_content?: string | null
           id?: number
+          images?: string[] | null
           is_posted?: boolean | null
           is_processed?: boolean | null
           original_content?: string | null
@@ -237,6 +245,7 @@ export type Database = {
           published_date?: string | null
           relevance_score?: number | null
           source_id?: number | null
+          telegraph_url?: string | null
           translated_content?: string | null
           translated_title?: string | null
         }
