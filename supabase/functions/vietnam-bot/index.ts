@@ -10,8 +10,8 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
 
-// Group chat ID for automated notifications
-const GROUP_CHAT_ID = -3589064021;
+// Public group/channel username for automated notifications
+const GROUP_CHAT_ID = '@renthcm_bot';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -33,7 +33,7 @@ interface TelegramUpdate {
 }
 
 // Send message to Telegram
-async function sendTelegramMessage(chatId: number, text: string, options: any = {}) {
+async function sendTelegramMessage(chatId: number | string, text: string, options: any = {}) {
   if (!TELEGRAM_BOT_TOKEN) {
     console.error('VIETNAM_BOT_TOKEN not configured');
     return;
