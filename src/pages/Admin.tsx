@@ -27,6 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 import { PropertyImporter } from "@/components/admin/PropertyImporter";
 import { ManualPropertyForm } from "@/components/admin/ManualPropertyForm";
 import { BatdongsanScraper } from "@/components/admin/BatdongsanScraper";
+import { ChannelMonitor } from "@/components/admin/ChannelMonitor";
 
 interface Property {
   id: number;
@@ -247,8 +248,9 @@ const Admin = () => {
           </TabsList>
 
           {/* Batdongsan Scraper Tab */}
-          <TabsContent value="scraper">
+          <TabsContent value="scraper" className="space-y-6">
             <BatdongsanScraper />
+            <ChannelMonitor />
           </TabsContent>
 
           {/* AI Import Tab */}
