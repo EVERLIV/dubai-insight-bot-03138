@@ -2,16 +2,16 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Loader2, Plus, Upload, X } from "lucide-react";
+import { Loader2, Plus, X, Upload, Image } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 export const ManualPropertyForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [imageUrls, setImageUrls] = useState<string[]>(['']);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -30,15 +30,43 @@ export const ManualPropertyForm = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const addImageUrl = () => {
-    setImageUrls(prev => [...prev, '']);
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingImages(true);
+    const newUrls: string[] = [];
+
+    try {
+      for (const file of Array.from(files)) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `properties/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('property-images')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('property-images')
+          .getPublicUrl(filePath);
+
+        newUrls.push(publicUrl);
+      }
+
+      setImageUrls(prev => [...prev, ...newUrls]);
+      toast({ title: "Uploaded", description: `${newUrls.length} image(s) uploaded` });
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({ title: "Error", description: "Failed to upload images", variant: "destructive" });
+    } finally {
+      setUploadingImages(false);
+    }
   };
 
-  const updateImageUrl = (index: number, value: string) => {
-    setImageUrls(prev => prev.map((url, i) => i === index ? value : url));
-  };
-
-  const removeImageUrl = (index: number) => {
+  const removeImage = (index: number) => {
     setImageUrls(prev => prev.filter((_, i) => i !== index));
   };
 
@@ -46,19 +74,13 @@ export const ManualPropertyForm = () => {
     e.preventDefault();
 
     if (!formData.title.trim()) {
-      toast({
-        title: "Error",
-        description: "Title is required",
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: "Title is required", variant: "destructive" });
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const images = imageUrls.filter(url => url.trim());
-
       const { data, error } = await supabase
         .from('property_listings')
         .insert({
@@ -70,7 +92,7 @@ export const ManualPropertyForm = () => {
           bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
           bathrooms: formData.bathrooms ? parseInt(formData.bathrooms) : null,
           area_sqft: formData.area_sqft ? parseInt(formData.area_sqft) : null,
-          images: images.length > 0 ? images : null,
+          images: imageUrls.length > 0 ? imageUrls : null,
           agent_name: formData.agent_name || null,
           agent_phone: formData.agent_phone || null,
           source_name: 'manual',
@@ -82,12 +104,8 @@ export const ManualPropertyForm = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Success!",
-        description: `Property #${data.id} created successfully`
-      });
+      toast({ title: "Success!", description: `Property #${data.id} created successfully` });
 
-      // Reset form
       setFormData({
         title: '',
         price: '',
@@ -99,15 +117,11 @@ export const ManualPropertyForm = () => {
         agent_name: '',
         agent_phone: ''
       });
-      setImageUrls(['']);
+      setImageUrls([]);
 
     } catch (error) {
       console.error('Submit error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create property",
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: "Failed to create property", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }
@@ -227,37 +241,49 @@ export const ManualPropertyForm = () => {
           </div>
 
           <div className="space-y-2">
-            <Label>Image URLs</Label>
-            <div className="space-y-2">
-              {imageUrls.map((url, index) => (
-                <div key={index} className="flex gap-2">
-                  <Input
-                    placeholder="https://..."
-                    value={url}
-                    onChange={(e) => updateImageUrl(index, e.target.value)}
-                  />
-                  {imageUrls.length > 1 && (
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="icon"
-                      onClick={() => removeImageUrl(index)}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
-              ))}
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="sm"
-                onClick={addImageUrl}
+            <Label>Property Images</Label>
+            <div className="border-2 border-dashed border-border rounded-lg p-4">
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImageUpload}
+                className="hidden"
+                id="image-upload"
+                disabled={uploadingImages}
+              />
+              <label
+                htmlFor="image-upload"
+                className="flex flex-col items-center justify-center cursor-pointer py-4"
               >
-                <Plus className="w-4 h-4 mr-1" />
-                Add Image URL
-              </Button>
+                {uploadingImages ? (
+                  <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
+                ) : (
+                  <Upload className="w-8 h-8 text-muted-foreground" />
+                )}
+                <span className="text-sm text-muted-foreground mt-2">
+                  {uploadingImages ? 'Uploading...' : 'Click to upload images'}
+                </span>
+              </label>
             </div>
+            {imageUrls.length > 0 && (
+              <div className="grid grid-cols-3 gap-2 mt-2">
+                {imageUrls.map((url, index) => (
+                  <div key={index} className="relative group">
+                    <img src={url} alt={`Property ${index + 1}`} className="w-full h-20 object-cover rounded" />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-1 right-1 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => removeImage(index)}
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <Button type="submit" disabled={isSubmitting} className="w-full">
