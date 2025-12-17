@@ -1,14 +1,5 @@
 project_id = "qnmyostnzwlnauxhsgfw"
 
-[functions.bot-dubai-eng]
-verify_jwt = false
-
-[functions.telegram-bot]
-verify_jwt = false
-
-[functions.dubai-bot]
-verify_jwt = false
-
 [functions.property-search]
 verify_jwt = false
 
@@ -18,12 +9,6 @@ verify_jwt = false
 [functions.property-filters]
 verify_jwt = false
 
-[functions.property-sync]
-verify_jwt = false
-
-[functions.match-bayut-images]
-verify_jwt = false
-
 [functions.deepseek-market-analysis]
 verify_jwt = false
 
@@ -31,9 +16,6 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.avm-valuation]
-verify_jwt = false
-
-[functions.web-scraper]
 verify_jwt = false
 
 [functions.news-analytics]

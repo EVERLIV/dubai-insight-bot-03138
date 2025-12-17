@@ -5,7 +5,7 @@ export default function Footer() {
   const footerLinks = {
     'Buy': ['Apartments', 'Villas', 'Penthouses', 'Townhouses'],
     'Rent': ['Short Term', 'Long Term', 'Furnished', 'Commercial'],
-    'Areas': ['Dubai Marina', 'Downtown', 'Business Bay', 'JBR'],
+    'Districts': ['District 1', 'District 2', 'District 7', 'Binh Thanh'],
     'Services': ['Property Management', 'Valuation', 'Legal Services', 'Mortgage']
   };
 
@@ -21,27 +21,27 @@ export default function Footer() {
                 <Building2 className="w-5 h-5 text-white" />
               </div>
               <div>
-                <span className="text-sm font-bold">Dubai Properties</span>
+                <span className="text-sm font-bold">Saigon Properties</span>
                 <p className="text-xs text-muted-foreground">Premium Real Estate Portal</p>
               </div>
             </div>
             <p className="text-sm text-muted-foreground mb-4 max-w-sm">
-              Your trusted partner in Dubai real estate. Find the perfect property from our extensive collection of apartments, villas, and commercial spaces.
+              Your trusted partner in Ho Chi Minh City real estate. Find the perfect property from our extensive collection of apartments, villas, and commercial spaces.
             </p>
             
             {/* Contact Info */}
             <div className="space-y-2">
               <div className="flex items-center space-x-2 text-sm">
                 <Phone className="w-4 h-4 text-primary" />
-                <span>+971 4 123 4567</span>
+                <span>+84 28 1234 5678</span>
               </div>
               <div className="flex items-center space-x-2 text-sm">
                 <Mail className="w-4 h-4 text-primary" />
-                <span>info@dubaiproperties.com</span>
+                <span>info@saigonproperties.vn</span>
               </div>
               <div className="flex items-center space-x-2 text-sm">
                 <MapPin className="w-4 h-4 text-primary" />
-                <span>Dubai Marina, UAE</span>
+                <span>District 1, Ho Chi Minh City, Vietnam</span>
               </div>
             </div>
           </div>
@@ -69,7 +69,7 @@ export default function Footer() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
             <div className="text-xs text-muted-foreground">
-              © 2024 Dubai Properties. All rights reserved.
+              © 2024 Saigon Properties. All rights reserved.
             </div>
             
             {/* Social Links */}

@@ -25,8 +25,8 @@ export default function Header() {
               <Building2 className="w-5 h-5 text-white" />
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-bold text-foreground">Dubai Properties</span>
-              <span className="text-xs text-muted-foreground">Real Estate Portal</span>
+              <span className="text-sm font-bold text-foreground">Saigon Properties</span>
+              <span className="text-xs text-muted-foreground">Ho Chi Minh City Real Estate</span>
             </div>
           </Link>
 
