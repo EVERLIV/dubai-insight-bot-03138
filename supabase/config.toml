@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.scrape-batdongsan]
 verify_jwt = false
+
+[functions.generate-channel-content]
+verify_jwt = false

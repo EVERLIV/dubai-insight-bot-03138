@@ -41,6 +41,141 @@ export type Database = {
         }
         Relationships: []
       }
+      channel_posts: {
+        Row: {
+          ai_generated: boolean | null
+          content: string
+          created_at: string | null
+          engagement_stats: Json | null
+          id: number
+          images: string[] | null
+          post_type: string
+          published_at: string | null
+          scheduled_at: string | null
+          source_data: Json | null
+          status: string | null
+          telegram_message_id: number | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          ai_generated?: boolean | null
+          content: string
+          created_at?: string | null
+          engagement_stats?: Json | null
+          id?: number
+          images?: string[] | null
+          post_type: string
+          published_at?: string | null
+          scheduled_at?: string | null
+          source_data?: Json | null
+          status?: string | null
+          telegram_message_id?: number | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          ai_generated?: boolean | null
+          content?: string
+          created_at?: string | null
+          engagement_stats?: Json | null
+          id?: number
+          images?: string[] | null
+          post_type?: string
+          published_at?: string | null
+          scheduled_at?: string | null
+          source_data?: Json | null
+          status?: string | null
+          telegram_message_id?: number | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      content_schedule: {
+        Row: {
+          created_at: string | null
+          day_of_week: number | null
+          id: number
+          is_active: boolean | null
+          post_time: string
+          post_type: string
+          template: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          day_of_week?: number | null
+          id?: number
+          is_active?: boolean | null
+          post_time: string
+          post_type: string
+          template?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          day_of_week?: number | null
+          id?: number
+          is_active?: boolean | null
+          post_time?: string
+          post_type?: string
+          template?: string | null
+        }
+        Relationships: []
+      }
+      district_reviews: {
+        Row: {
+          avg_rent_1br: number | null
+          avg_rent_2br: number | null
+          avg_rent_3br: number | null
+          created_at: string | null
+          description: string | null
+          district: string
+          expat_friendly_score: number | null
+          family_score: number | null
+          id: number
+          infrastructure_score: number | null
+          last_review_at: string | null
+          nightlife_score: number | null
+          popular_places: Json | null
+          tips: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          avg_rent_1br?: number | null
+          avg_rent_2br?: number | null
+          avg_rent_3br?: number | null
+          created_at?: string | null
+          description?: string | null
+          district: string
+          expat_friendly_score?: number | null
+          family_score?: number | null
+          id?: number
+          infrastructure_score?: number | null
+          last_review_at?: string | null
+          nightlife_score?: number | null
+          popular_places?: Json | null
+          tips?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          avg_rent_1br?: number | null
+          avg_rent_2br?: number | null
+          avg_rent_3br?: number | null
+          created_at?: string | null
+          description?: string | null
+          district?: string
+          expat_friendly_score?: number | null
+          family_score?: number | null
+          id?: number
+          infrastructure_score?: number | null
+          last_review_at?: string | null
+          nightlife_score?: number | null
+          popular_places?: Json | null
+          tips?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       market_analysis: {
         Row: {
           analysis_data: Json | null
@@ -59,6 +194,89 @@ export type Database = {
           created_at?: string | null
           id?: number
           news_articles?: Json | null
+        }
+        Relationships: []
+      }
+      news_articles: {
+        Row: {
+          created_at: string | null
+          id: number
+          is_posted: boolean | null
+          is_processed: boolean | null
+          original_content: string | null
+          original_title: string
+          original_url: string | null
+          published_date: string | null
+          relevance_score: number | null
+          source_id: number | null
+          translated_content: string | null
+          translated_title: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          is_posted?: boolean | null
+          is_processed?: boolean | null
+          original_content?: string | null
+          original_title: string
+          original_url?: string | null
+          published_date?: string | null
+          relevance_score?: number | null
+          source_id?: number | null
+          translated_content?: string | null
+          translated_title?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          is_posted?: boolean | null
+          is_processed?: boolean | null
+          original_content?: string | null
+          original_title?: string
+          original_url?: string | null
+          published_date?: string | null
+          relevance_score?: number | null
+          source_id?: number | null
+          translated_content?: string | null
+          translated_title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "news_articles_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "news_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      news_sources: {
+        Row: {
+          articles_count: number | null
+          created_at: string | null
+          id: number
+          is_active: boolean | null
+          last_scraped_at: string | null
+          source_name: string
+          source_url: string
+        }
+        Insert: {
+          articles_count?: number | null
+          created_at?: string | null
+          id?: number
+          is_active?: boolean | null
+          last_scraped_at?: string | null
+          source_name: string
+          source_url: string
+        }
+        Update: {
+          articles_count?: number | null
+          created_at?: string | null
+          id?: number
+          is_active?: boolean | null
+          last_scraped_at?: string | null
+          source_name?: string
+          source_url?: string
         }
         Relationships: []
       }
