@@ -1,0 +1,442 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+const TELEGRAM_BOT_TOKEN = Deno.env.get('VIETNAM_BOT_TOKEN');
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+interface TelegramUpdate {
+  update_id: number;
+  message?: {
+    message_id: number;
+    from: { id: number; first_name: string; username?: string };
+    chat: { id: number; type: string };
+    text?: string;
+    date: number;
+  };
+  callback_query?: {
+    id: string;
+    from: { id: number; first_name: string; username?: string };
+    message: { message_id: number; chat: { id: number } };
+    data: string;
+  };
+}
+
+// Send message to Telegram
+async function sendTelegramMessage(chatId: number, text: string, options: any = {}) {
+  if (!TELEGRAM_BOT_TOKEN) {
+    console.error('VIETNAM_BOT_TOKEN not configured');
+    return;
+  }
+
+  const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+  
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
+        parse_mode: 'HTML',
+        ...options
+      })
+    });
+
+    const result = await response.json();
+    console.log('Message sent:', result.ok);
+    return result;
+  } catch (error) {
+    console.error('Error sending message:', error);
+  }
+}
+
+// Delete message
+async function deleteTelegramMessage(chatId: number, messageId: number) {
+  if (!TELEGRAM_BOT_TOKEN) return;
+
+  const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/deleteMessage`;
+  
+  try {
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        message_id: messageId
+      })
+    });
+  } catch (error) {
+    console.error('Error deleting message:', error);
+  }
+}
+
+// Answer callback query
+async function answerCallbackQuery(callbackQueryId: string, text?: string) {
+  if (!TELEGRAM_BOT_TOKEN) return;
+
+  const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/answerCallbackQuery`;
+  
+  try {
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        callback_query_id: callbackQueryId,
+        text
+      })
+    });
+  } catch (error) {
+    console.error('Error answering callback:', error);
+  }
+}
+
+// Search properties
+async function searchProperties(query: string, purpose: string = 'for-rent', limit: number = 5) {
+  console.log('Searching properties:', { query, purpose, limit });
+
+  const { data, error } = await supabase.rpc('search_properties_unified', {
+    p_query: query,
+    p_purpose: purpose,
+    p_limit: limit
+  });
+
+  if (error) {
+    console.error('Search error:', error);
+    return [];
+  }
+
+  return data || [];
+}
+
+// Format property for display
+function formatProperty(property: any, index: number): string {
+  const price = property.price 
+    ? new Intl.NumberFormat('vi-VN').format(property.price) + ' VND'
+    : 'Price on request';
+
+  return `
+<b>${index}. ${property.title}</b>
+
+💰 <b>Price:</b> ${price}
+📍 <b>Location:</b> ${property.location_area || 'Ho Chi Minh City'}
+🛏 <b>Bedrooms:</b> ${property.bedrooms || 'N/A'}
+🚿 <b>Bathrooms:</b> ${property.bathrooms || 'N/A'}
+📐 <b>Area:</b> ${property.area_sqft ? property.area_sqft + ' m²' : 'N/A'}
+
+ID: <code>${property.id}</code>
+`;
+}
+
+// Handle /start command
+async function handleStart(chatId: number, userName: string) {
+  const welcomeText = `
+🏠 <b>Welcome to Saigon Properties Bot!</b>
+
+Hello ${userName}! I'm your real estate assistant for Ho Chi Minh City, Vietnam.
+
+<b>What I can do:</b>
+🔍 Search rental properties
+📊 Get market insights
+💰 Property valuations
+📍 District information
+
+<b>Commands:</b>
+/search - Search properties
+/rent - View rental listings
+/districts - Popular districts
+/help - Get help
+
+Just type what you're looking for, like:
+<i>"2 bedroom apartment in District 1"</i>
+<i>"studio near Bitexco"</i>
+`;
+
+  const keyboard = {
+    inline_keyboard: [
+      [
+        { text: '🔍 Search Rentals', callback_data: 'search_rent' },
+        { text: '🏠 All Listings', callback_data: 'all_listings' }
+      ],
+      [
+        { text: '📍 Districts', callback_data: 'districts' },
+        { text: '📊 Market Info', callback_data: 'market_info' }
+      ]
+    ]
+  };
+
+  await sendTelegramMessage(chatId, welcomeText, { reply_markup: keyboard });
+
+  // Log user
+  await supabase.from('user_preferences').upsert({
+    telegram_user_id: chatId,
+    preferences: { language: 'en', location: 'hcmc' },
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'telegram_user_id' });
+}
+
+// Handle search
+async function handleSearch(chatId: number, query: string) {
+  await sendTelegramMessage(chatId, '🔍 Searching properties...');
+
+  const properties = await searchProperties(query, 'for-rent', 5);
+
+  // Log search
+  await supabase.from('search_history').insert({
+    telegram_user_id: chatId,
+    query,
+    results_count: properties.length,
+    filters: { purpose: 'for-rent' }
+  });
+
+  if (properties.length === 0) {
+    await sendTelegramMessage(chatId, `
+❌ <b>No properties found</b>
+
+Try different search terms like:
+• "apartment District 1"
+• "2 bedroom Thao Dien"
+• "studio near center"
+`, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '🔄 Try Again', callback_data: 'search_rent' }]
+        ]
+      }
+    });
+    return;
+  }
+
+  let resultText = `✅ <b>Found ${properties.length} properties:</b>\n`;
+  
+  properties.forEach((prop: any, idx: number) => {
+    resultText += formatProperty(prop, idx + 1);
+  });
+
+  const buttons = properties.slice(0, 5).map((prop: any, idx: number) => ({
+    text: `📋 #${idx + 1}`,
+    callback_data: `detail_${prop.id}`
+  }));
+
+  await sendTelegramMessage(chatId, resultText, {
+    reply_markup: {
+      inline_keyboard: [
+        buttons,
+        [{ text: '🔍 New Search', callback_data: 'search_rent' }]
+      ]
+    }
+  });
+}
+
+// Handle callback queries
+async function handleCallback(callbackQuery: any) {
+  const chatId = callbackQuery.message.chat.id;
+  const messageId = callbackQuery.message.message_id;
+  const data = callbackQuery.data;
+
+  await answerCallbackQuery(callbackQuery.id);
+  await deleteTelegramMessage(chatId, messageId);
+
+  if (data === 'search_rent') {
+    await sendTelegramMessage(chatId, `
+🔍 <b>Property Search</b>
+
+What are you looking for? Type your search:
+
+Examples:
+• <i>apartment District 2</i>
+• <i>3 bedroom villa Thao Dien</i>
+• <i>studio near center</i>
+`);
+  } else if (data === 'all_listings') {
+    await handleSearch(chatId, '');
+  } else if (data === 'districts') {
+    await sendTelegramMessage(chatId, `
+📍 <b>Popular Districts in Ho Chi Minh City</b>
+
+🏙 <b>District 1</b> - City center, business hub
+🌿 <b>District 2 (Thu Duc)</b> - Expat area, Thao Dien
+🏢 <b>District 3</b> - Central, good restaurants
+🎭 <b>District 7</b> - Phu My Hung, modern area
+🏫 <b>Binh Thanh</b> - Near center, affordable
+
+Select a district to search:
+`, {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: 'District 1', callback_data: 'district_1' },
+            { text: 'District 2', callback_data: 'district_2' }
+          ],
+          [
+            { text: 'District 3', callback_data: 'district_3' },
+            { text: 'District 7', callback_data: 'district_7' }
+          ],
+          [{ text: '🔙 Back', callback_data: 'back_main' }]
+        ]
+      }
+    });
+  } else if (data === 'market_info') {
+    await sendTelegramMessage(chatId, `
+📊 <b>Ho Chi Minh City Market Overview</b>
+
+🏠 <b>Rental Market:</b>
+• Studio: 8-15M VND/month
+• 1BR: 12-25M VND/month
+• 2BR: 18-40M VND/month
+• 3BR: 30-80M VND/month
+
+📈 <b>Trends:</b>
+• High demand in District 2, 7
+• Growing expat community
+• New developments in Thu Duc
+
+💡 <b>Tips:</b>
+• Negotiate for long-term leases
+• Check included utilities
+• Visit during different times
+`, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '🔍 Search Now', callback_data: 'search_rent' }],
+          [{ text: '🔙 Back', callback_data: 'back_main' }]
+        ]
+      }
+    });
+  } else if (data.startsWith('district_')) {
+    const district = data.replace('district_', 'District ');
+    await handleSearch(chatId, district);
+  } else if (data.startsWith('detail_')) {
+    const propertyId = data.replace('detail_', '');
+    const { data: property } = await supabase
+      .from('property_listings')
+      .select('*')
+      .eq('id', propertyId)
+      .single();
+
+    if (property) {
+      const price = property.price 
+        ? new Intl.NumberFormat('vi-VN').format(property.price) + ' VND'
+        : 'Price on request';
+
+      await sendTelegramMessage(chatId, `
+🏠 <b>${property.title}</b>
+
+💰 <b>Price:</b> ${price}
+📍 <b>Location:</b> ${property.location_area || 'Ho Chi Minh City'}
+🏢 <b>Type:</b> ${property.property_type || 'Apartment'}
+🛏 <b>Bedrooms:</b> ${property.bedrooms || 'N/A'}
+🚿 <b>Bathrooms:</b> ${property.bathrooms || 'N/A'}
+📐 <b>Area:</b> ${property.area_sqft ? property.area_sqft + ' m²' : 'N/A'}
+
+📞 Contact our agent for viewing!
+`, {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '📞 Contact Agent', callback_data: 'contact_agent' }],
+            [{ text: '🔍 More Properties', callback_data: 'search_rent' }],
+            [{ text: '🔙 Back', callback_data: 'back_main' }]
+          ]
+        }
+      });
+    }
+  } else if (data === 'contact_agent') {
+    await sendTelegramMessage(chatId, `
+📞 <b>Contact Our Team</b>
+
+🌐 Website: saigon-properties.vn
+📱 WhatsApp: +84 xxx xxx xxx
+📧 Email: info@saigonproperties.vn
+
+Our agents speak:
+🇻🇳 Vietnamese
+🇬🇧 English
+🇷🇺 Russian
+`, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '🔙 Back', callback_data: 'back_main' }]
+        ]
+      }
+    });
+  } else if (data === 'back_main') {
+    await handleStart(chatId, 'User');
+  }
+}
+
+// Handle text messages
+async function handleMessage(message: any) {
+  const chatId = message.chat.id;
+  const text = message.text || '';
+  const userName = message.from.first_name || 'User';
+
+  console.log('Received message:', { chatId, text, userName });
+
+  if (text.startsWith('/start')) {
+    await handleStart(chatId, userName);
+  } else if (text.startsWith('/help')) {
+    await handleStart(chatId, userName);
+  } else if (text.startsWith('/search') || text.startsWith('/rent')) {
+    await sendTelegramMessage(chatId, `
+🔍 <b>Property Search</b>
+
+Type what you're looking for:
+• Location (District 1, Thao Dien, etc.)
+• Property type (apartment, villa, studio)
+• Number of bedrooms
+`);
+  } else if (text.startsWith('/districts')) {
+    await handleCallback({ 
+      id: 'fake', 
+      data: 'districts', 
+      message: { chat: { id: chatId }, message_id: 0 } 
+    });
+  } else {
+    // Treat as search query
+    await handleSearch(chatId, text);
+  }
+}
+
+// Main handler
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    if (!TELEGRAM_BOT_TOKEN) {
+      console.error('VIETNAM_BOT_TOKEN not set');
+      return new Response(
+        JSON.stringify({ error: 'Bot not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const update: TelegramUpdate = await req.json();
+    console.log('Received update:', JSON.stringify(update));
+
+    if (update.callback_query) {
+      await handleCallback(update.callback_query);
+    } else if (update.message) {
+      await handleMessage(update.message);
+    }
+
+    return new Response(
+      JSON.stringify({ ok: true }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } catch (error) {
+    console.error('Error processing update:', error);
+    return new Response(
+      JSON.stringify({ error: String(error) }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});

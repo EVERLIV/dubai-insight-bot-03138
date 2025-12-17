@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.news-analytics]
 verify_jwt = false
+
+[functions.vietnam-bot]
+verify_jwt = false
