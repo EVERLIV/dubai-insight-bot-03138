@@ -8,10 +8,16 @@ const corsHeaders = {
 const TELEGRAM_BOT_TOKEN = Deno.env.get('VIETNAM_BOT_TOKEN');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
 // Public group/channel ID for automated notifications
 const GROUP_CHAT_ID = -1003589064021;
+
+// Monitored channels for auto-import (add channel IDs here)
+const MONITORED_CHANNELS: number[] = [
+  -1003589064021, // Main group
+  // Add more channel IDs to monitor
+];
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -374,20 +380,194 @@ Our agents speak:
   }
 }
 
+// Check if message looks like a property listing
+function isPropertyListing(text: string): boolean {
+  const indicators = [
+    /\d+\s*(triệu|tr|million|usd|\$)/i,
+    /\d+\s*(m2|m²|sqm|square)/i,
+    /\d+\s*(pn|phòng ngủ|bedroom|br|bed)/i,
+    /(cho thuê|for rent|rent|căn hộ|apartment|studio|villa)/i,
+    /(quận|district|thảo điền|thao dien|phú mỹ hưng|binh thanh)/i,
+  ];
+  
+  const matches = indicators.filter(regex => regex.test(text)).length;
+  return matches >= 2 && text.length > 50;
+}
+
+// Parse property listing with AI
+async function parsePropertyListing(text: string): Promise<any | null> {
+  if (!LOVABLE_API_KEY) {
+    console.error('LOVABLE_API_KEY not configured');
+    return null;
+  }
+
+  const systemPrompt = `You are a real estate listing parser for Ho Chi Minh City, Vietnam.
+Extract property information from Telegram messages. Return JSON with:
+- title: Property title in English
+- price: Monthly rent in VND (number). Convert: 15 triệu = 15000000, $800 = 20000000
+- location_area: District/area (e.g., "District 1", "Thao Dien")
+- property_type: Apartment, Studio, Villa, House, Room
+- bedrooms: Number (integer)
+- bathrooms: Number (integer)
+- area_sqft: Area in m² (integer)
+- agent_phone: Phone if found
+If field not found, use null. Be accurate with price conversion.`;
+
+  try {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: `Parse this Telegram listing:\n\n${text}` }
+        ],
+        tools: [{
+          type: 'function',
+          function: {
+            name: 'extract_property',
+            description: 'Extract property details',
+            parameters: {
+              type: 'object',
+              properties: {
+                title: { type: 'string' },
+                price: { type: ['number', 'null'] },
+                location_area: { type: ['string', 'null'] },
+                property_type: { type: ['string', 'null'] },
+                bedrooms: { type: ['integer', 'null'] },
+                bathrooms: { type: ['integer', 'null'] },
+                area_sqft: { type: ['integer', 'null'] },
+                agent_phone: { type: ['string', 'null'] }
+              },
+              required: ['title']
+            }
+          }
+        }],
+        tool_choice: { type: 'function', function: { name: 'extract_property' } }
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('AI parse error:', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    
+    if (toolCall?.function?.arguments) {
+      return JSON.parse(toolCall.function.arguments);
+    }
+    return null;
+  } catch (error) {
+    console.error('Parse error:', error);
+    return null;
+  }
+}
+
+// Auto-import property from channel message
+async function autoImportProperty(text: string, chatId: number, messageId: number): Promise<boolean> {
+  console.log('Auto-importing property from channel:', chatId);
+  
+  const parsed = await parsePropertyListing(text);
+  if (!parsed || !parsed.title) {
+    console.log('Failed to parse property');
+    return false;
+  }
+
+  // Check for duplicates
+  const { data: existing } = await supabase
+    .from('property_listings')
+    .select('id')
+    .eq('source_name', 'telegram')
+    .ilike('title', `%${parsed.title.slice(0, 30)}%`)
+    .limit(1);
+
+  if (existing && existing.length > 0) {
+    console.log('Property already exists, skipping');
+    return false;
+  }
+
+  // Save to database
+  const { data, error } = await supabase
+    .from('property_listings')
+    .insert({
+      title: parsed.title,
+      price: parsed.price,
+      location_area: parsed.location_area,
+      property_type: parsed.property_type,
+      purpose: 'for-rent',
+      bedrooms: parsed.bedrooms,
+      bathrooms: parsed.bathrooms,
+      area_sqft: parsed.area_sqft,
+      agent_phone: parsed.agent_phone,
+      images: [],
+      source_name: 'telegram',
+      source_category: 'auto-import',
+      housing_status: 'secondary',
+      external_id: `tg_${chatId}_${messageId}`
+    })
+    .select('id')
+    .single();
+
+  if (error) {
+    console.error('Save error:', error);
+    return false;
+  }
+
+  console.log('Auto-imported property:', data.id, parsed.title);
+  
+  // React to the message to indicate it was imported
+  try {
+    await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setMessageReaction`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        message_id: messageId,
+        reaction: [{ type: 'emoji', emoji: '✅' }]
+      })
+    });
+  } catch (e) {
+    // Reaction failed, not critical
+  }
+
+  return true;
+}
+
 // Handle text messages
 async function handleMessage(message: any) {
   const chatId = message.chat.id;
   const text = message.text || '';
-  const userName = message.from.first_name || 'User';
+  const userName = message.from?.first_name || 'User';
+  const chatType = message.chat.type;
+  const messageId = message.message_id;
 
-  console.log('Received message:', { chatId, text, userName });
+  console.log('Received message:', { chatId, chatType, textLength: text.length });
 
-  if (text.startsWith('/start')) {
-    await handleStart(chatId, userName);
-  } else if (text.startsWith('/help')) {
-    await handleStart(chatId, userName);
-  } else if (text.startsWith('/search') || text.startsWith('/rent')) {
-    await sendTelegramMessage(chatId, `
+  // Check if this is from a monitored channel/group
+  if ((chatType === 'channel' || chatType === 'supergroup' || chatType === 'group') && 
+      MONITORED_CHANNELS.includes(chatId)) {
+    // Check if it looks like a property listing
+    if (isPropertyListing(text)) {
+      console.log('Detected property listing in monitored channel');
+      await autoImportProperty(text, chatId, messageId);
+      return; // Don't process further
+    }
+  }
+
+  // Regular bot commands (private chat)
+  if (chatType === 'private') {
+    if (text.startsWith('/start')) {
+      await handleStart(chatId, userName);
+    } else if (text.startsWith('/help')) {
+      await handleStart(chatId, userName);
+    } else if (text.startsWith('/search') || text.startsWith('/rent')) {
+      await sendTelegramMessage(chatId, `
 🔍 <b>Property Search</b>
 
 Type what you're looking for:
@@ -395,15 +575,16 @@ Type what you're looking for:
 • Property type (apartment, villa, studio)
 • Number of bedrooms
 `);
-  } else if (text.startsWith('/districts')) {
-    await handleCallback({ 
-      id: 'fake', 
-      data: 'districts', 
-      message: { chat: { id: chatId }, message_id: 0 } 
-    });
-  } else {
-    // Treat as search query
-    await handleSearch(chatId, text);
+    } else if (text.startsWith('/districts')) {
+      await handleCallback({ 
+        id: 'fake', 
+        data: 'districts', 
+        message: { chat: { id: chatId }, message_id: 0 } 
+      });
+    } else {
+      // Treat as search query
+      await handleSearch(chatId, text);
+    }
   }
 }
 
