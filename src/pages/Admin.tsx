@@ -17,10 +17,14 @@ import {
   CheckCircle,
   XCircle,
   Send,
-  Bell
+  Bell,
+  Sparkles,
+  Plus
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { PropertyImporter } from "@/components/admin/PropertyImporter";
+import { ManualPropertyForm } from "@/components/admin/ManualPropertyForm";
 
 interface Property {
   id: number;
@@ -212,21 +216,39 @@ const Admin = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="analytics" className="space-y-6">
-          <TabsList className="grid w-full max-w-lg grid-cols-3">
-            <TabsTrigger value="analytics" className="flex items-center gap-2">
-              <Activity className="w-4 h-4" />
-              Bot Analytics
+        <Tabs defaultValue="import" className="space-y-6">
+          <TabsList className="grid w-full max-w-2xl grid-cols-5">
+            <TabsTrigger value="import" className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              AI Import
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex items-center gap-2">
-              <Bell className="w-4 h-4" />
-              Group Messages
+            <TabsTrigger value="manual" className="flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              Add Manual
             </TabsTrigger>
             <TabsTrigger value="listings" className="flex items-center gap-2">
               <Home className="w-4 h-4" />
               Listings
             </TabsTrigger>
+            <TabsTrigger value="notifications" className="flex items-center gap-2">
+              <Bell className="w-4 h-4" />
+              Group
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <Activity className="w-4 h-4" />
+              Bot
+            </TabsTrigger>
           </TabsList>
+
+          {/* AI Import Tab */}
+          <TabsContent value="import">
+            <PropertyImporter />
+          </TabsContent>
+
+          {/* Manual Add Tab */}
+          <TabsContent value="manual">
+            <ManualPropertyForm />
+          </TabsContent>
 
           {/* Bot Analytics Tab */}
           <TabsContent value="analytics" className="space-y-6">
