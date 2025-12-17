@@ -13,7 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { 
   Send, Calendar, Sparkles, MapPin, Newspaper, Clock, 
   MessageSquare, RefreshCw, Building, Utensils, DollarSign, 
-  FileText, Dumbbell, Radio
+  FileText, Dumbbell, Radio, Globe, Languages, ExternalLink
 } from 'lucide-react';
 
 interface ChannelPost {
@@ -49,6 +49,28 @@ interface ContentSchedule {
   is_active: boolean;
 }
 
+interface NewsArticle {
+  id: number;
+  original_title: string;
+  original_content: string | null;
+  original_url: string | null;
+  translated_title: string | null;
+  translated_content: string | null;
+  relevance_score: number | null;
+  is_processed: boolean;
+  is_posted: boolean;
+  published_date: string | null;
+  created_at: string;
+}
+
+const NEWS_CATEGORIES = [
+  { value: 'tin-tuc-24h', label: 'Последние новости' },
+  { value: 'bat-dong-san', label: 'Недвижимость' },
+  { value: 'kinh-doanh', label: 'Бизнес' },
+  { value: 'doi-song', label: 'Жизнь' },
+  { value: 'du-lich', label: 'Туризм' },
+];
+
 const POST_TYPE_CONFIG: Record<string, { icon: any; label: string; color: string }> = {
   morning_digest: { icon: Newspaper, label: 'Утренний дайджест', color: 'bg-yellow-500' },
   district_review: { icon: MapPin, label: 'Район дня', color: 'bg-blue-500' },
@@ -67,16 +89,21 @@ export const ChannelMonitor = () => {
   const [posts, setPosts] = useState<ChannelPost[]>([]);
   const [districts, setDistricts] = useState<DistrictReview[]>([]);
   const [schedule, setSchedule] = useState<ContentSchedule[]>([]);
+  const [newsArticles, setNewsArticles] = useState<NewsArticle[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isParsing, setIsParsing] = useState(false);
   const [selectedPostType, setSelectedPostType] = useState('district_review');
   const [selectedDistrict, setSelectedDistrict] = useState('');
+  const [selectedNewsCategory, setSelectedNewsCategory] = useState('bat-dong-san');
+  const [translateNews, setTranslateNews] = useState(true);
   const [generatedContent, setGeneratedContent] = useState('');
   const [stats, setStats] = useState({
     totalPosts: 0,
     publishedToday: 0,
     scheduledPosts: 0,
     aiGenerated: 0,
+    totalNews: 0,
   });
 
   useEffect(() => {
@@ -93,6 +120,13 @@ export const ChannelMonitor = () => {
         .order('created_at', { ascending: false })
         .limit(50);
       
+      // Fetch news articles
+      const { data: newsData } = await supabase
+        .from('news_articles')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      
       if (postsData) {
         setPosts(postsData as ChannelPost[]);
         
@@ -102,7 +136,12 @@ export const ChannelMonitor = () => {
           publishedToday: postsData.filter((p: any) => p.published_at?.startsWith(today)).length,
           scheduledPosts: postsData.filter((p: any) => p.status === 'scheduled').length,
           aiGenerated: postsData.filter((p: any) => p.ai_generated).length,
+          totalNews: newsData?.length || 0,
         });
+      }
+      
+      if (newsData) {
+        setNewsArticles(newsData as NewsArticle[]);
       }
 
       // Fetch districts
@@ -154,6 +193,60 @@ export const ChannelMonitor = () => {
       });
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const parseNews = async () => {
+    setIsParsing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('parse-vnexpress', {
+        body: { 
+          action: 'fetch_and_translate',
+          category: selectedNewsCategory,
+          translate: translateNews,
+          limit: 5,
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Новости загружены',
+        description: `Получено ${data.fetched} новостей, сохранено ${data.saved}`,
+      });
+      
+      fetchData();
+    } catch (error) {
+      console.error('Error parsing news:', error);
+      toast({
+        title: 'Ошибка парсинга',
+        description: 'Не удалось загрузить новости',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsParsing(false);
+    }
+  };
+
+  const translateArticle = async (articleId: number) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('parse-vnexpress', {
+        body: { 
+          action: 'translate_article',
+          article_id: articleId,
+        }
+      });
+
+      if (error) throw error;
+
+      toast({ title: 'Переведено!' });
+      fetchData();
+    } catch (error) {
+      console.error('Error translating:', error);
+      toast({
+        title: 'Ошибка перевода',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -291,13 +384,181 @@ export const ChannelMonitor = () => {
         </Card>
       </div>
 
-      <Tabs defaultValue="generate" className="space-y-4">
-        <TabsList className="grid grid-cols-4 w-full max-w-xl">
+      <Tabs defaultValue="news" className="space-y-4">
+        <TabsList className="grid grid-cols-5 w-full max-w-2xl">
+          <TabsTrigger value="news">📰 Новости</TabsTrigger>
           <TabsTrigger value="generate">🤖 Генерация</TabsTrigger>
           <TabsTrigger value="posts">📋 Посты</TabsTrigger>
           <TabsTrigger value="districts">🗺️ Районы</TabsTrigger>
           <TabsTrigger value="schedule">⏰ Расписание</TabsTrigger>
         </TabsList>
+
+        {/* News Parsing */}
+        <TabsContent value="news" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Globe className="h-5 w-5" />
+                Парсинг VNExpress
+              </CardTitle>
+              <CardDescription>
+                Загрузка новостей с вьетнамских СМИ и AI-перевод на русский
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Категория</Label>
+                  <Select value={selectedNewsCategory} onValueChange={setSelectedNewsCategory}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {NEWS_CATEGORIES.map((cat) => (
+                        <SelectItem key={cat.value} value={cat.value}>
+                          {cat.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>AI-перевод</Label>
+                  <div className="flex items-center gap-2 pt-2">
+                    <Switch 
+                      checked={translateNews} 
+                      onCheckedChange={setTranslateNews} 
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      {translateNews ? 'Включен' : 'Выключен'}
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>&nbsp;</Label>
+                  <Button 
+                    onClick={parseNews} 
+                    disabled={isParsing}
+                    className="w-full"
+                  >
+                    {isParsing ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Загрузка...
+                      </>
+                    ) : (
+                      <>
+                        <Globe className="h-4 w-4 mr-2" />
+                        Загрузить новости
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Languages className="h-5 w-5" />
+                Загруженные новости ({newsArticles.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[400px]">
+                <div className="space-y-4">
+                  {newsArticles.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">
+                      Новостей пока нет. Загрузите с VNExpress!
+                    </p>
+                  ) : (
+                    newsArticles.map((article) => (
+                      <Card key={article.id} className="p-4">
+                        <div className="space-y-3">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <h4 className="font-medium text-sm">
+                                {article.translated_title || article.original_title}
+                              </h4>
+                              {article.translated_title && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  📝 {article.original_title}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {article.relevance_score && (
+                                <Badge 
+                                  variant={article.relevance_score >= 70 ? 'default' : 'outline'}
+                                  className="text-xs"
+                                >
+                                  {article.relevance_score}%
+                                </Badge>
+                              )}
+                              {article.is_processed ? (
+                                <Badge className="bg-green-500 text-xs">
+                                  <Languages className="h-3 w-3 mr-1" />
+                                  RU
+                                </Badge>
+                              ) : (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => translateArticle(article.id)}
+                                >
+                                  <Languages className="h-3 w-3 mr-1" />
+                                  Перевести
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {article.translated_content && (
+                            <p className="text-sm text-muted-foreground line-clamp-3">
+                              {article.translated_content}
+                            </p>
+                          )}
+                          
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>
+                              {article.published_date 
+                                ? new Date(article.published_date).toLocaleString('ru') 
+                                : new Date(article.created_at).toLocaleString('ru')}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              {article.original_url && (
+                                <a 
+                                  href={article.original_url} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="hover:text-primary"
+                                >
+                                  <ExternalLink className="h-3 w-3" />
+                                </a>
+                              )}
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  const text = `📰 ${article.translated_title || article.original_title}\n\n${article.translated_content || article.original_content || ''}\n\n🔗 ${article.original_url || ''}`;
+                                  navigator.clipboard.writeText(text);
+                                  toast({ title: 'Скопировано!' });
+                                }}
+                              >
+                                📋
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* AI Content Generation */}
         <TabsContent value="generate" className="space-y-4">
