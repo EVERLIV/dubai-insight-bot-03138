@@ -598,6 +598,11 @@ ${getFilterSummary(filters)}
       const pets = p.pets_allowed === true ? '🐾 Можно с животными' : p.pets_allowed === false ? '🚫 Без животных' : '❓ Не указано';
       const period = p.rental_period === 'short-term' ? '⏱️ Краткосрочная' : p.rental_period === 'long-term' ? '📅 Долгосрочная' : '📅 Любой срок';
 
+      // Get images first for the keyboard
+      const rawImages = p.images || [];
+      const images = rawImages.filter((img: string) => img && img.startsWith('http'));
+      console.log('Processing images:', images.length);
+
       const detailText = `
 🏠 <b>${p.title}</b>
 
@@ -616,6 +621,7 @@ ${p.agent_phone ? `📞 Телефон: ${p.agent_phone}` : ''}`;
 
       const keyboard = {
         inline_keyboard: [
+          ...(images.length > 1 ? [[{ text: `🖼 Все фото (${images.length})`, callback_data: `gallery_${propertyId}` }]] : []),
           [{ text: '📞 Связаться', callback_data: 'contact_agent' }],
           [{ text: '🔍 Ещё объявления', callback_data: 'filter_search' }],
           [{ text: '🔙 Главное меню', callback_data: 'back_main' }]
@@ -631,37 +637,20 @@ ${p.agent_phone ? `📞 Телефон: ${p.agent_phone}` : ''}`;
         });
       } catch {}
 
-      // Send photos if available
-      const rawImages = p.images || [];
-      const images = rawImages.filter((img: string) => img && img.startsWith('http'));
-      console.log('Processing images:', images.length);
-      
       let photosSent = false;
       
       if (images.length > 0) {
-        // Try sending media group first
-        if (images.length > 1) {
-          console.log('Trying media group with', images.length, 'images');
-          const mediaResult = await sendTelegramMediaGroup(chatId, images.slice(0, 5), `📸 Фото объекта #${p.id}`);
-          if (mediaResult?.ok) {
-            photosSent = true;
-            await sendTelegramMessage(chatId, detailText, { reply_markup: keyboard });
-          }
-        }
-        
-        // Fallback: try sending first photo as file
-        if (!photosSent) {
-          console.log('Trying to send photo as file (fallback)');
-          const photoResult = await sendPhotoAsFile(chatId, images[0], detailText, { reply_markup: keyboard });
-          if (photoResult?.ok) {
-            photosSent = true;
-          }
+        // Try sending first photo as file (more reliable)
+        console.log('Trying to send photo as file');
+        const photoResult = await sendPhotoAsFile(chatId, images[0], detailText, { reply_markup: keyboard });
+        if (photoResult?.ok) {
+          photosSent = true;
         }
       }
       
       // Final fallback: send text with image links
       if (!photosSent) {
-        console.log('Sending text with image links as final fallback');
+        console.log('Sending text with image links as fallback');
         const imageLinks = images.length > 0 
           ? `\n\n📷 <b>Фото:</b>\n${images.map((img: string, i: number) => `<a href="${img}">Фото ${i + 1}</a>`).join(' | ')}`
           : '';
@@ -669,6 +658,49 @@ ${p.agent_phone ? `📞 Телефон: ${p.agent_phone}` : ''}`;
       }
     } else {
       console.log('Property not found for ID:', propertyId);
+    }
+  }
+
+  // GALLERY - Show all photos
+  else if (data.startsWith('gallery_')) {
+    const propertyId = data.replace('gallery_', '');
+    console.log('Gallery requested for property:', propertyId);
+    
+    const { data: p } = await supabase
+      .from('property_listings')
+      .select('id, title, images')
+      .eq('id', propertyId)
+      .single();
+    
+    if (p && p.images) {
+      const images = (p.images as string[]).filter((img: string) => img && img.startsWith('http'));
+      
+      if (images.length > 0) {
+        // Send each photo individually as files
+        await sendTelegramMessage(chatId, `📸 <b>Галерея: ${p.title}</b>\n\nЗагружаю ${images.length} фото...`);
+        
+        let sentCount = 0;
+        for (const imageUrl of images.slice(0, 10)) { // Max 10 photos
+          const result = await sendPhotoAsFile(chatId, imageUrl, sentCount === 0 ? `Фото 1/${images.length}` : `Фото ${sentCount + 1}/${images.length}`);
+          if (result?.ok) sentCount++;
+        }
+        
+        // Send back button
+        await sendTelegramMessage(chatId, `✅ Загружено ${sentCount} из ${images.length} фото`, {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🔙 К объявлению', callback_data: `detail_${propertyId}` }],
+              [{ text: '🔙 Главное меню', callback_data: 'back_main' }]
+            ]
+          }
+        });
+      } else {
+        await sendTelegramMessage(chatId, '📷 Фото отсутствуют', {
+          reply_markup: {
+            inline_keyboard: [[{ text: '🔙 Назад', callback_data: `detail_${propertyId}` }]]
+          }
+        });
+      }
     }
   }
 
