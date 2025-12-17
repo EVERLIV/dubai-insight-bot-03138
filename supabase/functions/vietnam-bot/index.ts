@@ -10,8 +10,8 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
 
-// Public group/channel username for automated notifications
-const GROUP_CHAT_ID = '@renthcm_bot';
+// Public group/channel ID for automated notifications
+const GROUP_CHAT_ID = -1003589064021;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
