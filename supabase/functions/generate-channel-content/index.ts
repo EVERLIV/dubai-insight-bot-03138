@@ -81,7 +81,33 @@ ${properties.map(p => `- ${p.title}: ${p.price} VND, ${p.bedrooms}BR`).join('\n'
         break;
 
       case 'morning_digest':
-        // Fetch latest property
+        // Fetch weather data
+        let weatherInfo = 'около 30°C, возможен дождь';
+        try {
+          const weatherResponse = await fetch(
+            'https://api.open-meteo.com/v1/forecast?latitude=10.8231&longitude=106.6297&current=temperature_2m,weather_code&timezone=Asia/Ho_Chi_Minh'
+          );
+          if (weatherResponse.ok) {
+            const weatherData = await weatherResponse.json();
+            const temp = Math.round(weatherData.current?.temperature_2m || 30);
+            const weatherCode = weatherData.current?.weather_code || 0;
+            const weatherDesc = weatherCode >= 61 ? '🌧 дождь' : weatherCode >= 51 ? '🌦 облачно с прояснениями' : weatherCode >= 1 ? '⛅ переменная облачность' : '☀️ солнечно';
+            weatherInfo = `${temp}°C, ${weatherDesc}`;
+          }
+        } catch (e) {
+          console.log('Weather fetch failed, using default');
+        }
+
+        // Fetch latest translated news
+        const { data: latestNews } = await supabase
+          .from('news_articles')
+          .select('translated_title, translated_content, original_url')
+          .eq('is_processed', true)
+          .not('translated_title', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(3);
+
+        // Fetch featured property
         const { data: latestProperty } = await supabase
           .from('property_listings')
           .select('*')
@@ -89,15 +115,40 @@ ${properties.map(p => `- ${p.title}: ${p.price} VND, ${p.bedrooms}BR`).join('\n'
           .limit(1)
           .single();
 
-        userPrompt = `Создай утренний дайджест для канала.
+        const newsSection = latestNews?.length 
+          ? latestNews.map((n, i) => `${i + 1}. ${n.translated_title}`).join('\n')
+          : '- Новости о рынке недвижимости\n- Изменения в визовом режиме\n- Открытие новых заведений';
 
-Структура:
-1. 🌅 Приветствие "Доброе утро, Сайгон!"
-2. ☀️ Погода на сегодня (примерно 28-32°C, возможен дождь)
-3. 📰 3 актуальные темы для экспатов (придумай релевантные)
-4. 🏠 Квартира дня: ${latestProperty ? `${latestProperty.title}, ${latestProperty.price} VND, ${latestProperty.bedrooms}BR в ${latestProperty.location_area}` : 'подборка квартир'}
-5. 💬 Вопрос дня для вовлечения аудитории
-6. Call-to-action`;
+        userPrompt = `Создай утренний дайджест для Telegram канала.
+
+ОБЯЗАТЕЛЬНО используй эти РЕАЛЬНЫЕ данные:
+
+🌡 ПОГОДА в Хошимине сегодня: ${weatherInfo}
+
+📰 НОВОСТИ ДНЯ (переведены с VNExpress):
+${newsSection}
+
+🏠 КВАРТИРА ДНЯ:
+${latestProperty ? `- ${latestProperty.title}
+- Цена: ${latestProperty.price?.toLocaleString()} VND/мес
+- Район: ${latestProperty.location_area || 'HCMC'}
+- Комнат: ${latestProperty.bedrooms || '?'} спальни, ${latestProperty.bathrooms || '?'} ванные
+- Площадь: ${latestProperty.area_sqft || '?'} м²` : '- 2-комнатная в District 2, Thao Dien\n- $800/мес | 70м² | Бассейн'}
+
+СТРУКТУРА ПОСТА:
+🌅 Доброе утро, Вьетнам!
+
+☀️ Погода в Хошимине: [используй реальные данные выше]
+
+📰 Главное за сутки:
+[перечисли 3 новости из данных выше, кратко своими словами]
+
+🏠 Квартира дня:
+[опиши квартиру из данных + добавь почему она выгодна]
+
+💬 Вопросы по аренде? → @saigon_realty_bot
+
+#SaigonMorning #HCM #Вьетнам #Экспаты`;
         break;
 
       case 'evening_entertainment':
