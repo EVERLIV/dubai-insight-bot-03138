@@ -10,6 +10,9 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
 
+// Group chat ID for automated notifications
+const GROUP_CHAT_ID = -3589064021;
+
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 interface TelegramUpdate {
@@ -404,6 +407,42 @@ Type what you're looking for:
   }
 }
 
+// Send notification to group
+async function sendGroupNotification(message: string, type: string = 'info') {
+  console.log('Sending group notification:', { message, type });
+  
+  const emoji = type === 'new_listing' ? '🏠' : 
+                type === 'alert' ? '⚠️' : 
+                type === 'promo' ? '🎉' : 'ℹ️';
+  
+  const formattedMessage = `${emoji} <b>Saigon Properties</b>\n\n${message}`;
+  
+  const result = await sendTelegramMessage(GROUP_CHAT_ID, formattedMessage);
+  return result;
+}
+
+// Send new property notification
+async function sendNewPropertyNotification(property: any) {
+  const price = property.price 
+    ? new Intl.NumberFormat('vi-VN').format(property.price) + ' VND'
+    : 'Price on request';
+
+  const message = `
+🆕 <b>New Property Listed!</b>
+
+<b>${property.title}</b>
+
+💰 ${price}
+📍 ${property.location_area || 'Ho Chi Minh City'}
+🛏 ${property.bedrooms || 'N/A'} bedrooms
+📐 ${property.area_sqft ? property.area_sqft + ' m²' : 'N/A'}
+
+Contact us for details! 📞
+`;
+
+  return await sendTelegramMessage(GROUP_CHAT_ID, message);
+}
+
 // Main handler
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -419,6 +458,52 @@ Deno.serve(async (req) => {
       );
     }
 
+    const url = new URL(req.url);
+    const contentType = req.headers.get('content-type') || '';
+
+    // Handle API calls for sending group messages
+    if (url.searchParams.get('action') === 'send_group_message') {
+      const body = await req.json();
+      const { message, type } = body;
+      
+      if (!message) {
+        return new Response(
+          JSON.stringify({ error: 'Message is required' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      const result = await sendGroupNotification(message, type || 'info');
+      console.log('Group message sent:', result);
+      
+      return new Response(
+        JSON.stringify({ ok: true, result }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Handle API call for new property notification
+    if (url.searchParams.get('action') === 'notify_new_property') {
+      const body = await req.json();
+      const { property } = body;
+      
+      if (!property) {
+        return new Response(
+          JSON.stringify({ error: 'Property data is required' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      const result = await sendNewPropertyNotification(property);
+      console.log('Property notification sent:', result);
+      
+      return new Response(
+        JSON.stringify({ ok: true, result }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Handle Telegram webhook updates
     const update: TelegramUpdate = await req.json();
     console.log('Received update:', JSON.stringify(update));
 
