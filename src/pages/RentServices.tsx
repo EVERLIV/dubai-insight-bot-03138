@@ -52,10 +52,10 @@ const RentServices = () => {
     },
     {
       title: "Legal & Documentation",
-      description: "RERA-compliant contracts and legal protection services",
+      description: "Compliant contracts and legal protection services",
       features: [
         "Tenancy contract preparation",
-        "RERA registration",
+        "Legal registration",
         "Security deposit management",
         "Dispute resolution support"
       ],
@@ -75,19 +75,19 @@ const RentServices = () => {
   ];
 
   const partners = [
-    { name: "DEWA", type: "Utility Partner", icon: Zap },
-    { name: "Du & Etisalat", type: "Telecom Partners", icon: Wifi },
-    { name: "Emaar Facilities", type: "Maintenance Partner", icon: Wrench },
-    { name: "RERA", type: "Regulatory Authority", icon: Shield },
-    { name: "Dubai Municipality", type: "Government Partner", icon: Landmark },
-    { name: "Property Finder", type: "Marketing Partner", icon: Search }
+    { name: "EVN", type: "Utility Partner", icon: Zap },
+    { name: "Viettel & VNPT", type: "Telecom Partners", icon: Wifi },
+    { name: "PMH Services", type: "Maintenance Partner", icon: Wrench },
+    { name: "VARS", type: "Regulatory Authority", icon: Shield },
+    { name: "HCMC Govt", type: "Government Partner", icon: Landmark },
+    { name: "Batdongsan", type: "Marketing Partner", icon: Search }
   ];
 
   const rentalStats = [
-    { label: "Average Rental Yield", value: "7.2%", change: "+0.3%" },
+    { label: "Average Rental Yield", value: "8.5%", change: "+0.5%" },
     { label: "Tenant Retention Rate", value: "89%", change: "+5%" },
-    { label: "Average Days to Let", value: "12", change: "-3 days" },
-    { label: "Properties Managed", value: "850+", change: "+120" }
+    { label: "Average Days to Let", value: "10", change: "-3 days" },
+    { label: "Properties Managed", value: "650+", change: "+80" }
   ];
 
   return (
@@ -99,7 +99,7 @@ const RentServices = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-1 h-16 bg-green-500"></div>
+              <div className="w-1 h-16 bg-emerald-500"></div>
               <div>
                 <h1 className="text-4xl md:text-5xl font-bold mb-4">
                   Rental Management Services
@@ -122,18 +122,18 @@ const RentServices = () => {
                   </p>
                   {/* Hand-written signature effect */}
                   <div className="mt-6 relative">
-                    <div className="text-2xl font-light text-green-400 transform -rotate-1 inline-block">
-                      Sarah Mitchell
+                    <div className="text-2xl font-light text-emerald-400 transform -rotate-1 inline-block">
+                      Le Thi Mai
                     </div>
                     <div className="text-sm text-gray-400 mt-1">Head of Rental Services</div>
                     {/* Hand-drawn line effect */}
-                    <div className="absolute -bottom-2 left-0 w-36 h-0.5 bg-green-400 transform -rotate-2 opacity-60"></div>
+                    <div className="absolute -bottom-2 left-0 w-36 h-0.5 bg-emerald-400 transform -rotate-2 opacity-60"></div>
                   </div>
                 </div>
               </div>
               {/* Decorative elements */}
-              <div className="absolute -top-2 -right-2 w-4 h-4 border-2 border-green-400 rotate-45"></div>
-              <div className="absolute -bottom-2 -left-2 w-3 h-3 bg-green-400"></div>
+              <div className="absolute -top-2 -right-2 w-4 h-4 border-2 border-emerald-400 rotate-45"></div>
+              <div className="absolute -bottom-2 -left-2 w-3 h-3 bg-emerald-400"></div>
             </div>
           </div>
         </div>
@@ -145,7 +145,7 @@ const RentServices = () => {
           {/* Performance Metrics */}
           <div className="mb-16">
             <div className="flex items-center gap-3 mb-8">
-              <div className="w-1 h-8 bg-green-600"></div>
+              <div className="w-1 h-8 bg-emerald-600"></div>
               <h2 className="text-2xl font-bold text-gray-900">Our Performance Metrics</h2>
             </div>
             
@@ -154,7 +154,7 @@ const RentServices = () => {
                 <div key={index} className="bg-white border border-gray-200 p-6 text-center">
                   <div className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</div>
                   <div className="text-sm text-gray-600 mb-2">{stat.label}</div>
-                  <Badge className="bg-green-100 text-green-800 text-xs">
+                  <Badge className="bg-emerald-100 text-emerald-800 text-xs">
                     {stat.change}
                   </Badge>
                 </div>
@@ -165,7 +165,7 @@ const RentServices = () => {
           {/* Service Selection */}
           <div className="mb-16">
             <div className="flex items-center gap-3 mb-8">
-              <div className="w-1 h-8 bg-green-600"></div>
+              <div className="w-1 h-8 bg-emerald-600"></div>
               <h2 className="text-2xl font-bold text-gray-900">Comprehensive Rental Services</h2>
             </div>
             
@@ -176,12 +176,12 @@ const RentServices = () => {
                   onClick={() => setActiveService(index)}
                   className={`p-4 border text-left transition-all ${
                     activeService === index
-                      ? 'border-green-600 bg-green-50'
-                      : 'border-gray-200 hover:border-green-600'
+                      ? 'border-emerald-600 bg-emerald-50'
+                      : 'border-gray-200 hover:border-emerald-600'
                   }`}
                 >
                   <service.icon className={`w-6 h-6 mb-3 ${
-                    activeService === index ? 'text-green-600' : 'text-gray-600'
+                    activeService === index ? 'text-emerald-600' : 'text-gray-600'
                   }`} />
                   <h3 className="font-semibold text-sm mb-2">{service.title}</h3>
                   <p className="text-xs text-gray-600">{service.description}</p>
@@ -196,7 +196,7 @@ const RentServices = () => {
                   <div>
                     <div className="flex items-center gap-3 mb-4">
                       {React.createElement(services[activeService].icon, { 
-                        className: "w-8 h-8 text-green-600" 
+                        className: "w-8 h-8 text-emerald-600" 
                       })}
                       <h3 className="text-2xl font-bold text-gray-900">
                         {services[activeService].title}
@@ -205,7 +205,7 @@ const RentServices = () => {
                     <p className="text-gray-600 mb-6">
                       {services[activeService].description}
                     </p>
-                    <Button className="bg-green-600 hover:bg-green-700 text-white">
+                    <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">
                       <Phone className="w-4 h-4 mr-2" />
                       Get Rental Quote
                     </Button>
@@ -215,7 +215,7 @@ const RentServices = () => {
                     <div className="space-y-3">
                       {services[activeService].features.map((feature, idx) => (
                         <div key={idx} className="flex items-center gap-3">
-                          <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                          <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
                           <span className="text-gray-700">{feature}</span>
                         </div>
                       ))}
@@ -229,7 +229,7 @@ const RentServices = () => {
           {/* Rental Process Timeline */}
           <div className="mb-16 bg-gray-50 border border-gray-200 p-8">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-1 h-8 bg-green-600"></div>
+              <div className="w-1 h-8 bg-emerald-600"></div>
               <h2 className="text-2xl font-bold text-gray-900">Our Rental Process</h2>
             </div>
             
@@ -242,10 +242,10 @@ const RentServices = () => {
               ].map((phase, index) => (
                 <div key={index} className="bg-white border border-gray-300 p-6 relative">
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                    <div className="w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
                       {phase.step}
                     </div>
-                    <phase.icon className="w-6 h-6 text-green-600" />
+                    <phase.icon className="w-6 h-6 text-emerald-600" />
                   </div>
                   <h3 className="font-bold text-gray-900 mb-2">{phase.title}</h3>
                   <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -253,7 +253,7 @@ const RentServices = () => {
                     {phase.time}
                   </div>
                   {index < 3 && (
-                    <div className="hidden md:block absolute top-1/2 -right-3 w-6 h-0.5 bg-green-600"></div>
+                    <div className="hidden md:block absolute top-1/2 -right-3 w-6 h-0.5 bg-emerald-600"></div>
                   )}
                 </div>
               ))}
@@ -263,7 +263,7 @@ const RentServices = () => {
           {/* Our Partners Section */}
           <div className="mb-16">
             <div className="flex items-center gap-3 mb-8">
-              <div className="w-1 h-8 bg-green-600"></div>
+              <div className="w-1 h-8 bg-emerald-600"></div>
               <h2 className="text-2xl font-bold text-gray-900">Our Service Partners</h2>
             </div>
             
@@ -275,8 +275,8 @@ const RentServices = () => {
               
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 {partners.map((partner, index) => (
-                  <div key={index} className="border border-gray-200 p-4 text-center hover:border-green-600 transition-colors">
-                    <partner.icon className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                  <div key={index} className="border border-gray-200 p-4 text-center hover:border-emerald-600 transition-colors">
+                    <partner.icon className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
                     <h4 className="font-semibold text-sm text-gray-900 mb-1">{partner.name}</h4>
                     <Badge variant="outline" className="text-xs">
                       {partner.type}
@@ -297,13 +297,13 @@ const RentServices = () => {
                   guaranteed monthly income and property appreciation.
                 </p>
                 <div className="flex flex-wrap gap-4">
-                  <Button className="bg-green-600 hover:bg-green-700 text-white">
+                  <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">
                     <Phone className="w-4 h-4 mr-2" />
-                    +971 4 123 4568
+                    +84 28 1234 5679
                   </Button>
                   <Button variant="outline" className="border-white text-white hover:bg-white hover:text-gray-900">
                     <Mail className="w-4 h-4 mr-2" />
-                    rentals@agency.ae
+                    rentals@saigonproperties.vn
                   </Button>
                 </div>
               </div>

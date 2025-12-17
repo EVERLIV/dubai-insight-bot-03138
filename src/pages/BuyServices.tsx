@@ -42,7 +42,7 @@ const BuyServices = () => {
       description: "Complete legal verification and documentation services",
       features: [
         "Title deed verification",
-        "RERA compliance check",
+        "Legal compliance check",
         "Legal documentation review",
         "Property inspection coordination"
       ],
@@ -73,12 +73,12 @@ const BuyServices = () => {
   ];
 
   const partners = [
-    { name: "Emirates NBD", type: "Banking Partner", icon: Landmark },
-    { name: "ADCB", type: "Mortgage Provider", icon: CreditCard },
-    { name: "Damac Properties", type: "Developer Partner", icon: Hammer },
-    { name: "Emaar", type: "Premium Developer", icon: Building2 },
-    { name: "Dubai Land Department", type: "Government Partner", icon: Landmark },
-    { name: "RERA", type: "Regulatory Authority", icon: Shield }
+    { name: "Vietcombank", type: "Banking Partner", icon: Landmark },
+    { name: "BIDV", type: "Mortgage Provider", icon: CreditCard },
+    { name: "Novaland", type: "Developer Partner", icon: Hammer },
+    { name: "Vingroup", type: "Premium Developer", icon: Building2 },
+    { name: "HCMC Land Dept", type: "Government Partner", icon: Landmark },
+    { name: "VARS", type: "Regulatory Authority", icon: Shield }
   ];
 
   return (
@@ -90,7 +90,7 @@ const BuyServices = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-1 h-16 bg-blue-500"></div>
+              <div className="w-1 h-16 bg-emerald-500"></div>
               <div>
                 <h1 className="text-4xl md:text-5xl font-bold mb-4">
                   Property Acquisition Services
@@ -113,18 +113,18 @@ const BuyServices = () => {
                   </p>
                   {/* Hand-written signature effect */}
                   <div className="mt-6 relative">
-                    <div className="text-2xl font-light text-blue-400 transform -rotate-2 inline-block">
-                      Ahmed Al-Mansouri
+                    <div className="text-2xl font-light text-emerald-400 transform -rotate-2 inline-block">
+                      Nguyen Thanh Tung
                     </div>
                     <div className="text-sm text-gray-400 mt-1">Managing Director</div>
                     {/* Hand-drawn line effect */}
-                    <div className="absolute -bottom-2 left-0 w-40 h-0.5 bg-blue-400 transform -rotate-1 opacity-60"></div>
+                    <div className="absolute -bottom-2 left-0 w-40 h-0.5 bg-emerald-400 transform -rotate-1 opacity-60"></div>
                   </div>
                 </div>
               </div>
               {/* Decorative elements */}
-              <div className="absolute -top-2 -right-2 w-4 h-4 border-2 border-blue-400 rotate-45"></div>
-              <div className="absolute -bottom-2 -left-2 w-3 h-3 bg-blue-400"></div>
+              <div className="absolute -top-2 -right-2 w-4 h-4 border-2 border-emerald-400 rotate-45"></div>
+              <div className="absolute -bottom-2 -left-2 w-3 h-3 bg-emerald-400"></div>
             </div>
           </div>
         </div>
@@ -136,7 +136,7 @@ const BuyServices = () => {
           {/* Service Selection */}
           <div className="mb-16">
             <div className="flex items-center gap-3 mb-8">
-              <div className="w-1 h-8 bg-blue-900"></div>
+              <div className="w-1 h-8 bg-emerald-800"></div>
               <h2 className="text-2xl font-bold text-gray-900">Professional Services Portfolio</h2>
             </div>
             
@@ -147,12 +147,12 @@ const BuyServices = () => {
                   onClick={() => setActiveService(index)}
                   className={`p-4 border text-left transition-all ${
                     activeService === index
-                      ? 'border-blue-900 bg-blue-50'
-                      : 'border-gray-200 hover:border-blue-900'
+                      ? 'border-emerald-800 bg-emerald-50'
+                      : 'border-gray-200 hover:border-emerald-800'
                   }`}
                 >
                   <service.icon className={`w-6 h-6 mb-3 ${
-                    activeService === index ? 'text-blue-900' : 'text-gray-600'
+                    activeService === index ? 'text-emerald-800' : 'text-gray-600'
                   }`} />
                   <h3 className="font-semibold text-sm mb-2">{service.title}</h3>
                   <p className="text-xs text-gray-600">{service.description}</p>
@@ -167,7 +167,7 @@ const BuyServices = () => {
                   <div>
                     <div className="flex items-center gap-3 mb-4">
                       {React.createElement(services[activeService].icon, { 
-                        className: "w-8 h-8 text-blue-900" 
+                        className: "w-8 h-8 text-emerald-800" 
                       })}
                       <h3 className="text-2xl font-bold text-gray-900">
                         {services[activeService].title}
@@ -176,7 +176,7 @@ const BuyServices = () => {
                     <p className="text-gray-600 mb-6">
                       {services[activeService].description}
                     </p>
-                    <Button className="bg-blue-900 hover:bg-blue-800 text-white">
+                    <Button className="bg-emerald-800 hover:bg-emerald-700 text-white">
                       <Phone className="w-4 h-4 mr-2" />
                       Schedule Consultation
                     </Button>
@@ -200,27 +200,27 @@ const BuyServices = () => {
           {/* Market Intelligence Section */}
           <div className="mb-16 bg-gray-50 border border-gray-200 p-8">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-1 h-8 bg-blue-900"></div>
+              <div className="w-1 h-8 bg-emerald-800"></div>
               <h2 className="text-2xl font-bold text-gray-900">Market Intelligence & Analytics</h2>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-white border border-gray-300 p-6">
-                <TrendingUp className="w-8 h-8 text-blue-900 mb-4" />
+                <TrendingUp className="w-8 h-8 text-emerald-800 mb-4" />
                 <h3 className="font-bold text-gray-900 mb-2">Market Trends Analysis</h3>
                 <p className="text-sm text-gray-600">
                   Real-time market data and predictive analytics for informed investment decisions.
                 </p>
               </div>
               <div className="bg-white border border-gray-300 p-6">
-                <MapPin className="w-8 h-8 text-blue-900 mb-4" />
+                <MapPin className="w-8 h-8 text-emerald-800 mb-4" />
                 <h3 className="font-bold text-gray-900 mb-2">Location Intelligence</h3>
                 <p className="text-sm text-gray-600">
                   Comprehensive area analysis including infrastructure, demographics, and growth potential.
                 </p>
               </div>
               <div className="bg-white border border-gray-300 p-6">
-                <Building2 className="w-8 h-8 text-blue-900 mb-4" />
+                <Building2 className="w-8 h-8 text-emerald-800 mb-4" />
                 <h3 className="font-bold text-gray-900 mb-2">Property Valuation</h3>
                 <p className="text-sm text-gray-600">
                   Professional property valuations using advanced algorithms and market comparables.
@@ -232,7 +232,7 @@ const BuyServices = () => {
           {/* Our Partners Section */}
           <div className="mb-16">
             <div className="flex items-center gap-3 mb-8">
-              <div className="w-1 h-8 bg-blue-900"></div>
+              <div className="w-1 h-8 bg-emerald-800"></div>
               <h2 className="text-2xl font-bold text-gray-900">Our Strategic Partners</h2>
             </div>
             
@@ -245,8 +245,8 @@ const BuyServices = () => {
               
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 {partners.map((partner, index) => (
-                  <div key={index} className="border border-gray-200 p-4 text-center hover:border-blue-900 transition-colors">
-                    <partner.icon className="w-8 h-8 text-blue-900 mx-auto mb-2" />
+                  <div key={index} className="border border-gray-200 p-4 text-center hover:border-emerald-800 transition-colors">
+                    <partner.icon className="w-8 h-8 text-emerald-800 mx-auto mb-2" />
                     <h4 className="font-semibold text-sm text-gray-900 mb-1">{partner.name}</h4>
                     <Badge variant="outline" className="text-xs">
                       {partner.type}
@@ -267,13 +267,13 @@ const BuyServices = () => {
                   to discuss your investment objectives and explore exclusive opportunities.
                 </p>
                 <div className="flex flex-wrap gap-4">
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                  <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">
                     <Phone className="w-4 h-4 mr-2" />
-                    +971 4 123 4567
+                    +84 28 1234 5678
                   </Button>
                   <Button variant="outline" className="border-white text-white hover:bg-white hover:text-gray-900">
                     <Mail className="w-4 h-4 mr-2" />
-                    acquisition@agency.ae
+                    acquisition@saigonproperties.vn
                   </Button>
                 </div>
               </div>

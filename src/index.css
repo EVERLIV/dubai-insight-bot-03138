@@ -2,12 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Dubai Invest Design System - Luxury Real Estate Theme */
+/* Saigon Properties Design System - Vietnam Real Estate Theme */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
 
 @layer base {
   :root {
-    /* Modern E-commerce Light Theme */
+    /* Modern Vietnam Theme - Emerald & Gold */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 
@@ -17,9 +17,9 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    /* Blue primary - Modern & Professional */
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
+    /* Emerald primary - Modern & Professional */
+    --primary: 160 84% 25%;
+    --primary-foreground: 0 0% 100%;
 
     /* Light gray secondary */
     --secondary: 210 40% 96%;
@@ -36,14 +36,16 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    --ring: 160 84% 25%;
 
     --radius: 12px;
 
-    /* Modern E-commerce custom tokens */
-    --accent-blue: 221.2 83.2% 53.3%;
-    --accent-blue-light: 221.2 83.2% 63.3%;
-    --accent-blue-dark: 221.2 83.2% 43.3%;
+    /* Vietnam theme custom tokens */
+    --accent-emerald: 160 84% 25%;
+    --accent-emerald-light: 160 84% 35%;
+    --accent-emerald-dark: 160 84% 18%;
+    --accent-gold: 38 92% 50%;
+    --accent-gold-light: 38 92% 60%;
     
     --surface: 0 0% 98%;
     --surface-hover: 210 40% 96%;
@@ -54,34 +56,27 @@
     --info: 199.8 89.1% 48.0%;
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--accent-blue)), hsl(var(--accent-blue-light)));
+    --gradient-primary: linear-gradient(135deg, hsl(var(--accent-emerald)), hsl(var(--accent-emerald-light)));
     --gradient-surface: linear-gradient(145deg, hsl(var(--surface)), hsl(var(--background)));
-    --gradient-hero: linear-gradient(135deg, hsl(var(--surface)) 0%, hsl(var(--accent-blue-light) / 0.1) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(var(--accent-emerald-dark)) 0%, hsl(var(--accent-emerald)) 100%);
 
     /* Shadows */
-    --shadow-soft: 0 2px 8px hsl(221.2 83.2% 53.3% / 0.08);
-    --shadow-medium: 0 4px 16px hsl(221.2 83.2% 53.3% / 0.12);
-    --shadow-large: 0 8px 32px hsl(221.2 83.2% 53.3% / 0.16);
+    --shadow-soft: 0 2px 8px hsl(160 84% 25% / 0.08);
+    --shadow-medium: 0 4px 16px hsl(160 84% 25% / 0.12);
+    --shadow-large: 0 8px 32px hsl(160 84% 25% / 0.16);
 
     /* Animations */
     --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 160 84% 25%;
   }
 
   .dark {
@@ -94,7 +89,7 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
+    --primary: 160 84% 35%;
     --primary-foreground: 222.2 47.4% 11.2%;
 
     --secondary: 217.2 32.6% 17.5%;
@@ -111,15 +106,15 @@
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --ring: 160 84% 35%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary: 160 84% 35%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 160 84% 35%;
   }
 }
 
@@ -136,7 +131,7 @@
 }
 
 @layer components {
-  /* Modern E-commerce utility classes */
+  /* Modern utility classes */
   .font-display {
     font-family: 'Playfair Display', serif;
   }
@@ -276,7 +271,7 @@
   .glass-dark {
     background: rgba(0, 0, 0, 0.2);
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 215, 0, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.1);
   }
 
   /* Animations */
@@ -295,6 +290,6 @@
 }
 
 @keyframes glow {
-  from { box-shadow: var(--shadow-gold); }
-  to { box-shadow: 0 15px 50px hsl(var(--dubai-gold) / 0.5); }
+  from { box-shadow: var(--shadow-medium); }
+  to { box-shadow: 0 15px 50px hsl(38 92% 50% / 0.3); }
 }

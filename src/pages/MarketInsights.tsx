@@ -81,37 +81,37 @@ const MarketInsights = () => {
   ];
 
   const partners = [
-    { name: "Dubai Statistics Center", type: "Data Partner", icon: Database },
-    { name: "Property Monitor", type: "Analytics Partner", icon: TrendingUp },
-    { name: "Reidin", type: "Market Intelligence", icon: Building2 },
-    { name: "Dubai Land Department", type: "Official Data", icon: Landmark },
-    { name: "CBRE", type: "Research Partner", icon: Search },
-    { name: "JLL", type: "Market Research", icon: FileText }
+    { name: "GSO Vietnam", type: "Data Partner", icon: Database },
+    { name: "CBRE Vietnam", type: "Analytics Partner", icon: TrendingUp },
+    { name: "Savills Vietnam", type: "Market Intelligence", icon: Building2 },
+    { name: "HCMC Land Dept", type: "Official Data", icon: Landmark },
+    { name: "JLL Vietnam", type: "Research Partner", icon: Search },
+    { name: "Knight Frank", type: "Market Research", icon: FileText }
   ];
 
   const marketMetrics = [
-    { label: "Market Cap", value: "AED 2.1T", change: "+12.5%" },
-    { label: "Transaction Volume", value: "45,230", change: "+8.2%" },
-    { label: "Avg. Price Growth", value: "15.8%", change: "+2.1%" },
-    { label: "Foreign Investment", value: "68%", change: "+5.3%" }
+    { label: "Market Cap", value: "VND 850T", change: "+15.2%" },
+    { label: "Transaction Volume", value: "32,450", change: "+12.8%" },
+    { label: "Avg. Price Growth", value: "18.5%", change: "+3.2%" },
+    { label: "Foreign Investment", value: "45%", change: "+8.1%" }
   ];
 
   // Sample chart data
   const priceData = [
-    { month: 'Jan', price: 1850, volume: 3200 },
-    { month: 'Feb', price: 1920, volume: 3450 },
-    { month: 'Mar', price: 2100, volume: 3800 },
-    { month: 'Apr', price: 2250, volume: 4100 },
-    { month: 'May', price: 2180, volume: 3900 },
-    { month: 'Jun', price: 2350, volume: 4300 }
+    { month: 'Jan', price: 85, volume: 2800 },
+    { month: 'Feb', price: 92, volume: 3100 },
+    { month: 'Mar', price: 98, volume: 3400 },
+    { month: 'Apr', price: 105, volume: 3800 },
+    { month: 'May', price: 102, volume: 3600 },
+    { month: 'Jun', price: 112, volume: 4100 }
   ];
 
   const districtData = [
-    { area: 'Downtown', growth: 18.5, transactions: 1240 },
-    { area: 'Marina', growth: 15.2, transactions: 980 },
-    { area: 'JBR', growth: 12.8, transactions: 750 },
-    { area: 'Business Bay', growth: 22.1, transactions: 1580 },
-    { area: 'Palm Jumeirah', growth: 25.3, transactions: 420 }
+    { area: 'District 1', growth: 22.5, transactions: 980 },
+    { area: 'District 2', growth: 28.2, transactions: 1240 },
+    { area: 'District 7', growth: 19.8, transactions: 850 },
+    { area: 'Binh Thanh', growth: 16.5, transactions: 720 },
+    { area: 'Thu Duc', growth: 32.1, transactions: 1580 }
   ];
 
   useEffect(() => {
@@ -122,7 +122,7 @@ const MarketInsights = () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('deepseek-market-analysis', {
-        body: { type: 'market_analysis', region: 'dubai' }
+        body: { type: 'market_analysis', region: 'hcmc' }
       });
 
       if (data?.success) {
@@ -144,7 +144,7 @@ const MarketInsights = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-1 h-16 bg-purple-500"></div>
+              <div className="w-1 h-16 bg-amber-500"></div>
               <div>
                 <h1 className="text-4xl md:text-5xl font-bold mb-4">
                   Market Intelligence & Analytics
@@ -167,18 +167,18 @@ const MarketInsights = () => {
                   </p>
                   {/* Hand-written signature effect */}
                   <div className="mt-6 relative">
-                    <div className="text-2xl font-light text-purple-400 transform rotate-1 inline-block">
-                      Dr. Raj Patel
+                    <div className="text-2xl font-light text-amber-400 transform rotate-1 inline-block">
+                      Dr. Tran Minh Duc
                     </div>
                     <div className="text-sm text-gray-400 mt-1">Chief Market Analyst</div>
                     {/* Hand-drawn line effect */}
-                    <div className="absolute -bottom-2 left-0 w-32 h-0.5 bg-purple-400 transform rotate-2 opacity-60"></div>
+                    <div className="absolute -bottom-2 left-0 w-32 h-0.5 bg-amber-400 transform rotate-2 opacity-60"></div>
                   </div>
                 </div>
               </div>
               {/* Decorative elements */}
-              <div className="absolute -top-2 -right-2 w-4 h-4 border-2 border-purple-400 rotate-45"></div>
-              <div className="absolute -bottom-2 -left-2 w-3 h-3 bg-purple-400"></div>
+              <div className="absolute -top-2 -right-2 w-4 h-4 border-2 border-amber-400 rotate-45"></div>
+              <div className="absolute -bottom-2 -left-2 w-3 h-3 bg-amber-400"></div>
             </div>
           </div>
         </div>
@@ -191,13 +191,13 @@ const MarketInsights = () => {
           <div className="mb-16">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-3">
-                <div className="w-1 h-8 bg-purple-600"></div>
+                <div className="w-1 h-8 bg-emerald-600"></div>
                 <h2 className="text-2xl font-bold text-gray-900">Live Market Indicators</h2>
               </div>
               <Button 
                 onClick={fetchMarketData}
                 disabled={isLoading}
-                className="bg-purple-600 hover:bg-purple-700 text-white"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white"
               >
                 <Activity className="w-4 h-4 mr-2" />
                 {isLoading ? 'Updating...' : 'Refresh Data'}
@@ -209,7 +209,7 @@ const MarketInsights = () => {
                 <div key={index} className="bg-white border border-gray-200 p-6 text-center">
                   <div className="text-2xl font-bold text-gray-900 mb-1">{metric.value}</div>
                   <div className="text-sm text-gray-600 mb-2">{metric.label}</div>
-                  <Badge className="bg-purple-100 text-purple-800 text-xs">
+                  <Badge className="bg-emerald-100 text-emerald-800 text-xs">
                     {metric.change}
                   </Badge>
                 </div>
@@ -221,7 +221,7 @@ const MarketInsights = () => {
               <Card className="border-gray-200 mb-8">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Zap className="w-5 h-5 text-purple-600" />
+                    <Zap className="w-5 h-5 text-emerald-600" />
                     AI Market Analysis
                   </CardTitle>
                 </CardHeader>
@@ -233,7 +233,7 @@ const MarketInsights = () => {
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-600">Avg Price/Sqm:</span>
-                          <span className="font-semibold">AED {Math.round(marketData.keyMetrics?.avgPricePerSqm || 0).toLocaleString()}</span>
+                          <span className="font-semibold">VND {Math.round(marketData.keyMetrics?.avgPricePerSqm || 0).toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-600">Price Growth:</span>
@@ -259,7 +259,7 @@ const MarketInsights = () => {
           <div className="mb-16 grid grid-cols-1 lg:grid-cols-2 gap-8">
             <Card className="border-gray-200">
               <CardHeader>
-                <CardTitle className="text-lg">Price Trend Analysis</CardTitle>
+                <CardTitle className="text-lg">Price Trend Analysis (Million VND/sqm)</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -267,8 +267,8 @@ const MarketInsights = () => {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis />
-                    <Tooltip formatter={(value) => [`AED ${value}`, 'Price per Sqft']} />
-                    <Line type="monotone" dataKey="price" stroke="#9333ea" strokeWidth={2} />
+                    <Tooltip formatter={(value) => [`VND ${value}M`, 'Price per Sqm']} />
+                    <Line type="monotone" dataKey="price" stroke="#059669" strokeWidth={2} />
                   </LineChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -285,7 +285,7 @@ const MarketInsights = () => {
                     <XAxis dataKey="area" />
                     <YAxis />
                     <Tooltip formatter={(value) => [`${value}%`, 'Growth Rate']} />
-                    <Bar dataKey="growth" fill="#9333ea" />
+                    <Bar dataKey="growth" fill="#059669" />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -295,7 +295,7 @@ const MarketInsights = () => {
           {/* Insights Services */}
           <div className="mb-16">
             <div className="flex items-center gap-3 mb-8">
-              <div className="w-1 h-8 bg-purple-600"></div>
+              <div className="w-1 h-8 bg-emerald-600"></div>
               <h2 className="text-2xl font-bold text-gray-900">Analytics Services</h2>
             </div>
             
@@ -306,12 +306,12 @@ const MarketInsights = () => {
                   onClick={() => setActiveInsight(index)}
                   className={`p-4 border text-left transition-all ${
                     activeInsight === index
-                      ? 'border-purple-600 bg-purple-50'
-                      : 'border-gray-200 hover:border-purple-600'
+                      ? 'border-emerald-600 bg-emerald-50'
+                      : 'border-gray-200 hover:border-emerald-600'
                   }`}
                 >
                   <insight.icon className={`w-6 h-6 mb-3 ${
-                    activeInsight === index ? 'text-purple-600' : 'text-gray-600'
+                    activeInsight === index ? 'text-emerald-600' : 'text-gray-600'
                   }`} />
                   <h3 className="font-semibold text-sm mb-2">{insight.title}</h3>
                   <p className="text-xs text-gray-600">{insight.description}</p>
@@ -326,7 +326,7 @@ const MarketInsights = () => {
                   <div>
                     <div className="flex items-center gap-3 mb-4">
                       {React.createElement(insights[activeInsight].icon, { 
-                        className: "w-8 h-8 text-purple-600" 
+                        className: "w-8 h-8 text-emerald-600" 
                       })}
                       <h3 className="text-2xl font-bold text-gray-900">
                         {insights[activeInsight].title}
@@ -335,7 +335,7 @@ const MarketInsights = () => {
                     <p className="text-gray-600 mb-6">
                       {insights[activeInsight].description}
                     </p>
-                    <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+                    <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">
                       <Calendar className="w-4 h-4 mr-2" />
                       Subscribe to Reports
                     </Button>
@@ -345,7 +345,7 @@ const MarketInsights = () => {
                     <div className="space-y-3">
                       {insights[activeInsight].features.map((feature, idx) => (
                         <div key={idx} className="flex items-center gap-3">
-                          <CheckCircle className="w-5 h-5 text-purple-600 flex-shrink-0" />
+                          <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
                           <span className="text-gray-700">{feature}</span>
                         </div>
                       ))}
@@ -359,7 +359,7 @@ const MarketInsights = () => {
           {/* Research Partners Section */}
           <div className="mb-16">
             <div className="flex items-center gap-3 mb-8">
-              <div className="w-1 h-8 bg-purple-600"></div>
+              <div className="w-1 h-8 bg-emerald-600"></div>
               <h2 className="text-2xl font-bold text-gray-900">Our Research Partners</h2>
             </div>
             
@@ -372,8 +372,8 @@ const MarketInsights = () => {
               
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 {partners.map((partner, index) => (
-                  <div key={index} className="border border-gray-200 p-4 text-center hover:border-purple-600 transition-colors">
-                    <partner.icon className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+                  <div key={index} className="border border-gray-200 p-4 text-center hover:border-emerald-600 transition-colors">
+                    <partner.icon className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
                     <h4 className="font-semibold text-sm text-gray-900 mb-1">{partner.name}</h4>
                     <Badge variant="outline" className="text-xs">
                       {partner.type}
@@ -394,13 +394,13 @@ const MarketInsights = () => {
                   to institutional-grade research reports and real-time market data.
                 </p>
                 <div className="flex flex-wrap gap-4">
-                  <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+                  <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">
                     <Phone className="w-4 h-4 mr-2" />
-                    +971 4 123 4569
+                    +84 28 1234 5680
                   </Button>
                   <Button variant="outline" className="border-white text-white hover:bg-white hover:text-gray-900">
                     <Mail className="w-4 h-4 mr-2" />
-                    research@agency.ae
+                    research@saigonproperties.vn
                   </Button>
                 </div>
               </div>
