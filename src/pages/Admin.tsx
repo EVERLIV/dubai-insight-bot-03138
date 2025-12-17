@@ -19,12 +19,14 @@ import {
   Send,
   Bell,
   Sparkles,
-  Plus
+  Plus,
+  Globe
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { PropertyImporter } from "@/components/admin/PropertyImporter";
 import { ManualPropertyForm } from "@/components/admin/ManualPropertyForm";
+import { BatdongsanScraper } from "@/components/admin/BatdongsanScraper";
 
 interface Property {
   id: number;
@@ -216,29 +218,38 @@ const Admin = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="import" className="space-y-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-5">
-            <TabsTrigger value="import" className="flex items-center gap-2">
+        <Tabs defaultValue="scraper" className="space-y-6">
+          <TabsList className="grid w-full max-w-3xl grid-cols-6">
+            <TabsTrigger value="scraper" className="flex items-center gap-1">
+              <Globe className="w-4 h-4" />
+              Scraper
+            </TabsTrigger>
+            <TabsTrigger value="import" className="flex items-center gap-1">
               <Sparkles className="w-4 h-4" />
               AI Import
             </TabsTrigger>
-            <TabsTrigger value="manual" className="flex items-center gap-2">
+            <TabsTrigger value="manual" className="flex items-center gap-1">
               <Plus className="w-4 h-4" />
-              Add Manual
+              Manual
             </TabsTrigger>
-            <TabsTrigger value="listings" className="flex items-center gap-2">
+            <TabsTrigger value="listings" className="flex items-center gap-1">
               <Home className="w-4 h-4" />
               Listings
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex items-center gap-2">
+            <TabsTrigger value="notifications" className="flex items-center gap-1">
               <Bell className="w-4 h-4" />
               Group
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-2">
+            <TabsTrigger value="analytics" className="flex items-center gap-1">
               <Activity className="w-4 h-4" />
               Bot
             </TabsTrigger>
           </TabsList>
+
+          {/* Batdongsan Scraper Tab */}
+          <TabsContent value="scraper">
+            <BatdongsanScraper />
+          </TabsContent>
 
           {/* AI Import Tab */}
           <TabsContent value="import">
