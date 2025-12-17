@@ -127,44 +127,72 @@ async function sendTelegramMediaGroup(chatId: number | string, images: string[],
   }
 }
 
-// Download and send photo as file (fallback for URLs that Telegram can't access)
+// Compress image URL using Supabase transform or resize
+function getCompressedImageUrl(photoUrl: string, maxWidth = 800): string {
+  // If it's a Supabase storage URL, use built-in transformation
+  if (photoUrl.includes('supabase.co/storage/v1/object/public/')) {
+    // Add transformation parameters for compression
+    const separator = photoUrl.includes('?') ? '&' : '?';
+    return `${photoUrl}${separator}width=${maxWidth}&quality=75`;
+  }
+  return photoUrl;
+}
+
+// Download and send photo as file with compression
 async function sendPhotoAsFile(chatId: number | string, photoUrl: string, caption?: string, options: any = {}) {
   if (!TELEGRAM_BOT_TOKEN) return { ok: false };
   
   try {
+    // Use compressed version of the image
+    const compressedUrl = getCompressedImageUrl(photoUrl, 800);
+    console.log('Downloading compressed image:', compressedUrl);
+    
     // Download the image
-    const imageResponse = await fetch(photoUrl);
+    const imageResponse = await fetch(compressedUrl);
     if (!imageResponse.ok) {
-      console.error('Failed to download image:', photoUrl);
-      return { ok: false };
+      console.error('Failed to download image:', compressedUrl, imageResponse.status);
+      // Fallback to original URL
+      const fallbackResponse = await fetch(photoUrl);
+      if (!fallbackResponse.ok) {
+        return { ok: false };
+      }
+      const imageBlob = await fallbackResponse.blob();
+      return await sendBlobToTelegram(chatId, imageBlob, caption, options);
     }
     
     const imageBlob = await imageResponse.blob();
-    const formData = new FormData();
-    formData.append('chat_id', chatId.toString());
-    formData.append('photo', imageBlob, 'photo.jpg');
-    if (caption) {
-      const truncatedCaption = caption.length > 1000 ? caption.substring(0, 1000) + '...' : caption;
-      formData.append('caption', truncatedCaption);
-      formData.append('parse_mode', 'HTML');
-    }
-    if (options.reply_markup) {
-      formData.append('reply_markup', JSON.stringify(options.reply_markup));
-    }
+    console.log('Image size:', Math.round(imageBlob.size / 1024), 'KB');
     
-    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
-    const response = await fetch(url, {
-      method: 'POST',
-      body: formData
-    });
-    
-    const result = await response.json();
-    console.log('Photo as file result:', JSON.stringify(result));
-    return result;
+    return await sendBlobToTelegram(chatId, imageBlob, caption, options);
   } catch (error) {
     console.error('Error sending photo as file:', error);
     return { ok: false };
   }
+}
+
+// Helper to send blob to Telegram
+async function sendBlobToTelegram(chatId: number | string, imageBlob: Blob, caption?: string, options: any = {}) {
+  const formData = new FormData();
+  formData.append('chat_id', chatId.toString());
+  formData.append('photo', imageBlob, 'photo.jpg');
+  if (caption) {
+    const truncatedCaption = caption.length > 1000 ? caption.substring(0, 1000) + '...' : caption;
+    formData.append('caption', truncatedCaption);
+    formData.append('parse_mode', 'HTML');
+  }
+  if (options.reply_markup) {
+    formData.append('reply_markup', JSON.stringify(options.reply_markup));
+  }
+  
+  const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
+  const response = await fetch(url, {
+    method: 'POST',
+    body: formData
+  });
+  
+  const result = await response.json();
+  console.log('Photo sent, size:', Math.round(imageBlob.size / 1024), 'KB, result:', result.ok);
+  return result;
 }
 
 async function editTelegramMessage(chatId: number, messageId: number, text: string, options: any = {}) {
