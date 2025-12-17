@@ -318,22 +318,30 @@ export const ChannelMonitor = () => {
 
     try {
       console.log('Saving post with status:', status);
+      
+      // Extract title from first line, clean emojis
+      const firstLine = generatedContent.split('\n')[0] || '';
+      const cleanTitle = firstLine.replace(/[🏠📰💰🍜🌅🌙🏋️📋💰📍🇻🇳☀️🌤️🌡️📊🔥💡✨🎉🏢🏠🌆🌃]/g, '').trim().substring(0, 100);
+      
       const postData = {
-        post_type: selectedPostType,
-        title: generatedContent.split('\n')[0].replace(/[🏠📰💰🍜🌅🌙🏋️📋💰📍]/g, '').trim().substring(0, 100) || 'Без заголовка',
-        content: generatedContent,
-        status,
+        post_type: selectedPostType || 'news',
+        title: cleanTitle || 'Без заголовка',
+        content: generatedContent.trim(),
+        status: status,
         ai_generated: true,
         scheduled_at: status === 'scheduled' ? new Date(Date.now() + 3600000).toISOString() : null,
       };
       
-      console.log('Post data:', postData);
+      console.log('Post data:', JSON.stringify(postData, null, 2));
       
-      const { data, error } = await supabase.from('channel_posts').insert(postData).select();
+      const { data, error } = await supabase
+        .from('channel_posts')
+        .insert([postData])
+        .select();
 
       if (error) {
         console.error('Supabase error:', error);
-        throw error;
+        throw new Error(error.message || 'Ошибка сохранения в базу данных');
       }
 
       console.log('Saved post:', data);
