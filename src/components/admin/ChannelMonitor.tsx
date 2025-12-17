@@ -56,11 +56,14 @@ interface NewsArticle {
   original_url: string | null;
   translated_title: string | null;
   translated_content: string | null;
+  full_content: string | null;
   relevance_score: number | null;
   is_processed: boolean;
   is_posted: boolean;
   published_date: string | null;
   created_at: string;
+  images: string[] | null;
+  telegraph_url: string | null;
 }
 
 const NEWS_CATEGORIES = [
@@ -552,49 +555,70 @@ export const ChannelMonitor = () => {
                     newsArticles.map((article) => (
                       <Card key={article.id} className="p-4">
                         <div className="space-y-3">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1">
-                              <h4 className="font-medium text-sm">
-                                {article.translated_title || article.original_title}
-                              </h4>
-                              {article.translated_title && (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  📝 {article.original_title}
+                          <div className="flex gap-3">
+                            {/* Image preview */}
+                            {article.images && article.images.length > 0 && (
+                              <div className="flex-shrink-0">
+                                <img 
+                                  src={article.images[0]} 
+                                  alt=""
+                                  className="w-20 h-20 object-cover rounded"
+                                  onError={(e) => (e.currentTarget.style.display = 'none')}
+                                />
+                              </div>
+                            )}
+                            
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-2">
+                                <h4 className="font-medium text-sm line-clamp-2">
+                                  {article.translated_title || article.original_title}
+                                </h4>
+                                <div className="flex items-center gap-1 flex-shrink-0">
+                                  {article.relevance_score && (
+                                    <Badge 
+                                      variant={article.relevance_score >= 70 ? 'default' : 'outline'}
+                                      className="text-xs"
+                                    >
+                                      {article.relevance_score}%
+                                    </Badge>
+                                  )}
+                                  {article.images && article.images.length > 0 && (
+                                    <Badge variant="outline" className="text-xs">
+                                      🖼 {article.images.length}
+                                    </Badge>
+                                  )}
+                                  {article.telegraph_url && (
+                                    <a 
+                                      href={article.telegraph_url} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                    >
+                                      <Badge className="bg-blue-500 text-xs cursor-pointer">
+                                        📖 Telegraph
+                                      </Badge>
+                                    </a>
+                                  )}
+                                  {article.is_processed ? (
+                                    <Badge className="bg-green-500 text-xs">RU</Badge>
+                                  ) : (
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline"
+                                      onClick={() => translateArticle(article.id)}
+                                    >
+                                      <Languages className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              {article.translated_content && (
+                                <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                                  {article.translated_content}
                                 </p>
                               )}
                             </div>
-                            <div className="flex items-center gap-2">
-                              {article.relevance_score && (
-                                <Badge 
-                                  variant={article.relevance_score >= 70 ? 'default' : 'outline'}
-                                  className="text-xs"
-                                >
-                                  {article.relevance_score}%
-                                </Badge>
-                              )}
-                              {article.is_processed ? (
-                                <Badge className="bg-green-500 text-xs">
-                                  <Languages className="h-3 w-3 mr-1" />
-                                  RU
-                                </Badge>
-                              ) : (
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  onClick={() => translateArticle(article.id)}
-                                >
-                                  <Languages className="h-3 w-3 mr-1" />
-                                  Перевести
-                                </Button>
-                              )}
-                            </div>
                           </div>
-                          
-                          {article.translated_content && (
-                            <p className="text-sm text-muted-foreground line-clamp-3">
-                              {article.translated_content}
-                            </p>
-                          )}
                           
                           <div className="flex items-center justify-between text-xs text-muted-foreground">
                             <span>
