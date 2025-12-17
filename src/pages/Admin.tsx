@@ -38,12 +38,17 @@ interface Property {
   title: string;
   price: number | null;
   location_area: string | null;
+  district: string | null;
   bedrooms: number | null;
   bathrooms: number | null;
   area_sqft: number | null;
   property_type: string | null;
   purpose: string | null;
   images: string[] | null;
+  pets_allowed: boolean | null;
+  rental_period: string | null;
+  agent_name: string | null;
+  agent_phone: string | null;
   created_at: string | null;
 }
 
@@ -558,21 +563,27 @@ const Admin = () => {
                       <h3 className="font-semibold text-foreground line-clamp-2 mb-2">
                         {property.title}
                       </h3>
-                      <p className="text-primary font-bold text-lg mb-2">
+                      <p className="text-primary font-bold text-lg mb-1">
                         {formatPrice(property.price)}
                       </p>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        {property.location_area || 'Ho Chi Minh City'}
+                      <p className="text-sm text-muted-foreground mb-2">
+                        {property.district || property.location_area || 'Ho Chi Minh City'}
                       </p>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
-                        {property.bedrooms && (
-                          <span>{property.bedrooms} bed</span>
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mb-2">
+                        {property.bedrooms && <span className="bg-muted px-2 py-0.5 rounded">{property.bedrooms} bed</span>}
+                        {property.bathrooms && <span className="bg-muted px-2 py-0.5 rounded">{property.bathrooms} bath</span>}
+                        {property.area_sqft && <span className="bg-muted px-2 py-0.5 rounded">{property.area_sqft} m²</span>}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-1 text-xs mb-3">
+                        {property.pets_allowed !== null && (
+                          <Badge variant={property.pets_allowed ? "default" : "secondary"} className="text-xs">
+                            {property.pets_allowed ? '🐾 Pets OK' : '🚫 No pets'}
+                          </Badge>
                         )}
-                        {property.bathrooms && (
-                          <span>{property.bathrooms} bath</span>
-                        )}
-                        {property.area_sqft && (
-                          <span>{property.area_sqft} m²</span>
+                        {property.rental_period && (
+                          <Badge variant="outline" className="text-xs">
+                            {property.rental_period === 'short-term' ? '⏱️ Short' : property.rental_period === 'long-term' ? '📅 Long' : '📅 Any'}
+                          </Badge>
                         )}
                       </div>
                       <div className="flex gap-2">

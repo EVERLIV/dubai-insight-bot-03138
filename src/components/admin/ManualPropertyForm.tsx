@@ -4,9 +4,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Loader2, Plus, X, Upload, Image } from "lucide-react";
+import { Loader2, Plus, X, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+
+const HCMC_DISTRICTS = [
+  "District 1", "District 2", "District 3", "District 4", "District 5",
+  "District 6", "District 7", "District 8", "District 9", "District 10",
+  "District 11", "District 12", "Binh Thanh", "Go Vap", "Phu Nhuan",
+  "Tan Binh", "Tan Phu", "Thu Duc", "Binh Tan", "Nha Be",
+  "Can Gio", "Cu Chi", "Hoc Mon", "Binh Chanh"
+];
+
+const RENTAL_PERIODS = [
+  { value: "short-term", label: "Краткосрочная (< 6 мес)" },
+  { value: "long-term", label: "Долгосрочная (6+ мес)" },
+  { value: "both", label: "Любая" }
+];
 
 export const ManualPropertyForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -17,11 +31,14 @@ export const ManualPropertyForm = () => {
   const [formData, setFormData] = useState({
     title: '',
     price: '',
+    district: '',
     location_area: '',
     property_type: 'Apartment',
     bedrooms: '',
     bathrooms: '',
     area_sqft: '',
+    pets_allowed: '',
+    rental_period: '',
     agent_name: '',
     agent_phone: ''
   });
@@ -86,12 +103,15 @@ export const ManualPropertyForm = () => {
         .insert({
           title: formData.title,
           price: formData.price ? parseFloat(formData.price) : null,
+          district: formData.district || null,
           location_area: formData.location_area || null,
           property_type: formData.property_type,
           purpose: 'for-rent',
           bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
           bathrooms: formData.bathrooms ? parseInt(formData.bathrooms) : null,
           area_sqft: formData.area_sqft ? parseInt(formData.area_sqft) : null,
+          pets_allowed: formData.pets_allowed === 'yes' ? true : formData.pets_allowed === 'no' ? false : null,
+          rental_period: formData.rental_period || null,
           images: imageUrls.length > 0 ? imageUrls : null,
           agent_name: formData.agent_name || null,
           agent_phone: formData.agent_phone || null,
@@ -109,11 +129,14 @@ export const ManualPropertyForm = () => {
       setFormData({
         title: '',
         price: '',
+        district: '',
         location_area: '',
         property_type: 'Apartment',
         bedrooms: '',
         bathrooms: '',
         area_sqft: '',
+        pets_allowed: '',
+        rental_period: '',
         agent_name: '',
         agent_phone: ''
       });
@@ -137,8 +160,8 @@ export const ManualPropertyForm = () => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2 space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="md:col-span-2 lg:col-span-3 space-y-2">
               <Label htmlFor="title">Title *</Label>
               <Input
                 id="title"
@@ -146,6 +169,28 @@ export const ManualPropertyForm = () => {
                 value={formData.title}
                 onChange={(e) => handleChange('title', e.target.value)}
                 required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>District</Label>
+              <Select value={formData.district} onValueChange={(v) => handleChange('district', v)}>
+                <SelectTrigger><SelectValue placeholder="Select district" /></SelectTrigger>
+                <SelectContent>
+                  {HCMC_DISTRICTS.map(d => (
+                    <SelectItem key={d} value={d}>{d}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="location">Address/Details</Label>
+              <Input
+                id="location"
+                placeholder="e.g., Thao Dien, near park"
+                value={formData.location_area}
+                onChange={(e) => handleChange('location_area', e.target.value)}
               />
             </div>
 
@@ -161,21 +206,9 @@ export const ManualPropertyForm = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="location">Location/District</Label>
-              <Input
-                id="location"
-                placeholder="e.g., District 1, Thao Dien"
-                value={formData.location_area}
-                onChange={(e) => handleChange('location_area', e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="type">Property Type</Label>
+              <Label>Property Type</Label>
               <Select value={formData.property_type} onValueChange={(v) => handleChange('property_type', v)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Apartment">Apartment</SelectItem>
                   <SelectItem value="Studio">Studio</SelectItem>
@@ -187,14 +220,26 @@ export const ManualPropertyForm = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="area">Area (m²)</Label>
-              <Input
-                id="area"
-                type="number"
-                placeholder="e.g., 65"
-                value={formData.area_sqft}
-                onChange={(e) => handleChange('area_sqft', e.target.value)}
-              />
+              <Label>Rental Period</Label>
+              <Select value={formData.rental_period} onValueChange={(v) => handleChange('rental_period', v)}>
+                <SelectTrigger><SelectValue placeholder="Select period" /></SelectTrigger>
+                <SelectContent>
+                  {RENTAL_PERIODS.map(p => (
+                    <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Pets Allowed</Label>
+              <Select value={formData.pets_allowed} onValueChange={(v) => handleChange('pets_allowed', v)}>
+                <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="yes">🐾 Yes</SelectItem>
+                  <SelectItem value="no">🚫 No</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
@@ -216,6 +261,17 @@ export const ManualPropertyForm = () => {
                 placeholder="e.g., 1"
                 value={formData.bathrooms}
                 onChange={(e) => handleChange('bathrooms', e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="area">Area (m²)</Label>
+              <Input
+                id="area"
+                type="number"
+                placeholder="e.g., 65"
+                value={formData.area_sqft}
+                onChange={(e) => handleChange('area_sqft', e.target.value)}
               />
             </div>
 
