@@ -144,11 +144,6 @@ const Admin = () => {
 
     setSendingMessage(true);
     try {
-      const response = await supabase.functions.invoke('vietnam-bot', {
-        body: { message: groupMessage, type: messageType },
-        headers: { 'Content-Type': 'application/json' }
-      });
-
       // Call the endpoint with action parameter
       const result = await fetch(
         `https://qnmyostnzwlnauxhsgfw.supabase.co/functions/v1/vietnam-bot?action=send_group_message`,
