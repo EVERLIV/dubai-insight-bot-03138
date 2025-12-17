@@ -92,6 +92,7 @@ async function scrapeFullArticle(url: string): Promise<{ content: string; images
         url,
         formats: ['markdown', 'html'],
         onlyMainContent: true,
+        waitFor: 2000,
       }),
     });
 
@@ -101,26 +102,142 @@ async function scrapeFullArticle(url: string): Promise<{ content: string; images
     }
 
     const data = await response.json();
-    const markdown = data.data?.markdown || '';
+    let markdown = data.data?.markdown || '';
     const html = data.data?.html || '';
     
-    // Extract images from HTML
-    const imgRegex = /<img[^>]+src="([^"]+)"/gi;
-    const images: string[] = [];
-    let match;
-    while ((match = imgRegex.exec(html)) !== null) {
-      const imgUrl = match[1];
-      if (imgUrl.startsWith('http') && !imgUrl.includes('icon') && !imgUrl.includes('logo')) {
-        images.push(imgUrl);
+    // Clean up markdown - remove navigation and menu items
+    markdown = cleanArticleContent(markdown);
+    
+    // If markdown is too short or contains mostly links, try extracting from HTML
+    if (markdown.length < 200 || isNavigationContent(markdown)) {
+      const extractedContent = extractArticleFromHtml(html);
+      if (extractedContent.length > markdown.length) {
+        markdown = extractedContent;
       }
     }
+    
+    // Extract images from HTML
+    const images = extractArticleImages(html);
 
     console.log(`Scraped ${markdown.length} chars, ${images.length} images`);
-    return { content: markdown, images: images.slice(0, 5) };
+    return { content: markdown, images };
   } catch (error) {
     console.error('Scrape error:', error);
     return { content: '', images: [] };
   }
+}
+
+// Check if content is navigation/menu
+function isNavigationContent(content: string): boolean {
+  const lines = content.split('\n').filter(l => l.trim());
+  const linkLines = lines.filter(l => l.includes('[') && l.includes(']('));
+  // If more than 60% of lines are links, it's probably navigation
+  return linkLines.length > lines.length * 0.6;
+}
+
+// Clean article content from navigation elements
+function cleanArticleContent(markdown: string): string {
+  const lines = markdown.split('\n');
+  const cleanedLines: string[] = [];
+  let skipSection = false;
+  
+  for (const line of lines) {
+    const trimmed = line.trim();
+    
+    // Skip navigation sections
+    if (trimmed.match(/^\[.*\]\(https:\/\/vnexpress\.net\/(thoi-su|the-gioi|kinh-doanh|giai-tri|phap-luat|giao-duc|doi-song|du-lich|khoa-hoc|suc-khoe|oto-xe-may|the-thao|bat-dong-san|goc-nhin|vne-go)/)) {
+      continue;
+    }
+    
+    // Skip common navigation patterns
+    if (trimmed === 'Показать больше' || 
+        trimmed === 'Show more' ||
+        trimmed.match(/^-\s*\[.*\]\(.*\)$/) ||
+        trimmed.match(/^\[VnE-GO\]/) ||
+        trimmed.match(/^\[Discover\]/) ||
+        trimmed.match(/^\[Shorts\]/) ||
+        trimmed.match(/^\[Подкасты\]/) ||
+        trimmed.match(/^#+\s*\[/) ||
+        (trimmed.startsWith('[') && trimmed.includes('](https://vnexpress.net') && trimmed.endsWith(')'))
+       ) {
+      continue;
+    }
+    
+    // Skip sections that are just lists of links
+    if (trimmed.startsWith('- [') && trimmed.includes('](')) {
+      continue;
+    }
+    
+    // Keep actual content
+    if (trimmed.length > 0) {
+      cleanedLines.push(line);
+    }
+  }
+  
+  // Join and clean up multiple empty lines
+  return cleanedLines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+// Extract article content from HTML more precisely
+function extractArticleFromHtml(html: string): string {
+  // Try to find article body in VNExpress HTML structure
+  const articleBodyMatch = html.match(/<article[^>]*class="[^"]*fck_detail[^"]*"[^>]*>([\s\S]*?)<\/article>/i) ||
+                          html.match(/<div[^>]*class="[^"]*fck_detail[^"]*"[^>]*>([\s\S]*?)<\/div>/i) ||
+                          html.match(/<div[^>]*class="[^"]*article-content[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
+  
+  if (!articleBodyMatch) {
+    return '';
+  }
+  
+  let content = articleBodyMatch[1];
+  
+  // Remove HTML tags but keep text
+  content = content
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<figure[^>]*>[\s\S]*?<\/figure>/gi, '')
+    .replace(/<img[^>]*>/gi, '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<p[^>]*>/gi, '')
+    .replace(/<h([1-6])[^>]*>([\s\S]*?)<\/h\1>/gi, (_, level, text) => `${'#'.repeat(parseInt(level))} ${text}\n`)
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+  
+  return content;
+}
+
+// Extract article images (not icons/logos)
+function extractArticleImages(html: string): string[] {
+  const images: string[] = [];
+  const imgRegex = /<img[^>]+src="([^"]+)"[^>]*>/gi;
+  let match;
+  
+  while ((match = imgRegex.exec(html)) !== null) {
+    const imgUrl = match[1];
+    // Filter out icons, logos, tracking pixels
+    if (imgUrl.startsWith('http') && 
+        !imgUrl.includes('icon') && 
+        !imgUrl.includes('logo') &&
+        !imgUrl.includes('tracking') &&
+        !imgUrl.includes('pixel') &&
+        !imgUrl.includes('avatar') &&
+        !imgUrl.includes('btn') &&
+        (imgUrl.includes('.jpg') || imgUrl.includes('.jpeg') || imgUrl.includes('.png') || imgUrl.includes('.webp')) &&
+        (imgUrl.includes('vnecdn') || imgUrl.includes('vnexpress'))
+       ) {
+      images.push(imgUrl);
+    }
+  }
+  
+  // Return unique images, max 5
+  return [...new Set(images)].slice(0, 5);
 }
 
 // Translate text using Lovable AI
