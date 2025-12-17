@@ -304,20 +304,37 @@ export const ChannelMonitor = () => {
   };
 
   const savePost = async (status: 'draft' | 'scheduled') => {
-    if (!generatedContent) return;
+    if (!generatedContent) {
+      toast({
+        title: 'Ошибка',
+        description: 'Сначала сгенерируйте контент',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     try {
-      const { error } = await supabase.from('channel_posts').insert({
+      console.log('Saving post with status:', status);
+      const postData = {
         post_type: selectedPostType,
-        title: generatedContent.split('\n')[0].replace(/[🏠📰💰🍜🌅🌙🏋️📋💰📍]/g, '').trim().substring(0, 100),
+        title: generatedContent.split('\n')[0].replace(/[🏠📰💰🍜🌅🌙🏋️📋💰📍]/g, '').trim().substring(0, 100) || 'Без заголовка',
         content: generatedContent,
         status,
         ai_generated: true,
         scheduled_at: status === 'scheduled' ? new Date(Date.now() + 3600000).toISOString() : null,
-      });
+      };
+      
+      console.log('Post data:', postData);
+      
+      const { data, error } = await supabase.from('channel_posts').insert(postData).select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
+      console.log('Saved post:', data);
+      
       toast({
         title: status === 'draft' ? 'Сохранено в черновики' : 'Запланировано',
         description: 'Пост успешно сохранен',
@@ -328,8 +345,8 @@ export const ChannelMonitor = () => {
     } catch (error) {
       console.error('Error saving post:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось сохранить пост',
+        title: 'Ошибка сохранения',
+        description: error instanceof Error ? error.message : 'Не удалось сохранить пост',
         variant: 'destructive',
       });
     }
