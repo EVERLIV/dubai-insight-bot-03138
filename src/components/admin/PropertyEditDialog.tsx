@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Save, X, Plus } from "lucide-react";
+import { Loader2, Save, X, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -32,7 +32,8 @@ interface PropertyEditDialogProps {
 
 export const PropertyEditDialog = ({ property, open, onOpenChange, onSaved }: PropertyEditDialogProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [imageUrls, setImageUrls] = useState<string[]>(['']);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -60,7 +61,7 @@ export const PropertyEditDialog = ({ property, open, onOpenChange, onSaved }: Pr
         agent_name: property.agent_name || '',
         agent_phone: property.agent_phone || ''
       });
-      setImageUrls(property.images?.length ? property.images : ['']);
+      setImageUrls(property.images || []);
     }
   }, [property]);
 
@@ -68,11 +69,43 @@ export const PropertyEditDialog = ({ property, open, onOpenChange, onSaved }: Pr
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const addImageUrl = () => setImageUrls(prev => [...prev, '']);
-  const updateImageUrl = (index: number, value: string) => {
-    setImageUrls(prev => prev.map((url, i) => i === index ? value : url));
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingImages(true);
+    const newUrls: string[] = [];
+
+    try {
+      for (const file of Array.from(files)) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `properties/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('property-images')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('property-images')
+          .getPublicUrl(filePath);
+
+        newUrls.push(publicUrl);
+      }
+
+      setImageUrls(prev => [...prev, ...newUrls]);
+      toast({ title: "Uploaded", description: `${newUrls.length} image(s) uploaded` });
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({ title: "Error", description: "Failed to upload images", variant: "destructive" });
+    } finally {
+      setUploadingImages(false);
+    }
   };
-  const removeImageUrl = (index: number) => {
+
+  const removeImage = (index: number) => {
     setImageUrls(prev => prev.filter((_, i) => i !== index));
   };
 
@@ -82,7 +115,6 @@ export const PropertyEditDialog = ({ property, open, onOpenChange, onSaved }: Pr
 
     setIsSubmitting(true);
     try {
-      const images = imageUrls.filter(url => url.trim());
       const { error } = await supabase
         .from('property_listings')
         .update({
@@ -93,7 +125,7 @@ export const PropertyEditDialog = ({ property, open, onOpenChange, onSaved }: Pr
           bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
           bathrooms: formData.bathrooms ? parseInt(formData.bathrooms) : null,
           area_sqft: formData.area_sqft ? parseInt(formData.area_sqft) : null,
-          images: images.length > 0 ? images : null,
+          images: imageUrls.length > 0 ? imageUrls : null,
           agent_name: formData.agent_name || null,
           agent_phone: formData.agent_phone || null,
           updated_at: new Date().toISOString()
@@ -177,22 +209,49 @@ export const PropertyEditDialog = ({ property, open, onOpenChange, onSaved }: Pr
           </div>
 
           <div className="space-y-2">
-            <Label>Image URLs</Label>
-            <div className="space-y-2">
-              {imageUrls.map((url, index) => (
-                <div key={index} className="flex gap-2">
-                  <Input value={url} onChange={(e) => updateImageUrl(index, e.target.value)} placeholder="https://..." />
-                  {imageUrls.length > 1 && (
-                    <Button type="button" variant="outline" size="icon" onClick={() => removeImageUrl(index)}>
-                      <X className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
-              ))}
-              <Button type="button" variant="outline" size="sm" onClick={addImageUrl}>
-                <Plus className="w-4 h-4 mr-1" /> Add Image
-              </Button>
+            <Label>Property Images</Label>
+            <div className="border-2 border-dashed border-border rounded-lg p-3">
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImageUpload}
+                className="hidden"
+                id="edit-image-upload"
+                disabled={uploadingImages}
+              />
+              <label
+                htmlFor="edit-image-upload"
+                className="flex flex-col items-center justify-center cursor-pointer py-2"
+              >
+                {uploadingImages ? (
+                  <Loader2 className="w-6 h-6 text-muted-foreground animate-spin" />
+                ) : (
+                  <Upload className="w-6 h-6 text-muted-foreground" />
+                )}
+                <span className="text-xs text-muted-foreground mt-1">
+                  {uploadingImages ? 'Uploading...' : 'Click to upload'}
+                </span>
+              </label>
             </div>
+            {imageUrls.length > 0 && (
+              <div className="grid grid-cols-4 gap-2 mt-2">
+                {imageUrls.map((url, index) => (
+                  <div key={index} className="relative group">
+                    <img src={url} alt={`Property ${index + 1}`} className="w-full h-16 object-cover rounded" />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-0 right-0 w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => removeImage(index)}
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="flex gap-2 justify-end">
