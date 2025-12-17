@@ -66,8 +66,14 @@ async function sendTelegramMessage(chatId: number | string, text: string, option
 
 // Send single photo
 async function sendTelegramPhoto(chatId: number | string, photoUrl: string, caption?: string, options: any = {}) {
-  if (!TELEGRAM_BOT_TOKEN) return;
+  if (!TELEGRAM_BOT_TOKEN) return { ok: false };
   const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
+  
+  // Telegram caption limit is 1024 characters
+  const truncatedCaption = caption && caption.length > 1000 ? caption.substring(0, 1000) + '...' : caption;
+  
+  console.log('Sending photo:', { chatId, photoUrl });
+  
   try {
     const response = await fetch(url, {
       method: 'POST',
@@ -75,28 +81,36 @@ async function sendTelegramPhoto(chatId: number | string, photoUrl: string, capt
       body: JSON.stringify({ 
         chat_id: chatId, 
         photo: photoUrl, 
-        caption, 
+        caption: truncatedCaption, 
         parse_mode: 'HTML',
         ...options 
       })
     });
-    return await response.json();
+    const result = await response.json();
+    console.log('Photo send result:', JSON.stringify(result));
+    return result;
   } catch (error) {
     console.error('Error sending photo:', error);
+    return { ok: false };
   }
 }
 
 // Send media group (multiple photos)
 async function sendTelegramMediaGroup(chatId: number | string, images: string[], caption?: string) {
-  if (!TELEGRAM_BOT_TOKEN || !images.length) return;
+  if (!TELEGRAM_BOT_TOKEN || !images.length) return { ok: false };
   const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMediaGroup`;
+  
+  // Telegram caption limit is 1024 characters
+  const truncatedCaption = caption && caption.length > 1000 ? caption.substring(0, 1000) + '...' : caption;
   
   const media = images.slice(0, 10).map((img, idx) => ({
     type: 'photo',
     media: img,
-    caption: idx === 0 ? caption : undefined,
+    caption: idx === 0 ? truncatedCaption : undefined,
     parse_mode: idx === 0 ? 'HTML' : undefined
   }));
+
+  console.log('Sending media group:', { chatId, imageCount: images.length });
 
   try {
     const response = await fetch(url, {
@@ -104,9 +118,52 @@ async function sendTelegramMediaGroup(chatId: number | string, images: string[],
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ chat_id: chatId, media })
     });
-    return await response.json();
+    const result = await response.json();
+    console.log('Media group result:', JSON.stringify(result));
+    return result;
   } catch (error) {
     console.error('Error sending media group:', error);
+    return { ok: false };
+  }
+}
+
+// Download and send photo as file (fallback for URLs that Telegram can't access)
+async function sendPhotoAsFile(chatId: number | string, photoUrl: string, caption?: string, options: any = {}) {
+  if (!TELEGRAM_BOT_TOKEN) return { ok: false };
+  
+  try {
+    // Download the image
+    const imageResponse = await fetch(photoUrl);
+    if (!imageResponse.ok) {
+      console.error('Failed to download image:', photoUrl);
+      return { ok: false };
+    }
+    
+    const imageBlob = await imageResponse.blob();
+    const formData = new FormData();
+    formData.append('chat_id', chatId.toString());
+    formData.append('photo', imageBlob, 'photo.jpg');
+    if (caption) {
+      const truncatedCaption = caption.length > 1000 ? caption.substring(0, 1000) + '...' : caption;
+      formData.append('caption', truncatedCaption);
+      formData.append('parse_mode', 'HTML');
+    }
+    if (options.reply_markup) {
+      formData.append('reply_markup', JSON.stringify(options.reply_markup));
+    }
+    
+    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData
+    });
+    
+    const result = await response.json();
+    console.log('Photo as file result:', JSON.stringify(result));
+    return result;
+  } catch (error) {
+    console.error('Error sending photo as file:', error);
+    return { ok: false };
   }
 }
 
@@ -526,11 +583,15 @@ ${getFilterSummary(filters)}
   // PROPERTY DETAIL
   else if (data.startsWith('detail_')) {
     const propertyId = data.replace('detail_', '');
-    const { data: p } = await supabase
+    console.log('Fetching property detail for ID:', propertyId);
+    
+    const { data: p, error: fetchError } = await supabase
       .from('property_listings')
       .select('*')
       .eq('id', propertyId)
       .single();
+
+    console.log('Property fetch result:', { found: !!p, error: fetchError?.message, images: p?.images });
 
     if (p) {
       const price = p.price ? new Intl.NumberFormat('vi-VN').format(p.price) + ' VND' : 'По запросу';
@@ -571,20 +632,43 @@ ${p.agent_phone ? `📞 Телефон: ${p.agent_phone}` : ''}`;
       } catch {}
 
       // Send photos if available
-      const images = p.images?.filter((img: string) => img && img.startsWith('http')) || [];
+      const rawImages = p.images || [];
+      const images = rawImages.filter((img: string) => img && img.startsWith('http'));
+      console.log('Processing images:', images.length);
       
-      if (images.length > 1) {
-        // Send multiple photos as media group
-        await sendTelegramMediaGroup(chatId, images.slice(0, 5), `📸 Фото объекта #${p.id}`);
-        // Then send details with buttons
-        await sendTelegramMessage(chatId, detailText, { reply_markup: keyboard });
-      } else if (images.length === 1) {
-        // Send single photo with caption and buttons
-        await sendTelegramPhoto(chatId, images[0], detailText, { reply_markup: keyboard });
-      } else {
-        // No photos - just send text
-        await sendTelegramMessage(chatId, `📷 <i>Фото отсутствует</i>\n${detailText}`, { reply_markup: keyboard });
+      let photosSent = false;
+      
+      if (images.length > 0) {
+        // Try sending media group first
+        if (images.length > 1) {
+          console.log('Trying media group with', images.length, 'images');
+          const mediaResult = await sendTelegramMediaGroup(chatId, images.slice(0, 5), `📸 Фото объекта #${p.id}`);
+          if (mediaResult?.ok) {
+            photosSent = true;
+            await sendTelegramMessage(chatId, detailText, { reply_markup: keyboard });
+          }
+        }
+        
+        // Fallback: try sending first photo as file
+        if (!photosSent) {
+          console.log('Trying to send photo as file (fallback)');
+          const photoResult = await sendPhotoAsFile(chatId, images[0], detailText, { reply_markup: keyboard });
+          if (photoResult?.ok) {
+            photosSent = true;
+          }
+        }
       }
+      
+      // Final fallback: send text with image links
+      if (!photosSent) {
+        console.log('Sending text with image links as final fallback');
+        const imageLinks = images.length > 0 
+          ? `\n\n📷 <b>Фото:</b>\n${images.map((img: string, i: number) => `<a href="${img}">Фото ${i + 1}</a>`).join(' | ')}`
+          : '';
+        await sendTelegramMessage(chatId, detailText + imageLinks, { reply_markup: keyboard });
+      }
+    } else {
+      console.log('Property not found for ID:', propertyId);
     }
   }
 
