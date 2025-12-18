@@ -169,8 +169,8 @@ export default function PropertyCard({ property, onViewDetails }: PropertyCardPr
                 <Bed className="w-3 h-3 text-white" />
               </div>
               <div>
-                <div className="text-xs text-gray-600 font-medium uppercase tracking-wide">Bedrooms</div>
-                <div className="text-sm font-bold text-gray-900">{property.bedrooms || 'Studio'}</div>
+                <div className="text-xs text-gray-600 font-medium uppercase tracking-wide">Комнат</div>
+                <div className="text-sm font-bold text-gray-900">{property.bedrooms ? `${property.bedrooms}к. кв` : 'Студия'}</div>
               </div>
             </div>
           )}
