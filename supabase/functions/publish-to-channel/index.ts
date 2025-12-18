@@ -103,20 +103,20 @@ function formatNewsPost(article: NewsArticle): { text: string; hasPhoto: boolean
   let post = `📰 <b>${escapeHtml(title)}</b>\n\n`;
   
   if (hasTelegraph) {
-    // Short preview + Telegraph link
-    const preview = content.slice(0, 300);
+    // Short engaging preview + Telegraph link
+    const preview = content.slice(0, 400);
     post += `${escapeHtml(preview)}...\n\n`;
-    post += `📖 <a href="${article.telegraph_url}">Читать полностью</a>\n\n`;
+    post += `📖 ${article.telegraph_url}\n\n`;
   } else {
     // Full content (truncated)
-    const truncatedContent = content.length > 800 
-      ? content.substring(0, 800) + '...' 
+    const truncatedContent = content.length > 900 
+      ? content.substring(0, 900) + '...' 
       : content;
     post += `${escapeHtml(truncatedContent)}\n\n`;
   }
   
-  if (article.original_url && !hasTelegraph) {
-    post += `🔗 <a href="${article.original_url}">Источник</a>\n\n`;
+  if (article.original_url) {
+    post += `🔗 ${article.original_url}\n\n`;
   }
   
   post += `#новости #вьетнам #сайгон`;
