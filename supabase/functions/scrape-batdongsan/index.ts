@@ -52,13 +52,25 @@ async function scrapeUrl(url: string): Promise<string | null> {
 
 // District URLs for targeted scraping
 const DISTRICT_URLS: Record<string, string> = {
-  'district-9': 'https://batdongsan.com.vn/cho-thue-can-ho-chung-cu-quan-9',
-  'thu-duc': 'https://batdongsan.com.vn/cho-thue-can-ho-chung-cu-tp-thu-duc',
-  'thao-dien': 'https://batdongsan.com.vn/cho-thue-can-ho-chung-cu-phuong-thao-dien',
+  'district-1': 'https://batdongsan.com.vn/cho-thue-can-ho-chung-cu-quan-1',
   'district-2': 'https://batdongsan.com.vn/cho-thue-can-ho-chung-cu-quan-2',
+  'district-3': 'https://batdongsan.com.vn/cho-thue-can-ho-chung-cu-quan-3',
   'district-7': 'https://batdongsan.com.vn/cho-thue-can-ho-chung-cu-quan-7',
-  'binh-thanh': 'https://batdongsan.com.vn/cho-thue-can-ho-chung-cu-quan-binh-thanh',
+  'thao-dien': 'https://batdongsan.com.vn/cho-thue-can-ho-chung-cu-phuong-thao-dien',
 };
+
+// Extract district number from Vietnamese title (e.g., "Quận 7" → "7")
+function extractDistrictFromTitle(title: string): string | null {
+  const match = title.match(/Qu[aậ]n\s*(\d+)/i);
+  if (match) return match[1];
+  
+  // Also check for Thảo Điền, Bình Thạnh, etc.
+  if (/Th[aả]o\s*[ĐD]i[eề]n/i.test(title)) return 'Thảo Điền';
+  if (/B[iì]nh\s*Th[aạ]nh/i.test(title)) return 'Bình Thạnh';
+  if (/Thu\s*[ĐD][uứ]c/i.test(title)) return 'Thủ Đức';
+  
+  return null;
+}
 
 // Search batdongsan.com.vn by district - scrape listing page and extract property links
 async function searchByDistrict(districtKey: string): Promise<string[]> {
@@ -171,7 +183,7 @@ async function searchBatdongsan(query: string): Promise<string[]> {
 
 // Auto-scrape targeted districts (for cron job)
 async function autoScrapeDistricts(): Promise<{ district: string; imported: number }[]> {
-  const targetDistricts = ['district-9', 'thu-duc', 'thao-dien'];
+  const targetDistricts = ['district-1', 'district-2', 'district-3', 'district-7', 'thao-dien'];
   const results: { district: string; imported: number }[] = [];
   
   console.log('Starting auto-scrape for districts:', targetDistricts);
@@ -316,20 +328,24 @@ async function saveProperty(property: any, sourceUrl: string): Promise<number | 
       return null;
     }
 
+    // Extract district from title
+    const district = extractDistrictFromTitle(property.title || '') || property.location_area;
+
     const { data, error } = await supabase
       .from('property_listings')
       .insert({
         title: property.title,
         price: property.price,
         location_area: property.location_area,
+        district: district,
         property_type: property.property_type,
         purpose: 'for-rent',
         bedrooms: property.bedrooms,
         bathrooms: property.bathrooms,
         area_sqft: property.area_sqft,
         images: property.images || [],
-        agent_name: property.agent_name,
-        agent_phone: property.agent_phone,
+        agent_name: 'RentHCM',
+        agent_phone: 'https://t.me/renthcm',
         source_name: 'batdongsan',
         source_category: 'scraped',
         housing_status: 'secondary',

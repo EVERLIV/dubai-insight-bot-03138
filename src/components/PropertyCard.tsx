@@ -13,6 +13,7 @@ interface PropertyCardProps {
     title: string;
     price: number;
     location_area?: string;
+    district?: string;
     property_type?: string;
     bedrooms?: number;
     bathrooms?: number;
@@ -26,6 +27,7 @@ interface PropertyCardProps {
     source_name?: string;
     source_category?: string;
     scraped_at?: string;
+    created_at?: string;
     description?: string;
     amenities?: string[];
     completion_status?: string;
@@ -117,7 +119,7 @@ export default function PropertyCard({ property, onViewDetails }: PropertyCardPr
         {/* Professional Price Display */}
         <div className="flex items-center justify-between mb-3">
           <div className="text-2xl font-bold text-gray-900">
-            {property.price ? `${property.price.toLocaleString()} AED` : 'Price on request'}
+            {property.price ? `${property.price.toLocaleString()} VND` : 'Price on request'}
           </div>
         </div>
 
@@ -126,11 +128,24 @@ export default function PropertyCard({ property, onViewDetails }: PropertyCardPr
           {property.title}
         </h3>
 
-        {/* Professional Location */}
-        {property.location_area && (
-          <div className="flex items-center text-gray-600 mb-4">
-            <MapPin className="w-4 h-4 mr-2" />
+        {/* District & Location */}
+        <div className="flex items-center gap-2 text-gray-600 mb-2">
+          <MapPin className="w-4 h-4" />
+          {property.district && (
+            <Badge variant="outline" className="text-xs font-semibold">
+              Quận {property.district}
+            </Badge>
+          )}
+          {property.location_area && (
             <span className="text-sm font-medium">{property.location_area}</span>
+          )}
+        </div>
+
+        {/* Upload Date */}
+        {property.created_at && (
+          <div className="flex items-center text-gray-500 mb-4 text-xs">
+            <Clock className="w-3 h-3 mr-1" />
+            <span>Добавлено: {new Date(property.created_at).toLocaleDateString('ru-RU')}</span>
           </div>
         )}
 
@@ -186,15 +201,32 @@ export default function PropertyCard({ property, onViewDetails }: PropertyCardPr
         </div>
 
 
+        {/* Contact Channel */}
+        <div className="flex items-center gap-2 mb-4 p-2 bg-emerald-50 border border-emerald-200 rounded">
+          <User className="w-4 h-4 text-emerald-600" />
+          <span className="text-sm font-medium text-emerald-700">{property.agent_name || 'RentHCM'}</span>
+          {property.agent_phone?.includes('t.me') && (
+            <a 
+              href={property.agent_phone}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-emerald-600 hover:underline ml-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Написать →
+            </a>
+          )}
+        </div>
+
         {/* Professional Action Button */}
         <Button 
-          className="w-full bg-blue-900 hover:bg-blue-800 text-white h-10 text-sm font-semibold uppercase tracking-wide"
+          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-10 text-sm font-semibold uppercase tracking-wide"
           onClick={(e) => {
             e.stopPropagation();
             onViewDetails?.(property);
           }}
         >
-          View Property Details
+          Подробнее
         </Button>
       </div>
     </div>
