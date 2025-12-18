@@ -104,22 +104,28 @@ async function parsePropertyWithAI(markdown: string, url: string): Promise<any |
     return null;
   }
 
-  const systemPrompt = `You are a Vietnamese real estate listing parser. 
-Extract property information from the markdown content of batdongsan.com.vn.
-Return a JSON object with these fields:
-- title: Property title (translate to English if in Vietnamese)
-- price: Monthly rent in VND (number only). Look for "triệu/tháng" or "tr/th"
-- location_area: District name (e.g., "Quận 1", "District 1", "Bình Thạnh")
-- property_type: Type (Căn hộ = Apartment, Phòng trọ = Room, Nhà = House, Biệt thự = Villa)
-- bedrooms: Number of bedrooms (look for "PN" or "phòng ngủ")
-- bathrooms: Number of bathrooms (look for "WC" or "phòng tắm")
-- area_sqft: Area in m² (number only)
-- images: Array of image URLs
-- agent_name: Contact name
-- agent_phone: Phone number
+  const systemPrompt = `Ты парсер объявлений недвижимости с сайта batdongsan.com.vn.
+Извлеки информацию из markdown-контента и верни JSON.
 
-Convert prices: 15 triệu = 15000000 VND
-If a field cannot be found, use null.`;
+ВАЖНО для заголовка (title):
+- Переведи заголовок на РУССКИЙ язык
+- Сделай его КОРОТКИМ (максимум 50-60 символов)
+- Формат: "[Тип] [Комнаты]ПН в [Район]"
+- Примеры: "Квартира 2ПН в Quận 7", "Студия в Bình Thạnh", "Апартаменты 3ПН в Thảo Điền"
+
+Поля для извлечения:
+- title: Короткий русский заголовок (см. формат выше)
+- price: Аренда в VND (число). "15 triệu/tháng" = 15000000
+- location_area: Район (Quận 1, Bình Thạnh, District 2, etc.)
+- property_type: Тип (Căn hộ = Apartment, Phòng trọ = Room, Nhà = House, Biệt thự = Villa)
+- bedrooms: Спальни (ищи "PN" или "phòng ngủ")
+- bathrooms: Ванные (ищи "WC" или "phòng tắm")
+- area_sqft: Площадь в m² (только число)
+- images: Массив URL картинок
+- agent_name: Имя контакта
+- agent_phone: Телефон
+
+Если поле не найдено - null.`;
 
   try {
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
