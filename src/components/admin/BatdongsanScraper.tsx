@@ -11,7 +11,9 @@ export const BatdongsanScraper = () => {
   const [singleUrl, setSingleUrl] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [isScraping, setIsScraping] = useState(false);
+  const [isAutoScraping, setIsAutoScraping] = useState(false);
   const [results, setResults] = useState<any[]>([]);
+  const [autoResults, setAutoResults] = useState<any>(null);
   const { toast } = useToast();
 
   const handleSearch = async () => {
@@ -107,6 +109,46 @@ export const BatdongsanScraper = () => {
     }
   };
 
+  const handleAutoScrape = async () => {
+    setIsAutoScraping(true);
+    setAutoResults(null);
+
+    try {
+      const response = await fetch(
+        `https://qnmyostnzwlnauxhsgfw.supabase.co/functions/v1/scrape-batdongsan`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFubXlvc3RuendsbmF1eGhzZ2Z3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkxNzc2MjIsImV4cCI6MjA3NDc1MzYyMn0.oAKyBS8l5B4pn7oM1R9Au-H7mYAerZzTkz1kdAvHunw`
+          },
+          body: JSON.stringify({ action: 'auto' })
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        setAutoResults(data);
+        toast({
+          title: "Автопарсинг завершён",
+          description: `Импортировано ${data.totalImported} объектов из ${data.districts?.length || 0} районов`
+        });
+      } else {
+        throw new Error(data.error || 'Auto-scrape failed');
+      }
+    } catch (error) {
+      console.error('Auto-scrape error:', error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось выполнить автопарсинг",
+        variant: "destructive"
+      });
+    } finally {
+      setIsAutoScraping(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -181,6 +223,54 @@ export const BatdongsanScraper = () => {
             </div>
           </div>
 
+          <div className="border-t pt-4">
+            {/* Auto Scrape Districts */}
+            <div className="space-y-3">
+              <h4 className="font-medium flex items-center gap-2">
+                <Globe className="w-4 h-4" />
+                Автопарсинг районов
+              </h4>
+              <p className="text-sm text-muted-foreground">
+                Парсинг аренды квартир в District 9, Thu Duc и Thảo Điền
+              </p>
+              <Button 
+                onClick={handleAutoScrape} 
+                disabled={isAutoScraping}
+                className="w-full"
+                variant="default"
+              >
+                {isAutoScraping ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Парсинг районов...
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-4 h-4 mr-2" />
+                    Запустить автопарсинг
+                  </>
+                )}
+              </Button>
+              
+              {/* Auto Results */}
+              {autoResults && (
+                <div className="mt-4 p-3 bg-muted rounded-lg space-y-2">
+                  <p className="text-sm font-medium">
+                    Результат: {autoResults.totalImported} новых объектов
+                  </p>
+                  {autoResults.districts?.map((d: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">{d.district}</span>
+                      <Badge variant={d.imported > 0 ? "default" : "outline"}>
+                        +{d.imported}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Results */}
           {results.length > 0 && (
             <div className="border-t pt-4">
@@ -206,10 +296,11 @@ export const BatdongsanScraper = () => {
           <CardTitle className="text-sm">Tips</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-2">
-          <p>• Bulk import searches HCMC rental apartments by default</p>
-          <p>• Use Vietnamese keywords for better results: "Quận 2", "Thảo Điền"</p>
-          <p>• Single URL works for any batdongsan.com.vn property page</p>
-          <p>• Duplicates are automatically skipped</p>
+          <p>• <strong>Автопарсинг</strong> запускается каждые 6 часов (8:00, 14:00, 20:00, 02:00)</p>
+          <p>• Целевые районы: District 9, Thu Duc, Thảo Điền</p>
+          <p>• Single URL работает для любой страницы batdongsan.com.vn</p>
+          <p>• Дубликаты автоматически пропускаются</p>
+          <p>• Заголовки переводятся на русский</p>
         </CardContent>
       </Card>
     </div>
