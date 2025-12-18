@@ -50,7 +50,78 @@ async function scrapeUrl(url: string): Promise<string | null> {
   }
 }
 
-// Search batdongsan.com.vn
+// District URLs for targeted scraping
+const DISTRICT_URLS: Record<string, string> = {
+  'district-9': 'https://batdongsan.com.vn/cho-thue-can-ho-chung-cu-quan-9',
+  'thu-duc': 'https://batdongsan.com.vn/cho-thue-can-ho-chung-cu-tp-thu-duc',
+  'thao-dien': 'https://batdongsan.com.vn/cho-thue-can-ho-chung-cu-phuong-thao-dien',
+  'district-2': 'https://batdongsan.com.vn/cho-thue-can-ho-chung-cu-quan-2',
+  'district-7': 'https://batdongsan.com.vn/cho-thue-can-ho-chung-cu-quan-7',
+  'binh-thanh': 'https://batdongsan.com.vn/cho-thue-can-ho-chung-cu-quan-binh-thanh',
+};
+
+// Search batdongsan.com.vn by district - scrape listing page and extract property links
+async function searchByDistrict(districtKey: string): Promise<string[]> {
+  if (!FIRECRAWL_API_KEY) {
+    console.error('FIRECRAWL_API_KEY not configured');
+    return [];
+  }
+
+  const searchUrl = DISTRICT_URLS[districtKey];
+  if (!searchUrl) {
+    console.error('Unknown district:', districtKey);
+    return [];
+  }
+
+  try {
+    console.log('Searching district:', districtKey, 'URL:', searchUrl);
+    
+    // Use scrape with links format to get all links from the page
+    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: searchUrl,
+        formats: ['links'],
+        waitFor: 5000, // Wait for JS to load
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('Firecrawl scrape error:', response.status, error);
+      return [];
+    }
+
+    const data = await response.json();
+    const allLinks = data.data?.links || data.links || [];
+    console.log('Firecrawl returned', allLinks.length, 'total links');
+    
+    // Filter to only rental apartment detail pages (looking for -pr followed by numbers)
+    const links = allLinks.filter((link: string) => 
+      link.includes('batdongsan.com.vn') &&
+      link.includes('-pr') &&
+      /\-pr\d+$/.test(link) && // Ends with -prXXXXXX (property ID)
+      !link.includes('/ban-') // Exclude sales
+    );
+
+    console.log('Found', links.length, 'rental apartment links in', districtKey);
+    if (links.length === 0 && allLinks.length > 0) {
+      // Log sample links to debug
+      const sampleLinks = allLinks.filter((l: string) => l.includes('-pr')).slice(0, 3);
+      console.log('Sample -pr links:', sampleLinks);
+    }
+    return links.slice(0, 15); // Limit to 15 per district
+  } catch (error) {
+    console.error('District search error:', error);
+    return [];
+  }
+}
+
+// Search batdongsan.com.vn (general search)
 async function searchBatdongsan(query: string): Promise<string[]> {
   if (!FIRECRAWL_API_KEY) {
     console.error('FIRECRAWL_API_KEY not configured');
@@ -60,7 +131,7 @@ async function searchBatdongsan(query: string): Promise<string[]> {
   try {
     console.log('Searching batdongsan for:', query);
     
-    // Search for rental listings in HCMC
+    // Search for rental apartments in HCMC
     const searchUrl = `https://batdongsan.com.vn/cho-thue-can-ho-chung-cu-tp-hcm${query ? `?keyword=${encodeURIComponent(query)}` : ''}`;
     
     const response = await fetch('https://api.firecrawl.dev/v1/map', {
@@ -82,19 +153,61 @@ async function searchBatdongsan(query: string): Promise<string[]> {
     }
 
     const data = await response.json();
-    // Filter to only property detail pages
+    // Filter to only rental apartment detail pages
     const links = (data.links || []).filter((link: string) => 
-      link.includes('/cho-thue-') && 
+      link.includes('/cho-thue-can-ho') && 
       link.includes('-pr') &&
-      !link.includes('?')
+      !link.includes('?') &&
+      !link.includes('/ban-')
     );
 
     console.log('Found', links.length, 'property links');
-    return links.slice(0, 10); // Limit to 10 properties
+    return links.slice(0, 10);
   } catch (error) {
     console.error('Search error:', error);
     return [];
   }
+}
+
+// Auto-scrape targeted districts (for cron job)
+async function autoScrapeDistricts(): Promise<{ district: string; imported: number }[]> {
+  const targetDistricts = ['district-9', 'thu-duc', 'thao-dien'];
+  const results: { district: string; imported: number }[] = [];
+  
+  console.log('Starting auto-scrape for districts:', targetDistricts);
+  
+  for (const district of targetDistricts) {
+    const urls = await searchByDistrict(district);
+    let imported = 0;
+    
+    for (const url of urls.slice(0, 5)) { // Max 5 per district per run
+      console.log(`[${district}] Processing:`, url);
+      
+      const markdown = await scrapeUrl(url);
+      if (!markdown) continue;
+
+      const parsed = await parsePropertyWithAI(markdown, url);
+      if (!parsed) continue;
+
+      const savedId = await saveProperty(parsed, url);
+      if (savedId) {
+        imported++;
+        console.log(`[${district}] Saved property #${savedId}: ${parsed.title}`);
+      }
+      
+      // Rate limiting between requests
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+    
+    results.push({ district, imported });
+    console.log(`[${district}] Imported ${imported} properties`);
+    
+    // Pause between districts
+    await new Promise(resolve => setTimeout(resolve, 3000));
+  }
+  
+  console.log('Auto-scrape completed. Results:', results);
+  return results;
 }
 
 // Parse property data with AI
@@ -283,6 +396,25 @@ Deno.serve(async (req) => {
       );
     }
 
+    if (action === 'auto') {
+      // Auto-scrape targeted districts (District 9, Thu Duc, Thảo Điền)
+      console.log('Starting auto-scrape job...');
+      
+      const results = await autoScrapeDistricts();
+      const totalImported = results.reduce((sum, r) => sum + r.imported, 0);
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          mode: 'auto',
+          districts: results,
+          totalImported,
+          timestamp: new Date().toISOString()
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     if (action === 'single' && url) {
       // Scrape single URL
       const markdown = await scrapeUrl(url);
@@ -317,7 +449,7 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ error: 'Invalid action. Use "search" or "single"' }),
+      JSON.stringify({ error: 'Invalid action. Use "search", "single", or "auto"' }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
