@@ -229,19 +229,31 @@ async function parsePropertyWithAI(markdown: string, url: string): Promise<any |
     return null;
   }
 
-  const systemPrompt = `Ты парсер объявлений недвижимости с сайта batdongsan.com.vn.
+const systemPrompt = `Ты парсер объявлений недвижимости с сайта batdongsan.com.vn.
 Извлеки информацию из markdown-контента и верни JSON.
 
 ВАЖНО для заголовка (title):
 - Переведи заголовок на РУССКИЙ язык
 - Сделай его КОРОТКИМ (максимум 50-60 символов)
-- Формат: "[Тип] [Комнаты]ПН в [Район]"
-- Примеры: "Квартира 2ПН в Quận 7", "Студия в Bình Thạnh", "Апартаменты 3ПН в Thảo Điền"
+- Формат: "[Тип] [Комнаты]ПН в [Район на русском]"
+- ОБЯЗАТЕЛЬНО переводи названия районов на русский:
+  - Quận 1, District 1 → Район 1
+  - Quận 2, District 2 → Район 2
+  - Quận 7, District 7 → Район 7
+  - Bình Thạnh, Binh Thanh → Бинь Тхань
+  - Thủ Đức, Thu Duc → Тху Дык
+  - Thảo Điền, Thao Dien → Тхао Дьен
+  - Phú Nhuận, Phu Nhuan → Фу Нхуан
+  - Gò Vấp, Go Vap → Го Вап
+  - Tân Bình, Tan Binh → Тан Бинь
+- Примеры: "Квартира 2ПН в Район 7", "Студия в Бинь Тхань", "Апартаменты 3ПН в Тхао Дьен"
+
+Для поля location_area тоже переводи на русский!
 
 Поля для извлечения:
 - title: Короткий русский заголовок (см. формат выше)
 - price: Аренда в VND (число). "15 triệu/tháng" = 15000000
-- location_area: Район (Quận 1, Bình Thạnh, District 2, etc.)
+- location_area: Район НА РУССКОМ (Район 1, Бинь Тхань, Тху Дык, etc.)
 - property_type: Тип (Căn hộ = Apartment, Phòng trọ = Room, Nhà = House, Biệt thự = Villa)
 - bedrooms: Спальни (ищи "PN" или "phòng ngủ")
 - bathrooms: Ванные (ищи "WC" или "phòng tắm")
