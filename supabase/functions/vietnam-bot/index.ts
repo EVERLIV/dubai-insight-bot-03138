@@ -312,6 +312,16 @@ async function searchWithFilters(filters: typeof userFilters[0], limit: number =
   return { data: data || [], count: count || 0 };
 }
 
+// Format bedrooms to Russian format
+function formatBedrooms(bedrooms: number | null | undefined): string {
+  if (!bedrooms) return '?';
+  if (bedrooms === 1) return '1-комн.';
+  if (bedrooms === 2) return '2-комн.';
+  if (bedrooms === 3) return '3-комн.';
+  if (bedrooms === 4) return '4-комн.';
+  return `${bedrooms}-комн.`;
+}
+
 // Format property - compact version for list
 function formatPropertyCompact(p: any, idx: number): string {
   const price = p.price ? new Intl.NumberFormat('vi-VN').format(p.price) + ' ₫' : 'По запросу';
@@ -319,7 +329,7 @@ function formatPropertyCompact(p: any, idx: number): string {
   
   return `<b>${idx}. ${p.title}</b>
 💰 ${price} | 📍 ${district}
-🛏 ${p.bedrooms || '?'}ПН | 📐 ${p.area_sqft ? p.area_sqft + 'm²' : '—'}`;
+🛏 ${formatBedrooms(p.bedrooms)} | 📐 ${p.area_sqft ? p.area_sqft + 'm²' : '—'}`;
 }
 
 // Format property - old detailed format
@@ -333,7 +343,7 @@ function formatProperty(p: any, idx: number): string {
 <b>${idx}. ${p.title}</b>
 💰 ${price}
 📍 ${district}
-🛏 ${p.bedrooms || '?'} спальни | 🚿 ${p.bathrooms || '?'} ванные
+🛏 ${formatBedrooms(p.bedrooms)} | 🚿 ${p.bathrooms || '?'} ванн.
 📐 ${p.area_sqft ? p.area_sqft + ' m²' : 'N/A'}
 🐾 Животные: ${pets} | ${period}
 ID: <code>${p.id}</code>
