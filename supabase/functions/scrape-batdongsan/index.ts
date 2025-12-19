@@ -59,15 +59,25 @@ const DISTRICT_URLS: Record<string, string> = {
   'thao-dien': 'https://batdongsan.com.vn/cho-thue-can-ho-chung-cu-phuong-thao-dien',
 };
 
-// Extract district number from Vietnamese title (e.g., "Quận 7" → "7")
-function extractDistrictFromTitle(title: string): string | null {
-  const match = title.match(/Qu[aậ]n\s*(\d+)/i);
-  if (match) return match[1];
+// Extract district from title (Russian or Vietnamese format)
+function extractDistrictFromText(text: string): string | null {
+  if (!text) return null;
   
-  // Also check for Thảo Điền, Bình Thạnh, etc.
-  if (/Th[aả]o\s*[ĐD]i[eề]n/i.test(title)) return 'Thảo Điền';
-  if (/B[iì]nh\s*Th[aạ]nh/i.test(title)) return 'Bình Thạnh';
-  if (/Thu\s*[ĐD][uứ]c/i.test(title)) return 'Thủ Đức';
+  // Russian format: "Район 1", "Район 2", etc.
+  const russianMatch = text.match(/Район\s*(\d+)/i);
+  if (russianMatch) return `Район ${russianMatch[1]}`;
+  
+  // Vietnamese format: "Quận 1", "Quận 2", etc.
+  const vietMatch = text.match(/Qu[aậ]n\s*(\d+)/i);
+  if (vietMatch) return `Район ${vietMatch[1]}`;
+  
+  // Check for named districts (both Russian and Vietnamese)
+  if (/Тхао\s*Дьен/i.test(text) || /Th[aả]o\s*[ĐD]i[eề]n/i.test(text)) return 'Тхао Дьен';
+  if (/Бинь\s*Тхань/i.test(text) || /B[iì]nh\s*Th[aạ]nh/i.test(text)) return 'Бинь Тхань';
+  if (/Тху\s*Дык/i.test(text) || /Thu\s*[ĐD][uứ]c/i.test(text)) return 'Тху Дык';
+  if (/Фу\s*Нхуан/i.test(text) || /Ph[uú]\s*Nhu[aậ]n/i.test(text)) return 'Фу Нхуан';
+  if (/Го\s*Вап/i.test(text) || /G[oò]\s*V[aấ]p/i.test(text)) return 'Го Вап';
+  if (/Тан\s*Бинь/i.test(text) || /T[aâ]n\s*B[iì]nh/i.test(text)) return 'Тан Бинь';
   
   return null;
 }
@@ -345,8 +355,10 @@ async function saveProperty(property: any, sourceUrl: string): Promise<number | 
       return null;
     }
 
-    // Extract district from title
-    const district = extractDistrictFromTitle(property.title || '') || property.location_area;
+    // Extract district from title or location_area - they should match
+    const district = extractDistrictFromText(property.title || '') || 
+                     extractDistrictFromText(property.location_area || '') || 
+                     property.location_area;
 
     const { data, error } = await supabase
       .from('property_listings')
