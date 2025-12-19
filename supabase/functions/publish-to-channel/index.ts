@@ -102,18 +102,11 @@ function formatNewsPost(article: NewsArticle): { text: string; hasPhoto: boolean
   
   let post = `📰 <b>${escapeHtml(title)}</b>\n\n`;
   
-  if (hasTelegraph) {
-    // Short engaging preview + Telegraph link
-    const preview = content.slice(0, 400);
-    post += `${escapeHtml(preview)}...\n\n`;
-    post += `📖 ${article.telegraph_url}\n\n`;
-  } else {
-    // Full content (truncated)
-    const truncatedContent = content.length > 900 
-      ? content.substring(0, 900) + '...' 
-      : content;
-    post += `${escapeHtml(truncatedContent)}\n\n`;
-  }
+  // Контент статьи (обрезанный до 900 символов)
+  const truncatedContent = content.length > 900 
+    ? content.substring(0, 900) + '...' 
+    : content;
+  post += `${escapeHtml(truncatedContent)}\n\n`;
   
   if (article.original_url) {
     post += `🔗 ${article.original_url}\n\n`;
