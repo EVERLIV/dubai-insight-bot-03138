@@ -15,13 +15,62 @@ const MONITORED_CHANNELS: number[] = [-1003589064021];
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-// Districts list
+// Districts list with Russian translations
 const DISTRICTS = [
-  'District 1', 'District 2', 'District 3', 'District 4', 'District 5',
-  'District 6', 'District 7', 'District 8', 'District 9', 'District 10',
-  'District 11', 'District 12', 'Binh Thanh', 'Go Vap', 'Phu Nhuan',
-  'Tan Binh', 'Tan Phu', 'Thu Duc', 'Binh Tan'
+  'Район 1', 'Район 2', 'Район 3', 'Район 4', 'Район 5',
+  'Район 6', 'Район 7', 'Район 8', 'Район 9', 'Район 10',
+  'Район 11', 'Район 12', 'Бинь Тхань', 'Го Вап', 'Фу Нхуан',
+  'Тан Бинь', 'Тан Фу', 'Тху Дык', 'Бинь Тан'
 ];
+
+// District name translations
+const DISTRICT_TO_RUSSIAN: Record<string, string> = {
+  'District 1': 'Район 1', 'District 2': 'Район 2', 'District 3': 'Район 3',
+  'District 4': 'Район 4', 'District 5': 'Район 5', 'District 6': 'Район 6',
+  'District 7': 'Район 7', 'District 8': 'Район 8', 'District 9': 'Район 9',
+  'District 10': 'Район 10', 'District 11': 'Район 11', 'District 12': 'Район 12',
+  'Quận 1': 'Район 1', 'Quận 2': 'Район 2', 'Quận 3': 'Район 3',
+  'Quận 4': 'Район 4', 'Quận 5': 'Район 5', 'Quận 6': 'Район 6',
+  'Quận 7': 'Район 7', 'Quận 8': 'Район 8', 'Quận 9': 'Район 9',
+  'Quận 10': 'Район 10', 'Quận 11': 'Район 11', 'Quận 12': 'Район 12',
+  'Binh Thanh': 'Бинь Тхань', 'Bình Thạnh': 'Бинь Тхань',
+  'Go Vap': 'Го Вап', 'Gò Vấp': 'Го Вап',
+  'Phu Nhuan': 'Фу Нхуан', 'Phú Nhuận': 'Фу Нхуан',
+  'Tan Binh': 'Тан Бинь', 'Tân Bình': 'Тан Бинь',
+  'Tan Phu': 'Тан Фу', 'Tân Phú': 'Тан Фу',
+  'Thu Duc': 'Тху Дык', 'Thủ Đức': 'Тху Дык',
+  'Binh Tan': 'Бинь Тан', 'Bình Tân': 'Бинь Тан',
+  'Thao Dien': 'Тхао Дьен', 'Thảo Điền': 'Тхао Дьен',
+};
+
+const RUSSIAN_TO_DB: Record<string, string> = {
+  'Район 1': 'District 1', 'Район 2': 'District 2', 'Район 3': 'District 3',
+  'Район 4': 'District 4', 'Район 5': 'District 5', 'Район 6': 'District 6',
+  'Район 7': 'District 7', 'Район 8': 'District 8', 'Район 9': 'District 9',
+  'Район 10': 'District 10', 'Район 11': 'District 11', 'Район 12': 'District 12',
+  'Бинь Тхань': 'Binh Thanh', 'Го Вап': 'Go Vap', 'Фу Нхуан': 'Phu Nhuan',
+  'Тан Бинь': 'Tan Binh', 'Тан Фу': 'Tan Phu', 'Тху Дык': 'Thu Duc', 'Бинь Тан': 'Binh Tan',
+  'Тхао Дьен': 'Thao Dien',
+};
+
+// Convert district name to Russian
+function toRussianDistrict(name: string | null | undefined): string {
+  if (!name) return 'HCMC';
+  // Check direct match
+  if (DISTRICT_TO_RUSSIAN[name]) return DISTRICT_TO_RUSSIAN[name];
+  // Check for Quận X pattern
+  const qMatch = name.match(/Qu[aậ]n\s*(\d+)/i);
+  if (qMatch) return `Район ${qMatch[1]}`;
+  // Check for District X pattern
+  const dMatch = name.match(/District\s*(\d+)/i);
+  if (dMatch) return `Район ${dMatch[1]}`;
+  return name;
+}
+
+// Convert Russian district to DB format
+function fromRussianDistrict(name: string): string {
+  return RUSSIAN_TO_DB[name] || name;
+}
 
 // User filter sessions (in-memory, resets on deploy)
 const userFilters: Record<number, {
@@ -30,6 +79,7 @@ const userFilters: Record<number, {
   rental_period?: string;
   bedrooms?: number;
   price_range?: 'low' | 'high';
+  offset?: number;
 }> = {};
 
 interface TelegramUpdate {
@@ -221,19 +271,23 @@ async function answerCallbackQuery(callbackQueryId: string, text?: string) {
   } catch (error) {}
 }
 
-// Search with filters
-async function searchWithFilters(filters: typeof userFilters[0], limit: number = 10) {
-  console.log('Searching with filters:', filters);
+// Search with filters - returns paginated results
+async function searchWithFilters(filters: typeof userFilters[0], limit: number = 5, offset: number = 0) {
+  console.log('Searching with filters:', filters, 'offset:', offset);
+  
+  // Convert Russian district to DB format
+  const dbDistrict = filters.district ? fromRussianDistrict(filters.district) : undefined;
 
   let query = supabase
     .from('property_listings')
-    .select('*')
+    .select('*', { count: 'exact' })
     .eq('purpose', 'for-rent')
     .order('created_at', { ascending: false })
-    .limit(limit);
+    .range(offset, offset + limit - 1);
 
-  if (filters.district) {
-    query = query.or(`district.eq.${filters.district},location_area.ilike.%${filters.district}%`);
+  if (dbDistrict) {
+    // Search for both English and Vietnamese district names
+    query = query.or(`district.ilike.%${dbDistrict}%,location_area.ilike.%${dbDistrict}%,district.ilike.%${filters.district}%`);
   }
   if (filters.pets_allowed !== undefined) {
     query = query.eq('pets_allowed', filters.pets_allowed);
@@ -250,24 +304,35 @@ async function searchWithFilters(filters: typeof userFilters[0], limit: number =
     query = query.gt('price', 10000000);
   }
 
-  const { data, error } = await query;
+  const { data, error, count } = await query;
   if (error) {
     console.error('Search error:', error);
-    return [];
+    return { data: [], count: 0 };
   }
-  return data || [];
+  return { data: data || [], count: count || 0 };
 }
 
-// Format property
+// Format property - compact version for list
+function formatPropertyCompact(p: any, idx: number): string {
+  const price = p.price ? new Intl.NumberFormat('vi-VN').format(p.price) + ' ₫' : 'По запросу';
+  const district = toRussianDistrict(p.district || p.location_area);
+  
+  return `<b>${idx}. ${p.title}</b>
+💰 ${price} | 📍 ${district}
+🛏 ${p.bedrooms || '?'}ПН | 📐 ${p.area_sqft ? p.area_sqft + 'm²' : '—'}`;
+}
+
+// Format property - old detailed format
 function formatProperty(p: any, idx: number): string {
   const price = p.price ? new Intl.NumberFormat('vi-VN').format(p.price) + ' VND' : 'По запросу';
+  const district = toRussianDistrict(p.district || p.location_area);
   const pets = p.pets_allowed === true ? '🐾 Можно' : p.pets_allowed === false ? '🚫 Нельзя' : '❓';
   const period = p.rental_period === 'short-term' ? '⏱️ Кратко' : p.rental_period === 'long-term' ? '📅 Долго' : '📅 Любой';
   
   return `
 <b>${idx}. ${p.title}</b>
 💰 ${price}
-📍 ${p.district || p.location_area || 'HCMC'}
+📍 ${district}
 🛏 ${p.bedrooms || '?'} спальни | 🚿 ${p.bathrooms || '?'} ванные
 📐 ${p.area_sqft ? p.area_sqft + ' m²' : 'N/A'}
 🐾 Животные: ${pets} | ${period}
@@ -529,21 +594,30 @@ ${getFilterSummary(userFilters[userId])}
 `, { reply_markup: getFilterMenuKeyboard(userId) });
   }
 
-  // SEARCH WITH FILTERS
-  else if (data === 'filter_search') {
-    await editTelegramMessage(chatId, messageId, '🔍 Ищу объявления по вашим фильтрам...');
+  // SEARCH WITH FILTERS - with pagination
+  else if (data === 'filter_search' || data === 'load_more') {
+    const isLoadMore = data === 'load_more';
+    const offset = isLoadMore ? (filters.offset || 0) : 0;
     
-    const properties = await searchWithFilters(filters, 10);
+    if (!isLoadMore) {
+      await editTelegramMessage(chatId, messageId, '🔍 Ищу объявления по вашим фильтрам...');
+    }
     
-    // Log search
-    await supabase.from('search_history').insert({
-      telegram_user_id: userId,
-      query: JSON.stringify(filters),
-      results_count: properties.length,
-      filters: filters
-    });
+    const result = await searchWithFilters(filters, 5, offset);
+    const properties = result.data;
+    const totalCount = result.count;
+    
+    // Log search (only on first search)
+    if (!isLoadMore) {
+      await supabase.from('search_history').insert({
+        telegram_user_id: userId,
+        query: JSON.stringify(filters),
+        results_count: totalCount,
+        filters: filters
+      });
+    }
 
-    if (properties.length === 0) {
+    if (properties.length === 0 && offset === 0) {
       await editTelegramMessage(chatId, messageId, `
 ❌ <b>Ничего не найдено</b>
 
@@ -562,28 +636,37 @@ ${getFilterSummary(filters)}
       return;
     }
 
-    let text = `✅ <b>Найдено ${properties.length} объявлений</b>\n\n<b>Фильтры:</b> ${getFilterSummary(filters)}\n`;
-    properties.slice(0, 5).forEach((p: any, i: number) => {
-      text += formatProperty(p, i + 1);
+    // Compact list format
+    let text = `🏠 <b>${filters.district || 'Все районы'}</b> — ${totalCount} объявлений\n`;
+    text += `Показано: ${offset + 1}-${offset + properties.length}\n\n`;
+    
+    properties.forEach((p: any, i: number) => {
+      text += formatPropertyCompact(p, offset + i + 1) + '\n\n';
     });
 
-    if (properties.length > 5) {
-      text += `\n... и ещё ${properties.length - 5} объявлений`;
-    }
-
-    const buttons = properties.slice(0, 5).map((p: any, i: number) => ({
-      text: `📋 #${i + 1}`,
+    // Build keyboard with detail buttons
+    const detailButtons = properties.map((p: any, i: number) => ({
+      text: `👁 #${offset + i + 1}`,
       callback_data: `detail_${p.id}`
     }));
 
+    // Split detail buttons into rows of 5
+    const buttonRows: any[][] = [];
+    for (let i = 0; i < detailButtons.length; i += 5) {
+      buttonRows.push(detailButtons.slice(i, i + 5));
+    }
+
+    // Add "load more" button if there are more results
+    const hasMore = offset + properties.length < totalCount;
+    if (hasMore) {
+      filters.offset = offset + 5;
+      buttonRows.push([{ text: `⬇️ Ещё (${totalCount - offset - properties.length} осталось)`, callback_data: 'load_more' }]);
+    }
+
+    buttonRows.push([{ text: '🔧 Фильтры', callback_data: 'filter_menu' }, { text: '🔙 Меню', callback_data: 'back_main' }]);
+
     await editTelegramMessage(chatId, messageId, text, {
-      reply_markup: {
-        inline_keyboard: [
-          buttons,
-          [{ text: '🔧 Изменить фильтры', callback_data: 'filter_menu' }],
-          [{ text: '🔙 Главное меню', callback_data: 'back_main' }]
-        ]
-      }
+      reply_markup: { inline_keyboard: buttonRows }
     });
   }
 
@@ -601,9 +684,9 @@ ${getFilterSummary(filters)}
   // DISTRICTS QUICK SELECT
   else if (data === 'districts') {
     const rows = [
-      [{ text: 'District 1', callback_data: 'quick_d_District 1' }, { text: 'District 2', callback_data: 'quick_d_District 2' }],
-      [{ text: 'District 7', callback_data: 'quick_d_District 7' }, { text: 'Binh Thanh', callback_data: 'quick_d_Binh Thanh' }],
-      [{ text: 'Thu Duc', callback_data: 'quick_d_Thu Duc' }, { text: 'Phu Nhuan', callback_data: 'quick_d_Phu Nhuan' }],
+      [{ text: 'Район 1', callback_data: 'quick_d_Район 1' }, { text: 'Район 2', callback_data: 'quick_d_Район 2' }],
+      [{ text: 'Район 7', callback_data: 'quick_d_Район 7' }, { text: 'Бинь Тхань', callback_data: 'quick_d_Бинь Тхань' }],
+      [{ text: 'Тху Дык', callback_data: 'quick_d_Тху Дык' }, { text: 'Фу Нхуан', callback_data: 'quick_d_Фу Нхуан' }],
       [{ text: '🔍 Детальный поиск', callback_data: 'filter_menu' }],
       [{ text: '🔙 Назад', callback_data: 'back_main' }]
     ];
@@ -616,7 +699,7 @@ ${getFilterSummary(filters)}
 
   else if (data.startsWith('quick_d_')) {
     const district = data.replace('quick_d_', '');
-    userFilters[userId] = { district };
+    userFilters[userId] = { district, offset: 0 };
     await handleCallback({ ...callbackQuery, data: 'filter_search' });
   }
 
@@ -634,7 +717,8 @@ ${getFilterSummary(filters)}
     console.log('Property fetch result:', { found: !!p, error: fetchError?.message, images: p?.images });
 
     if (p) {
-      const price = p.price ? new Intl.NumberFormat('vi-VN').format(p.price) + ' VND' : 'По запросу';
+      const price = p.price ? new Intl.NumberFormat('vi-VN').format(p.price) + ' ₫' : 'По запросу';
+      const district = toRussianDistrict(p.district || p.location_area);
       const pets = p.pets_allowed === true ? '🐾 Можно с животными' : p.pets_allowed === false ? '🚫 Без животных' : '❓ Не указано';
       const period = p.rental_period === 'short-term' ? '⏱️ Краткосрочная' : p.rental_period === 'long-term' ? '📅 Долгосрочная' : '📅 Любой срок';
 
@@ -647,7 +731,7 @@ ${getFilterSummary(filters)}
 🏠 <b>${p.title}</b>
 
 💰 <b>Цена:</b> ${price}
-📍 <b>Район:</b> ${p.district || p.location_area || 'HCMC'}
+📍 <b>Район:</b> ${district}
 🏢 <b>Тип:</b> ${p.property_type || 'Квартира'}
 🛏 <b>Спальни:</b> ${p.bedrooms || 'N/A'}
 🚿 <b>Ванные:</b> ${p.bathrooms || 'N/A'}
@@ -916,24 +1000,33 @@ async function handleMessage(message: any) {
     } else if (text.startsWith('/search')) {
       await sendTelegramMessage(chatId, '🔍 <b>Детальный поиск</b>\n\nНастройте фильтры:', { reply_markup: getFilterMenuKeyboard(chatId) });
     } else if (text.startsWith('/all')) {
-      userFilters[chatId] = {};
-      const properties = await searchWithFilters({}, 10);
-      if (properties.length === 0) {
+      userFilters[chatId] = { offset: 0 };
+      const result = await searchWithFilters({}, 5, 0);
+      if (result.data.length === 0) {
         await sendTelegramMessage(chatId, '❌ Пока нет объявлений');
         return;
       }
-      let resultText = `📋 <b>Все объявления (${properties.length}):</b>\n`;
-      properties.slice(0, 5).forEach((p: any, i: number) => {
-        resultText += formatProperty(p, i + 1);
+      let resultText = `📋 <b>Все объявления (${result.count}):</b>\n\n`;
+      result.data.forEach((p: any, i: number) => {
+        resultText += formatPropertyCompact(p, i + 1) + '\n\n';
       });
-      await sendTelegramMessage(chatId, resultText, {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: '🔍 Детальный поиск', callback_data: 'filter_menu' }],
-            [{ text: '🏠 Главное меню', callback_data: 'back_main' }]
-          ]
-        }
-      });
+      
+      const buttons = result.data.map((p: any, i: number) => ({
+        text: `👁 #${i + 1}`,
+        callback_data: `detail_${p.id}`
+      }));
+      
+      const keyboard: any[][] = [];
+      for (let i = 0; i < buttons.length; i += 5) {
+        keyboard.push(buttons.slice(i, i + 5));
+      }
+      if (result.count > 5) {
+        userFilters[chatId].offset = 5;
+        keyboard.push([{ text: `⬇️ Ещё (${result.count - 5} осталось)`, callback_data: 'load_more' }]);
+      }
+      keyboard.push([{ text: '🔍 Детальный поиск', callback_data: 'filter_menu' }, { text: '🏠 Меню', callback_data: 'back_main' }]);
+      
+      await sendTelegramMessage(chatId, resultText, { reply_markup: { inline_keyboard: keyboard } });
     } else if (text.startsWith('/about')) {
       await sendTelegramMessage(chatId, `
 🏠 <b>О проекте RentHCM</b>
@@ -975,20 +1068,27 @@ async function handleMessage(message: any) {
       });
     } else {
       // Text search
-      const properties = await searchWithFilters({ district: text }, 5);
-      if (properties.length === 0) {
+      const result = await searchWithFilters({ district: text }, 5, 0);
+      if (result.data.length === 0) {
         await sendTelegramMessage(chatId, `❌ По запросу "${text}" ничего не найдено.\n\nПопробуйте детальный поиск:`, {
           reply_markup: { inline_keyboard: [[{ text: '🔍 Детальный поиск', callback_data: 'filter_menu' }]] }
         });
         return;
       }
-      let resultText = `✅ <b>Найдено ${properties.length}:</b>\n`;
-      properties.forEach((p: any, i: number) => {
-        resultText += formatProperty(p, i + 1);
+      let resultText = `✅ <b>Найдено ${result.count}:</b>\n\n`;
+      result.data.forEach((p: any, i: number) => {
+        resultText += formatPropertyCompact(p, i + 1) + '\n\n';
       });
+      
+      const buttons = result.data.map((p: any, i: number) => ({
+        text: `👁 #${i + 1}`,
+        callback_data: `detail_${p.id}`
+      }));
+      
       await sendTelegramMessage(chatId, resultText, {
         reply_markup: {
           inline_keyboard: [
+            buttons,
             [{ text: '🔍 Детальный поиск', callback_data: 'filter_menu' }],
             [{ text: '🏠 Главное меню', callback_data: 'back_main' }]
           ]
