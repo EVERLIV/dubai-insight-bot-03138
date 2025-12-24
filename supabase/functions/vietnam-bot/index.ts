@@ -38,6 +38,12 @@ function getOrCreateContext(userId: number): UserContext {
   return userContexts.get(userId)!;
 }
 
+function invalidateSearch(ctx: UserContext) {
+  ctx.searchResults = undefined;
+  ctx.currentIndex = undefined;
+  ctx.totalCount = undefined;
+}
+
 // District name translations (both ways)
 const DISTRICT_TRANSLATIONS: Record<string, string[]> = {
   'Район 1': ['District 1', 'Quận 1', 'Q1', 'D1'],
@@ -602,6 +608,8 @@ ${getFilterSummary(ctx.filters)}
   if (data.startsWith('set_district_')) {
     const district = data.replace('set_district_', '');
     ctx.filters.district = district === 'all' ? undefined : district;
+    invalidateSearch(ctx);
+
     const count = await countPropertiesWithFilters(ctx.filters);
     await editTelegramMessage(chatId, messageId, `
 🔍 <b>Поиск квартиры</b>
@@ -642,6 +650,8 @@ ${getFilterSummary(ctx.filters)}
   if (data.startsWith('set_bed_')) {
     const bed = data.replace('set_bed_', '');
     ctx.filters.bedrooms = bed === 'all' ? undefined : parseInt(bed);
+    invalidateSearch(ctx);
+
     const count = await countPropertiesWithFilters(ctx.filters);
     await editTelegramMessage(chatId, messageId, `
 🔍 <b>Поиск квартиры</b>
@@ -676,6 +686,8 @@ ${getFilterSummary(ctx.filters)}
   if (data.startsWith('set_price_')) {
     const price = data.replace('set_price_', '');
     ctx.filters.price_range = price === 'all' ? undefined : price as 'low' | 'mid' | 'high';
+    invalidateSearch(ctx);
+
     const count = await countPropertiesWithFilters(ctx.filters);
     await editTelegramMessage(chatId, messageId, `
 🔍 <b>Поиск квартиры</b>
@@ -709,6 +721,8 @@ ${getFilterSummary(ctx.filters)}
   if (data.startsWith('set_pets_')) {
     const pets = data.replace('set_pets_', '');
     ctx.filters.pets_allowed = pets === 'all' ? undefined : pets === 'yes';
+    invalidateSearch(ctx);
+
     const count = await countPropertiesWithFilters(ctx.filters);
     await editTelegramMessage(chatId, messageId, `
 🔍 <b>Поиск квартиры</b>
@@ -742,6 +756,8 @@ ${getFilterSummary(ctx.filters)}
   if (data.startsWith('set_period_')) {
     const period = data.replace('set_period_', '');
     ctx.filters.rental_period = period === 'all' ? undefined : period === 'short' ? 'short-term' : 'long-term';
+    invalidateSearch(ctx);
+
     const count = await countPropertiesWithFilters(ctx.filters);
     await editTelegramMessage(chatId, messageId, `
 🔍 <b>Поиск квартиры</b>
@@ -756,6 +772,8 @@ ${getFilterSummary(ctx.filters)}
   
   if (data === 'filter_reset') {
     ctx.filters = {};
+    invalidateSearch(ctx);
+
     const count = await countPropertiesWithFilters(ctx.filters);
     await editTelegramMessage(chatId, messageId, `
 🔍 <b>Поиск квартиры</b>
