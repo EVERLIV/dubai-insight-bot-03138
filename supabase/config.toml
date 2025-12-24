@@ -38,3 +38,15 @@ verify_jwt = false
 
 [functions.publish-to-channel]
 verify_jwt = false
+
+[functions.bot-dubai-eng]
+verify_jwt = false
+
+[functions.dubai-bot]
+verify_jwt = false
+
+[functions.telegram-bot]
+verify_jwt = false
+
+[functions.telegram-webhook-status]
+verify_jwt = false
