@@ -8,7 +8,7 @@ const corsHeaders = {
 const TELEGRAM_BOT_TOKEN = Deno.env.get('VIETNAM_BOT_TOKEN');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 
 const GROUP_CHAT_ID = -1003589064021;
 const MONITORED_CHANNELS: number[] = [-1003589064021];
@@ -882,19 +882,19 @@ function isPropertyListing(text: string): boolean {
   return indicators.filter(r => r.test(text)).length >= 2 && text.length > 50;
 }
 
-// Parse listing with AI
+// Parse listing with AI (OpenAI)
 async function parsePropertyListing(text: string): Promise<any | null> {
-  if (!LOVABLE_API_KEY) return null;
+  if (!OPENAI_API_KEY) return null;
 
   try {
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: `Parse Vietnamese property listings. Extract: title, price (VND number), location_area, district (e.g. "District 1"), property_type, bedrooms, bathrooms, area_sqft, agent_phone, pets_allowed (boolean if mentioned), rental_period ("short-term" or "long-term" if mentioned). Return JSON.` },
           { role: 'user', content: text }

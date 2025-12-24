@@ -3,7 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const TELEGRAM_BOT_TOKEN = Deno.env.get('TELEGRAM_BOT_TOKEN_ENG');
-const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
+const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -577,7 +577,7 @@ async function getDistrictAnalysis(district: string): Promise<string> {
 
 async function generatePropertyAnalysis(property: Property): Promise<string> {
   try {
-    if (!DEEPSEEK_API_KEY) {
+    if (!OPENAI_API_KEY) {
       return generateFallbackAnalysis(property);
     }
 
@@ -596,17 +596,16 @@ async function generatePropertyAnalysis(property: Property): Promise<string> {
     
     Keep response under 150 words, professional tone.`;
 
-    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'deepseek-chat',
+        model: 'gpt-4o-mini',
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 200,
-        temperature: 0.3
+        max_tokens: 200
       })
     });
 

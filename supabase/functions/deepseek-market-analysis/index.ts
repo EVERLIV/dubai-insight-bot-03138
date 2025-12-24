@@ -1,3 +1,4 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -5,6 +6,8 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 
 interface DeepSeekRequest {
   type: 'market_analysis' | 'district_info' | 'price_trends' | 'investment_forecast';
@@ -76,7 +79,6 @@ serve(async (req) => {
         analysis = await generatePriceTrends(region, timeframe);
         break;
       case 'investment_forecast':
-        // If propertyData is provided, generate property-specific analysis
         if (propertyData) {
           analysis = await generatePropertySpecificAnalysis(propertyData);
         } else {
@@ -87,7 +89,6 @@ serve(async (req) => {
         analysis = await generateMarketAnalysis(region);
     }
 
-    // Store analysis in database
     await supabaseClient
       .from('market_analysis')
       .upsert({
@@ -108,7 +109,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error("Error in deepseek-market-analysis:", error);
+    console.error("Error in market-analysis:", error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
       JSON.stringify({ error: errorMessage }),
@@ -124,10 +125,9 @@ serve(async (req) => {
 });
 
 async function generateMarketAnalysis(region: string): Promise<MarketAnalysis> {
-  const deepSeekApiKey = Deno.env.get("DEEPSEEK_API_KEY");
-  
-  if (!deepSeekApiKey) {
-    throw new Error("DEEPSEEK_API_KEY not configured");
+  if (!OPENAI_API_KEY) {
+    console.log("OPENAI_API_KEY not configured, using fallback");
+    return generateFallbackAnalysis(region);
   }
 
   const prompt = `
@@ -177,48 +177,56 @@ async function generateMarketAnalysis(region: string): Promise<MarketAnalysis> {
     }
   `;
 
-  const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${deepSeekApiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'deepseek-chat',
-      messages: [
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.3,
-      max_tokens: 2000
-    })
-  });
-
-  if (!response.ok) {
-    throw new Error(`DeepSeek API error: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  const content = data.choices[0].message.content;
-  
   try {
-    const analysisData = JSON.parse(content);
-    return {
-      ...analysisData,
-      lastUpdate: new Date().toISOString()
-    };
-  } catch (parseError) {
-    // Fallback to structured data if JSON parsing fails
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: 'Ты аналитик рынка недвижимости. Отвечай только валидным JSON.' },
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: 2000
+      })
+    });
+
+    if (!response.ok) {
+      console.error(`OpenAI API error: ${response.statusText}`);
+      return generateFallbackAnalysis(region);
+    }
+
+    const data = await response.json();
+    const content = data.choices[0].message.content;
+    
+    try {
+      // Extract JSON from potential markdown code blocks
+      let jsonStr = content;
+      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch) {
+        jsonStr = jsonMatch[1].trim();
+      }
+      
+      const analysisData = JSON.parse(jsonStr);
+      return {
+        ...analysisData,
+        lastUpdate: new Date().toISOString()
+      };
+    } catch (parseError) {
+      console.error("JSON parse error:", parseError);
+      return generateFallbackAnalysis(region);
+    }
+  } catch (error) {
+    console.error("OpenAI API call error:", error);
     return generateFallbackAnalysis(region);
   }
 }
 
 async function generateDistrictAnalysis(region: string, district?: string): Promise<MarketAnalysis> {
-  const deepSeekApiKey = Deno.env.get("DEEPSEEK_API_KEY");
-  
-  if (!deepSeekApiKey) {
+  if (!OPENAI_API_KEY) {
     return generateFallbackAnalysis(region);
   }
 
@@ -237,27 +245,37 @@ async function generateDistrictAnalysis(region: string, district?: string): Prom
   `;
 
   try {
-    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${deepSeekApiKey}`,
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.3,
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: 'Ты аналитик рынка недвижимости. Отвечай только валидным JSON.' },
+          { role: 'user', content: prompt }
+        ],
         max_tokens: 2000
       })
     });
 
     if (response.ok) {
       const data = await response.json();
-      const analysisData = JSON.parse(data.choices[0].message.content);
+      const content = data.choices[0].message.content;
+      
+      let jsonStr = content;
+      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch) {
+        jsonStr = jsonMatch[1].trim();
+      }
+      
+      const analysisData = JSON.parse(jsonStr);
       return { ...analysisData, lastUpdate: new Date().toISOString() };
     }
   } catch (error) {
-    console.error('Error calling DeepSeek API:', error);
+    console.error('Error calling OpenAI API:', error);
   }
 
   return generateFallbackAnalysis(region);
@@ -272,9 +290,7 @@ async function generateInvestmentForecast(region: string, timeframe: string): Pr
 }
 
 async function generatePropertySpecificAnalysis(propertyData: any): Promise<MarketAnalysis> {
-  const deepSeekApiKey = Deno.env.get("DEEPSEEK_API_KEY");
-  
-  if (!deepSeekApiKey) {
+  if (!OPENAI_API_KEY) {
     return generatePropertyFallbackAnalysis(propertyData);
   }
 
@@ -306,55 +322,42 @@ async function generatePropertySpecificAnalysis(propertyData: any): Promise<Mark
     
     Дай конкретные рекомендации для ЭТОГО объекта: стоит ли инвестировать, какие риски, какие возможности.
     
-    Ответ дай в формате JSON со структурой:
-    {
-      "summary": "краткое описание анализа ЭТОГО конкретного объекта",
-      "keyMetrics": {
-        "avgPricePerSqm": средняя_цена_в_районе,
-        "priceGrowth": прогноз_роста_для_этого_объекта,
-        "transactionVolume": объем_транзакций_в_районе,
-        "roi": ожидаемый_roi_для_этого_объекта,
-        "timeOnMarket": среднее_время_продажи_в_районе
-      },
-      "districts": [массив_топ_5_районов_для_сравнения],
-      "forecast": {
-        "priceGrowthForecast": прогноз_для_этого_объекта,
-        "marketActivity": активность_в_районе,
-        "roi": roi_для_этого_объекта,
-        "recommendation": "конкретная рекомендация по ЭТОМУ объекту"
-      }
-    }
+    Ответ дай в формате JSON.
   `;
 
   try {
-    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${deepSeekApiKey}`,
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'deepseek-chat',
+        model: 'gpt-4o-mini',
         messages: [
-          {
-            role: 'user',
-            content: prompt
-          }
+          { role: 'system', content: 'Ты аналитик рынка недвижимости. Отвечай только валидным JSON.' },
+          { role: 'user', content: prompt }
         ],
-        temperature: 0.4,
         max_tokens: 2500
       })
     });
 
     if (!response.ok) {
-      throw new Error(`DeepSeek API error: ${response.statusText}`);
+      console.error(`OpenAI API error: ${response.statusText}`);
+      return generatePropertyFallbackAnalysis(propertyData);
     }
 
     const data = await response.json();
     const content = data.choices[0].message.content;
     
     try {
-      const analysisData = JSON.parse(content);
+      let jsonStr = content;
+      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch) {
+        jsonStr = jsonMatch[1].trim();
+      }
+      
+      const analysisData = JSON.parse(jsonStr);
       return {
         ...analysisData,
         lastUpdate: new Date().toISOString()
@@ -372,68 +375,36 @@ function generatePropertyFallbackAnalysis(propertyData: any): MarketAnalysis {
   const pricePerSqft = propertyData.area_sqft ? propertyData.price / propertyData.area_sqft : 0;
   const location = propertyData.location_area || 'Dubai';
   
-  // Generate property-specific metrics based on actual property data
   const marketAvgPrice = pricePerSqft > 0 ? pricePerSqft * 1.1 : 1500;
   const pricePosition = pricePerSqft > marketAvgPrice ? -5 : 8;
   
   return {
     summary: `Анализ объекта в ${location}: ${propertyData.property_type || 'недвижимость'} площадью ${propertyData.area_sqft || 'N/A'} кв.футов по цене ${propertyData.price.toLocaleString()} AED. ${pricePerSqft > marketAvgPrice ? 'Цена выше средней по рынку' : 'Цена конкурентоспособна'}. Объект имеет ${propertyData.bedrooms || 'Studio'} спален в районе ${location}.`,
     keyMetrics: {
-      avgPricePerSqm: marketAvgPrice * 10.764, // Convert to sqm
+      avgPricePerSqm: marketAvgPrice * 10.764,
       priceGrowth: pricePosition + Math.random() * 3,
       transactionVolume: 8500 + Math.random() * 2000,
       roi: propertyData.purpose === 'for-rent' ? 6.5 + Math.random() * 2 : 12 + Math.random() * 3,
       timeOnMarket: propertyData.housing_status === 'primary' ? 30 + Math.random() * 15 : 40 + Math.random() * 20
     },
     districts: [
-      {
-        name: location,
-        growth: pricePosition + 2,
-        avgPrice: marketAvgPrice * 10.764,
-        rentYield: 6.8 + Math.random() * 1,
-        transactions: 120 + Math.random() * 30
-      },
-      {
-        name: "Downtown Dubai",
-        growth: 18.5 + Math.random() * 2,
-        avgPrice: 18500 + Math.random() * 1000,
-        rentYield: 7.2 + Math.random() * 0.5,
-        transactions: 156 + Math.random() * 20
-      },
-      {
-        name: "Dubai Marina",
-        growth: 12.3 + Math.random() * 2,
-        avgPrice: 14200 + Math.random() * 800,
-        rentYield: 6.8 + Math.random() * 0.5,
-        transactions: 143 + Math.random() * 15
-      },
-      {
-        name: "Business Bay",
-        growth: 9.8 + Math.random() * 2,
-        avgPrice: 12900 + Math.random() * 700,
-        rentYield: 8.1 + Math.random() * 0.4,
-        transactions: 198 + Math.random() * 25
-      },
-      {
-        name: "Palm Jumeirah",
-        growth: 22.1 + Math.random() * 3,
-        avgPrice: 25800 + Math.random() * 1500,
-        rentYield: 6.5 + Math.random() * 0.3,
-        transactions: 89 + Math.random() * 10
-      }
+      { name: location, growth: pricePosition + 2, avgPrice: marketAvgPrice * 10.764, rentYield: 6.8 + Math.random() * 1, transactions: 120 + Math.random() * 30 },
+      { name: "Downtown Dubai", growth: 18.5 + Math.random() * 2, avgPrice: 18500 + Math.random() * 1000, rentYield: 7.2 + Math.random() * 0.5, transactions: 156 + Math.random() * 20 },
+      { name: "Dubai Marina", growth: 12.3 + Math.random() * 2, avgPrice: 14200 + Math.random() * 800, rentYield: 6.8 + Math.random() * 0.5, transactions: 143 + Math.random() * 15 },
+      { name: "Business Bay", growth: 9.8 + Math.random() * 2, avgPrice: 12900 + Math.random() * 700, rentYield: 8.1 + Math.random() * 0.4, transactions: 198 + Math.random() * 25 },
+      { name: "Palm Jumeirah", growth: 22.1 + Math.random() * 3, avgPrice: 25800 + Math.random() * 1500, rentYield: 6.5 + Math.random() * 0.3, transactions: 89 + Math.random() * 10 }
     ],
     forecast: {
       priceGrowthForecast: pricePosition + 8 + Math.random() * 4,
       marketActivity: "высокая",
       roi: propertyData.purpose === 'for-rent' ? 7 + Math.random() * 2 : 14 + Math.random() * 3,
-      recommendation: `Для объекта в ${location}: ${pricePerSqft > marketAvgPrice ? 'Цена выше рыночной, рекомендуется торговаться. ' : 'Хорошее предложение по цене. '}${propertyData.housing_status === 'primary' ? 'Новостройка с потенциалом роста стоимости.' : 'Готовая недвижимость, можно сразу получать доход.'} Рекомендуется ${propertyData.purpose === 'for-rent' ? 'для получения арендного дохода' : 'как инвестиция с перспективой роста'}.`
+      recommendation: `Для объекта в ${location}: ${pricePerSqft > marketAvgPrice ? 'Цена выше рыночной, рекомендуется торговаться. ' : 'Хорошее предложение по цене. '}${propertyData.housing_status === 'primary' ? 'Новостройка с потенциалом роста стоимости.' : 'Готовая недвижимость, можно сразу получать доход.'}`
     },
     lastUpdate: new Date().toISOString()
   };
 }
 
 function generateFallbackAnalysis(region: string): MarketAnalysis {
-  // Realistic fallback data based on Dubai market trends
   return {
     summary: `Рынок недвижимости ${region} показывает стабильный рост с высокой инвестиционной привлекательностью. Цены продолжают расти на фоне притока международных инвесторов и развития инфраструктуры.`,
     keyMetrics: {
@@ -444,47 +415,17 @@ function generateFallbackAnalysis(region: string): MarketAnalysis {
       timeOnMarket: 45 - Math.random() * 10
     },
     districts: [
-      {
-        name: "Downtown Dubai",
-        growth: 18.5 + Math.random() * 2,
-        avgPrice: 18500 + Math.random() * 1000,
-        rentYield: 7.2 + Math.random() * 0.5,
-        transactions: 156 + Math.random() * 20
-      },
-      {
-        name: "Dubai Marina",
-        growth: 12.3 + Math.random() * 2,
-        avgPrice: 14200 + Math.random() * 800,
-        rentYield: 6.8 + Math.random() * 0.5,
-        transactions: 143 + Math.random() * 15
-      },
-      {
-        name: "Palm Jumeirah", 
-        growth: 22.1 + Math.random() * 3,
-        avgPrice: 25800 + Math.random() * 1500,
-        rentYield: 6.5 + Math.random() * 0.3,
-        transactions: 89 + Math.random() * 10
-      },
-      {
-        name: "Business Bay",
-        growth: 9.8 + Math.random() * 2,
-        avgPrice: 12900 + Math.random() * 700,
-        rentYield: 8.1 + Math.random() * 0.4,
-        transactions: 198 + Math.random() * 25
-      },
-      {
-        name: "Dubai Hills Estate",
-        growth: 15.2 + Math.random() * 2,
-        avgPrice: 13500 + Math.random() * 800,
-        rentYield: 7.8 + Math.random() * 0.3,
-        transactions: 167 + Math.random() * 20
-      }
+      { name: "Downtown Dubai", growth: 18.5 + Math.random() * 2, avgPrice: 18500 + Math.random() * 1000, rentYield: 7.2 + Math.random() * 0.5, transactions: 156 + Math.random() * 20 },
+      { name: "Dubai Marina", growth: 12.3 + Math.random() * 2, avgPrice: 14200 + Math.random() * 800, rentYield: 6.8 + Math.random() * 0.5, transactions: 143 + Math.random() * 15 },
+      { name: "Palm Jumeirah", growth: 22.1 + Math.random() * 3, avgPrice: 25800 + Math.random() * 1500, rentYield: 6.5 + Math.random() * 0.3, transactions: 89 + Math.random() * 10 },
+      { name: "Business Bay", growth: 9.8 + Math.random() * 2, avgPrice: 12900 + Math.random() * 700, rentYield: 8.1 + Math.random() * 0.4, transactions: 198 + Math.random() * 25 },
+      { name: "Dubai Hills Estate", growth: 15.2 + Math.random() * 2, avgPrice: 13500 + Math.random() * 600, rentYield: 7.5 + Math.random() * 0.4, transactions: 178 + Math.random() * 20 }
     ],
     forecast: {
-      priceGrowthForecast: 12 + Math.random() * 3,
+      priceGrowthForecast: 12.5 + Math.random() * 4,
       marketActivity: "высокая",
-      roi: 16 + Math.random() * 2,
-      recommendation: "Оптимальное время для инвестиций в элитную недвижимость Downtown Dubai и Palm Jumeirah. Рекомендуется рассмотреть объекты в Business Bay для получения высокой доходности от аренды."
+      roi: 15.5 + Math.random() * 3,
+      recommendation: `Оптимальное время для инвестиций в элитную недвижимость Downtown Dubai и Palm Jumeirah. Рекомендуется рассмотреть объекты в Business Bay для получения высокой доходности от аренды.`
     },
     lastUpdate: new Date().toISOString()
   };
