@@ -2,7 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
 
-const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
+const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -37,7 +37,6 @@ async function fetchRealEstateNews(): Promise<{ success: boolean; articles?: New
   const newsArticles: NewsArticle[] = [];
   
   try {
-    // Search for Dubai real estate news
     const searchQueries = [
       'Dubai real estate market 2025',
       'Dubai property prices trend',
@@ -47,7 +46,6 @@ async function fetchRealEstateNews(): Promise<{ success: boolean; articles?: New
 
     for (const query of searchQueries) {
       try {
-        // Simulate news fetching (in real implementation, you'd use news APIs like NewsAPI, Google News, etc.)
         const mockNews = await generateMockRealEstateNews(query);
         newsArticles.push(...mockNews);
       } catch (error) {
@@ -102,7 +100,7 @@ async function generateMockRealEstateNews(query: string): Promise<NewsArticle[]>
 
 // Analyze news impact on real estate market using AI
 async function analyzeMarketImpact(articles: NewsArticle[]): Promise<MarketAnalysis> {
-  if (!DEEPSEEK_API_KEY || articles.length === 0) {
+  if (!OPENAI_API_KEY || articles.length === 0) {
     return {
       sentiment: 'neutral',
       impact_factors: ['Limited data available'],
@@ -133,31 +131,22 @@ async function analyzeMarketImpact(articles: NewsArticle[]): Promise<MarketAnaly
       "key_events": ["event1", "event2", ...]
     }
 
-    Focus on factors that directly impact Dubai real estate prices in 2025 such as:
-    - Government policies and regulations for 2025
-    - Infrastructure developments planned/completed in 2025
-    - Economic indicators for current year 2025
-    - International investment trends in 2025
-    - Supply and demand dynamics in 2025
-    - Interest rates and financing conditions in 2025
-
-    Ensure all analysis reflects current 2025 market conditions and trends.
+    Focus on factors that directly impact Dubai real estate prices in 2025.
     `;
 
-    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'deepseek-chat',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: 'You are a Dubai real estate market analyst. Respond only with valid JSON.' },
           { role: 'user', content: prompt }
         ],
-        max_tokens: 1000,
-        temperature: 0.3
+        max_tokens: 1000
       })
     });
 
@@ -165,7 +154,14 @@ async function analyzeMarketImpact(articles: NewsArticle[]): Promise<MarketAnaly
     const analysisText = data.choices[0].message.content;
     
     try {
-      const analysis = JSON.parse(analysisText);
+      // Extract JSON from potential markdown code blocks
+      let jsonStr = analysisText;
+      const jsonMatch = analysisText.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch) {
+        jsonStr = jsonMatch[1].trim();
+      }
+      
+      const analysis = JSON.parse(jsonStr);
       return analysis;
     } catch (parseError) {
       console.error('Failed to parse AI analysis:', parseError);
@@ -230,7 +226,6 @@ serve(async (req) => {
     console.log('News analytics request:', { action });
     
     if (action === 'analyze_market') {
-      // Fetch latest real estate news
       const newsResult = await fetchRealEstateNews();
       
       if (!newsResult.success || !newsResult.articles) {
@@ -243,10 +238,7 @@ serve(async (req) => {
         });
       }
 
-      // Analyze market impact
       const marketAnalysis = await analyzeMarketImpact(newsResult.articles);
-      
-      // Save analysis to database
       await saveMarketAnalysis(marketAnalysis, newsResult.articles);
       
       const response = {
@@ -256,7 +248,7 @@ serve(async (req) => {
         analysis_timestamp: new Date().toISOString()
       };
 
-      console.log('Market analysis completed:', response);
+      console.log('Market analysis completed');
       
       return new Response(JSON.stringify(response), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

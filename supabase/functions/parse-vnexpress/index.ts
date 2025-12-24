@@ -8,7 +8,7 @@ const corsHeaders = {
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
 const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
 
 interface NewsItem {
@@ -240,9 +240,9 @@ function extractArticleImages(html: string): string[] {
   return [...new Set(images)].slice(0, 5);
 }
 
-// Translate text using Lovable AI
+// Translate text using OpenAI
 async function translateToRussian(text: string, type: 'title' | 'content' | 'full'): Promise<string> {
-  if (!lovableApiKey || !text) return text;
+  if (!openaiApiKey || !text) return text;
 
   const systemPrompts: Record<string, string> = {
     title: 'Ты профессиональный переводчик и редактор новостей. Переводи заголовки с вьетнамского на русский — делай их цепляющими и интригующими, но точно передавай суть. Отвечай только переводом.',
@@ -251,14 +251,14 @@ async function translateToRussian(text: string, type: 'title' | 'content' | 'ful
   };
 
   try {
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
+        'Authorization': `Bearer ${openaiApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompts[type] || systemPrompts.content },
           { role: 'user', content: `Переведи на русский:\n\n${text.slice(0, type === 'full' ? 8000 : 2000)}` }
