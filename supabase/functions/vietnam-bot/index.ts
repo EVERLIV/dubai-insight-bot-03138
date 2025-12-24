@@ -808,20 +808,47 @@ ${getFilterSummary(ctx.filters)}
 
   // ===== NAVIGATION =====
   
-  if (data === 'view_next' && ctx.searchResults) {
+  if (data === 'view_next') {
+    if (!ctx.searchResults || ctx.searchResults.length === 0) {
+      // Reload search results if lost
+      const results = await searchPropertiesWithFilters(ctx.filters);
+      if (results.length === 0) {
+        await sendTelegramMessage(chatId, '❌ Результаты поиска устарели. Начните поиск заново.', {
+          reply_markup: { inline_keyboard: [[{ text: '🔍 Новый поиск', callback_data: 'search_start' }], [{ text: '🏠 Меню', callback_data: 'back_main' }]] }
+        });
+        return;
+      }
+      ctx.searchResults = results;
+      ctx.totalCount = results.length;
+      ctx.currentIndex = 0;
+    }
+    
     const nextIndex = (ctx.currentIndex || 0) + 1;
     if (nextIndex < ctx.searchResults.length) {
       ctx.currentIndex = nextIndex;
       await displayPropertyWithPhotos(chatId, ctx.searchResults[nextIndex], ctx, messageId);
+    } else {
+      await sendTelegramMessage(chatId, '✅ Это последний вариант в списке', {
+        reply_markup: { inline_keyboard: [[{ text: '🔧 Фильтры', callback_data: 'filter_menu' }], [{ text: '🏠 Меню', callback_data: 'back_main' }]] }
+      });
     }
     return;
   }
 
-  if (data === 'view_prev' && ctx.searchResults) {
+  if (data === 'view_prev') {
+    if (!ctx.searchResults || ctx.searchResults.length === 0) {
+      await sendTelegramMessage(chatId, '❌ Результаты поиска устарели. Начните поиск заново.', {
+        reply_markup: { inline_keyboard: [[{ text: '🔍 Новый поиск', callback_data: 'search_start' }], [{ text: '🏠 Меню', callback_data: 'back_main' }]] }
+      });
+      return;
+    }
+    
     const prevIndex = (ctx.currentIndex || 0) - 1;
     if (prevIndex >= 0) {
       ctx.currentIndex = prevIndex;
       await displayPropertyWithPhotos(chatId, ctx.searchResults[prevIndex], ctx, messageId);
+    } else {
+      await sendTelegramMessage(chatId, '✅ Это первый вариант в списке');
     }
     return;
   }
