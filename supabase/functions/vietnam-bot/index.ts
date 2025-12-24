@@ -70,7 +70,7 @@ const DISTRICT_TRANSLATIONS: Record<string, string[]> = {
 // Convert any district name to Russian
 function toRussianDistrict(name: string | null | undefined): string {
   if (!name) return 'HCMC';
-  
+
   // Check if already Russian
   for (const [russian, variants] of Object.entries(DISTRICT_TRANSLATIONS)) {
     if (name === russian) return russian;
@@ -80,12 +80,22 @@ function toRussianDistrict(name: string | null | undefined): string {
       }
     }
   }
-  
+
   // Check for Quận/District X pattern
   const match = name.match(/(?:Qu[aậ]n|District|Q|D)\s*(\d+)/i);
   if (match) return `Район ${match[1]}`;
-  
+
   return name;
+}
+
+function buildDistrictOrConditions(district: string) {
+  // Include the Russian name itself + all known variants; filter will match DB values like "District 9" / "Quận 9".
+  const variants = [district, ...(DISTRICT_TRANSLATIONS[district] || [])]
+    .map(v => v?.trim())
+    .filter(Boolean);
+
+  // PostgREST OR syntax: "col.ilike.%value%" separated by commas
+  return variants.map(v => `district.ilike.%${v}%`).join(',');
 }
 
 interface TelegramUpdate {
@@ -240,10 +250,7 @@ async function countPropertiesWithFilters(filters: UserContext['filters']): Prom
     .eq('purpose', 'for-rent');
 
   if (filters.district) {
-    // Include the Russian name itself + all variants
-    const variants = [filters.district, ...(DISTRICT_TRANSLATIONS[filters.district] || [])];
-    const orConditions = variants.map(v => `district.ilike.%${v}%`).join(',');
-    query = query.or(orConditions);
+    query = query.or(buildDistrictOrConditions(filters.district));
   }
   if (filters.bedrooms) query = query.eq('bedrooms', filters.bedrooms);
   if (filters.pets_allowed !== undefined) query = query.eq('pets_allowed', filters.pets_allowed);
@@ -268,10 +275,7 @@ async function searchPropertiesWithFilters(filters: UserContext['filters'], limi
     .limit(limit);
 
   if (filters.district) {
-    // Include the Russian name itself + all variants
-    const variants = [filters.district, ...(DISTRICT_TRANSLATIONS[filters.district] || [])];
-    const orConditions = variants.map(v => `district.ilike.%${v}%`).join(',');
-    query = query.or(orConditions);
+    query = query.or(buildDistrictOrConditions(filters.district));
   }
   if (filters.bedrooms) query = query.eq('bedrooms', filters.bedrooms);
   if (filters.pets_allowed !== undefined) query = query.eq('pets_allowed', filters.pets_allowed);
@@ -292,15 +296,13 @@ async function searchPropertiesWithFilters(filters: UserContext['filters'], limi
 
 // Get average price for district
 async function getDistrictAvgPrice(district: string, bedrooms?: number): Promise<number | null> {
-  const variants = [district, ...(DISTRICT_TRANSLATIONS[district] || [])];
-  const orConditions = variants.map(v => `district.ilike.%${v}%`).join(',');
-
   let query = supabase
     .from('property_listings')
     .select('price')
     .eq('purpose', 'for-rent')
-    .not('price', 'is', null)
-    .or(orConditions);
+    .not('price', 'is', null);
+
+  query = query.or(buildDistrictOrConditions(district));
 
   if (bedrooms) query = query.eq('bedrooms', bedrooms);
 
@@ -494,19 +496,23 @@ ${priceInsight}
     // Send media group (up to 6 photos)
     const photoImages = images.slice(0, 6);
     const result = await sendTelegramMediaGroup(chatId, photoImages, caption);
-    
+
     if (result?.ok) {
-      // Send navigation buttons as separate message
+      // Send navigation buttons as separate message (always)
       await sendTelegramMessage(chatId, '👆 Выберите действие:', { reply_markup: keyboard });
     } else {
-      // Fallback to single photo
-      await sendTelegramPhoto(chatId, images[0], caption, { reply_markup: keyboard });
+      // Fallback to single photo without buttons, then buttons separately
+      await sendTelegramPhoto(chatId, images[0], caption);
+      await sendTelegramMessage(chatId, '👆 Выберите действие:', { reply_markup: keyboard });
     }
   } else if (images.length === 1) {
-    await sendTelegramPhoto(chatId, images[0], caption, { reply_markup: keyboard });
+    // Always keep buttons on a text message (so we can edit it reliably)
+    await sendTelegramPhoto(chatId, images[0], caption);
+    await sendTelegramMessage(chatId, '👆 Выберите действие:', { reply_markup: keyboard });
   } else {
-    // No photos - send text
-    await sendTelegramMessage(chatId, caption + '\n\n📷 Фото не загружены', { reply_markup: keyboard });
+    // No photos
+    await sendTelegramMessage(chatId, caption + '\n\n📷 Фото не загружены');
+    await sendTelegramMessage(chatId, '👆 Выберите действие:', { reply_markup: keyboard });
   }
 }
 
