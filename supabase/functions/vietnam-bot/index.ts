@@ -234,7 +234,8 @@ async function countPropertiesWithFilters(filters: UserContext['filters']): Prom
     .eq('purpose', 'for-rent');
 
   if (filters.district) {
-    const variants = DISTRICT_TRANSLATIONS[filters.district] || [filters.district];
+    // Include the Russian name itself + all variants
+    const variants = [filters.district, ...(DISTRICT_TRANSLATIONS[filters.district] || [])];
     const orConditions = variants.map(v => `district.ilike.%${v}%`).join(',');
     query = query.or(orConditions);
   }
@@ -261,7 +262,8 @@ async function searchPropertiesWithFilters(filters: UserContext['filters'], limi
     .limit(limit);
 
   if (filters.district) {
-    const variants = DISTRICT_TRANSLATIONS[filters.district] || [filters.district];
+    // Include the Russian name itself + all variants
+    const variants = [filters.district, ...(DISTRICT_TRANSLATIONS[filters.district] || [])];
     const orConditions = variants.map(v => `district.ilike.%${v}%`).join(',');
     query = query.or(orConditions);
   }
@@ -284,7 +286,7 @@ async function searchPropertiesWithFilters(filters: UserContext['filters'], limi
 
 // Get average price for district
 async function getDistrictAvgPrice(district: string, bedrooms?: number): Promise<number | null> {
-  const variants = DISTRICT_TRANSLATIONS[district] || [district];
+  const variants = [district, ...(DISTRICT_TRANSLATIONS[district] || [])];
   const orConditions = variants.map(v => `district.ilike.%${v}%`).join(',');
 
   let query = supabase
