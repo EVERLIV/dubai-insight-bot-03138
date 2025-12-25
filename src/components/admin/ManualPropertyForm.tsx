@@ -104,7 +104,7 @@ export const ManualPropertyForm = () => {
           title: formData.title,
           price: formData.price ? parseFloat(formData.price) : null,
           district: formData.district || null,
-          location_area: formData.location_area || null,
+          location_area: null, // Not used - district field is sufficient
           property_type: formData.property_type,
           purpose: 'for-rent',
           bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
@@ -184,15 +184,7 @@ export const ManualPropertyForm = () => {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="location">Address/Details</Label>
-              <Input
-                id="location"
-                placeholder="e.g., Thao Dien, near park"
-                value={formData.location_area}
-                onChange={(e) => handleChange('location_area', e.target.value)}
-              />
-            </div>
+            {/* Address field removed - district is sufficient */}
 
             <div className="space-y-2">
               <Label htmlFor="price">Price (VND/month)</Label>
