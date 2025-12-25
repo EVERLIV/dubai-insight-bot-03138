@@ -24,22 +24,96 @@ interface UserContext {
     bedrooms?: number;
     price_range?: 'low' | 'mid' | 'high';
   };
+  // Cached results for current runtime (can be empty on cold starts)
   searchResults?: any[];
+  // Persisted, stable ordering for navigation
+  searchResultIds?: number[];
   currentIndex?: number;
   totalCount?: number;
 }
 
+type PersistedPreferences = {
+  filters?: UserContext['filters'];
+  searchResultIds?: number[] | null;
+  currentIndex?: number | null;
+  totalCount?: number | null;
+  updatedAt?: string;
+};
+
 const userContexts: Map<number, UserContext> = new Map();
 
-function getOrCreateContext(userId: number): UserContext {
-  if (!userContexts.has(userId)) {
-    userContexts.set(userId, { filters: {} });
+async function loadUserContext(userId: number): Promise<UserContext> {
+  const base: UserContext = { filters: {} };
+
+  try {
+    const { data, error } = await supabase
+      .from('user_preferences')
+      .select('id, preferences')
+      .eq('telegram_user_id', userId)
+      .maybeSingle();
+
+    if (error || !data?.preferences) return base;
+
+    const prefs = data.preferences as PersistedPreferences;
+
+    const filters = (prefs.filters || {}) as UserContext['filters'];
+    // Keep UI consistent: show district in Russian even if stored as "District X"
+    if (filters.district) filters.district = toRussianDistrict(filters.district);
+
+    return {
+      filters,
+      searchResultIds: Array.isArray(prefs.searchResultIds) ? prefs.searchResultIds : undefined,
+      currentIndex: typeof prefs.currentIndex === 'number' ? prefs.currentIndex : undefined,
+      totalCount: typeof prefs.totalCount === 'number' ? prefs.totalCount : undefined,
+    };
+  } catch (e) {
+    console.error('Failed to load user context:', e);
+    return base;
   }
-  return userContexts.get(userId)!;
+}
+
+async function saveUserContext(userId: number, ctx: UserContext): Promise<void> {
+  try {
+    const preferences: PersistedPreferences = {
+      filters: ctx.filters,
+      searchResultIds: ctx.searchResultIds || null,
+      currentIndex: typeof ctx.currentIndex === 'number' ? ctx.currentIndex : null,
+      totalCount: typeof ctx.totalCount === 'number' ? ctx.totalCount : null,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const { data: updated, error: updateError } = await supabase
+      .from('user_preferences')
+      .update({ preferences, updated_at: new Date().toISOString() })
+      .eq('telegram_user_id', userId)
+      .select('id');
+
+    if (updateError) throw updateError;
+
+    if (!updated || updated.length === 0) {
+      const { error: insertError } = await supabase.from('user_preferences').insert({
+        telegram_user_id: userId,
+        preferences,
+      });
+      if (insertError) throw insertError;
+    }
+  } catch (e) {
+    console.error('Failed to save user context:', e);
+  }
+}
+
+async function getOrCreateContext(userId: number): Promise<UserContext> {
+  const existing = userContexts.get(userId);
+  if (existing) return existing;
+
+  const loaded = await loadUserContext(userId);
+  userContexts.set(userId, loaded);
+  return loaded;
 }
 
 function invalidateSearch(ctx: UserContext) {
   ctx.searchResults = undefined;
+  ctx.searchResultIds = undefined;
   ctx.currentIndex = undefined;
   ctx.totalCount = undefined;
 }
@@ -519,11 +593,11 @@ ${priceInsight}
 // ============= HANDLER FUNCTIONS =============
 
 async function handleStart(chatId: number, userName: string) {
-  const ctx = getOrCreateContext(chatId);
+  const ctx = await getOrCreateContext(chatId);
   ctx.filters = {};
-  ctx.searchResults = undefined;
-  ctx.currentIndex = undefined;
-  
+  invalidateSearch(ctx);
+  await saveUserContext(chatId, ctx);
+
   await sendTelegramMessage(chatId, `
 🏠 <b>RentHCM — Аренда квартир в Хошимине</b>
 
@@ -547,8 +621,9 @@ async function handleCallback(callbackQuery: any) {
   const userId = callbackQuery.from.id;
 
   await answerCallbackQuery(callbackQuery.id);
-  
-  const ctx = getOrCreateContext(userId);
+
+  const ctx = await getOrCreateContext(userId);
+  const persist = () => saveUserContext(userId, ctx);
 
   // ===== MAIN NAVIGATION =====
   
@@ -615,6 +690,7 @@ ${getFilterSummary(ctx.filters)}
     const district = data.replace('set_district_', '');
     ctx.filters.district = district === 'all' ? undefined : district;
     invalidateSearch(ctx);
+    await persist();
 
     const count = await countPropertiesWithFilters(ctx.filters);
     await editTelegramMessage(chatId, messageId, `
@@ -657,6 +733,7 @@ ${getFilterSummary(ctx.filters)}
     const bed = data.replace('set_bed_', '');
     ctx.filters.bedrooms = bed === 'all' ? undefined : parseInt(bed);
     invalidateSearch(ctx);
+    await persist();
 
     const count = await countPropertiesWithFilters(ctx.filters);
     await editTelegramMessage(chatId, messageId, `
@@ -1181,7 +1258,7 @@ async function handleMessage(message: any) {
     if (text.startsWith('/start') || text.startsWith('/help')) {
       await handleStart(chatId, userName);
     } else if (text.startsWith('/search')) {
-      const ctx = getOrCreateContext(chatId);
+      const ctx = await getOrCreateContext(chatId);
       const count = await countPropertiesWithFilters(ctx.filters);
       await sendTelegramMessage(chatId, `
 🔍 <b>Поиск квартиры</b>
@@ -1192,7 +1269,7 @@ async function handleMessage(message: any) {
 ${getFilterSummary(ctx.filters)}
 `, { reply_markup: getFilterMenuKeyboard(ctx, count) });
     } else if (text.startsWith('/all')) {
-      const ctx = getOrCreateContext(chatId);
+      const ctx = await getOrCreateContext(chatId);
       ctx.filters = {};
       const results = await searchPropertiesWithFilters({}, 50);
       
@@ -1202,8 +1279,10 @@ ${getFilterSummary(ctx.filters)}
       }
 
       ctx.searchResults = results;
+      ctx.searchResultIds = results.map((r: any) => r.id).filter((id: any) => typeof id === 'number');
       ctx.currentIndex = 0;
       ctx.totalCount = results.length;
+      await saveUserContext(chatId, ctx);
 
       await displayPropertyWithPhotos(chatId, results[0], ctx);
     } else if (text.startsWith('/about')) {
