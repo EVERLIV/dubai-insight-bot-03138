@@ -144,7 +144,7 @@ export const PropertyEditDialog = ({ property, open, onOpenChange, onSaved }: Pr
           title: formData.title,
           price: formData.price ? parseFloat(formData.price) : null,
           district: formData.district || null,
-          location_area: formData.location_area || null,
+          location_area: null, // Not used - district field is sufficient
           property_type: formData.property_type,
           bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
           bathrooms: formData.bathrooms ? parseInt(formData.bathrooms) : null,
@@ -196,10 +196,7 @@ export const PropertyEditDialog = ({ property, open, onOpenChange, onSaved }: Pr
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label>Address</Label>
-              <Input value={formData.location_area} onChange={(e) => handleChange('location_area', e.target.value)} />
-            </div>
+            {/* Address field removed - district is sufficient */}
 
             <div className="space-y-2">
               <Label>Price (VND)</Label>
