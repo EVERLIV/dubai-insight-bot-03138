@@ -20,32 +20,42 @@ interface NewsItem {
   fullContent?: string;
 }
 
-// Parse RSS feed from VNExpress
-async function fetchVNExpressNews(category: string = 'tin-tuc-24h'): Promise<NewsItem[]> {
+// Parse RSS feed from VNExpress - all categories
+async function fetchVNExpressNews(category: string = 'all'): Promise<NewsItem[]> {
   const rssUrls: Record<string, string> = {
     'tin-tuc-24h': 'https://vnexpress.net/rss/tin-moi-nhat.rss',
     'bat-dong-san': 'https://vnexpress.net/rss/bat-dong-san.rss',
     'kinh-doanh': 'https://vnexpress.net/rss/kinh-doanh.rss',
     'doi-song': 'https://vnexpress.net/rss/doi-song.rss',
     'du-lich': 'https://vnexpress.net/rss/du-lich.rss',
+    'thoi-su': 'https://vnexpress.net/rss/thoi-su.rss',
   };
 
-  const rssUrl = rssUrls[category] || rssUrls['tin-tuc-24h'];
-  console.log(`Fetching RSS from: ${rssUrl}`);
+  const allItems: NewsItem[] = [];
   
-  const response = await fetch(rssUrl, {
-    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0)' },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch RSS: ${response.status}`);
-  }
-
-  const xml = await response.text();
-  const items: NewsItem[] = [];
-  const itemMatches = xml.match(/<item>[\s\S]*?<\/item>/g) || [];
+  // If 'all' - fetch from all categories
+  const categoriesToFetch = category === 'all' 
+    ? Object.keys(rssUrls) 
+    : [category];
   
-  for (const itemXml of itemMatches.slice(0, 10)) {
+  for (const cat of categoriesToFetch) {
+    const rssUrl = rssUrls[cat] || rssUrls['tin-tuc-24h'];
+    console.log(`Fetching RSS from: ${rssUrl}`);
+    
+    try {
+      const response = await fetch(rssUrl, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0)' },
+      });
+
+      if (!response.ok) {
+        console.error(`Failed to fetch RSS ${cat}: ${response.status}`);
+        continue;
+      }
+
+      const xml = await response.text();
+      const itemMatches = xml.match(/<item>[\s\S]*?<\/item>/g) || [];
+      
+      for (const itemXml of itemMatches.slice(0, 5)) {
     const title = itemXml.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/)?.[1] || 
                   itemXml.match(/<title>(.*?)<\/title>/)?.[1] || '';
     const link = itemXml.match(/<link>(.*?)<\/link>/)?.[1] || '';
@@ -58,19 +68,28 @@ async function fetchVNExpressNews(category: string = 'tin-tuc-24h'): Promise<New
                      itemXml.match(/<enclosure[^>]+url="([^"]+)"/i);
     const images = imgMatch ? [imgMatch[1]] : [];
 
-    if (title && link) {
-      items.push({
-        title: title.trim(),
-        link: link.trim(),
-        description: description.replace(/<[^>]*>/g, '').trim().slice(0, 500),
-        pubDate: pubDate.trim(),
-        images,
-      });
+        if (title && link) {
+          allItems.push({
+            title: title.trim(),
+            link: link.trim(),
+            description: description.replace(/<[^>]*>/g, '').trim().slice(0, 500),
+            pubDate: pubDate.trim(),
+            images,
+          });
+        }
+      }
+    } catch (err) {
+      console.error(`Error fetching ${cat}:`, err);
     }
   }
 
-  console.log(`Parsed ${items.length} news items`);
-  return items;
+  // Remove duplicates by URL
+  const uniqueItems = allItems.filter((item, index, self) => 
+    index === self.findIndex(t => t.link === item.link)
+  );
+
+  console.log(`Parsed ${uniqueItems.length} unique news items from ${categoriesToFetch.length} categories`);
+  return uniqueItems;
 }
 
 // Scrape full article with Firecrawl
@@ -428,14 +447,14 @@ serve(async (req) => {
           continue;
         }
 
-        // Calculate relevance
+        // Calculate relevance (for sorting, not filtering)
         const relevanceScore = calculateRelevanceScore(item.title, item.description);
         
-        // Scrape full article if detailed mode and high relevance
+        // Scrape full article if detailed mode (no relevance filter)
         let fullContent = item.description;
         let images = item.images || [];
         
-        if (detailed && relevanceScore >= 50 && firecrawlApiKey) {
+        if (detailed && firecrawlApiKey) {
           const scraped = await scrapeFullArticle(item.link);
           if (scraped.content) {
             fullContent = scraped.content;
@@ -444,12 +463,12 @@ serve(async (req) => {
           await new Promise(r => setTimeout(r, 1000)); // Rate limit
         }
 
-        // Translate
+        // Translate ALL articles (no relevance filter)
         let translatedTitle = item.title;
         let translatedContent = item.description;
         let translatedFullContent = '';
         
-        if (translate && relevanceScore >= 50) {
+        if (translate) {
           console.log(`Translating: ${item.title.slice(0, 40)}...`);
           translatedTitle = await translateToRussian(item.title, 'title');
           translatedContent = await translateToRussian(item.description, 'content');

@@ -171,17 +171,16 @@ serve(async (req) => {
       }
     }
 
-    // Auto-publish best unpublished article
+    // Auto-publish best unpublished article (no relevance filter - publish all)
     if (action === 'auto_publish') {
-      // Get best unpublished article (highest relevance, translated)
+      // Get oldest unpublished article (FIFO - first in, first out)
       const { data: articles, error } = await supabase
         .from('news_articles')
         .select('*')
         .eq('is_posted', false)
         .eq('is_processed', true)
         .not('translated_title', 'is', null)
-        .order('relevance_score', { ascending: false })
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: true })
         .limit(1);
 
       if (error) throw error;
