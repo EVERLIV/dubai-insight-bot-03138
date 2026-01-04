@@ -8,6 +8,7 @@ import Properties from "./pages/Properties";
 import PropertyDetails from "./pages/PropertyDetails";
 import BuyServices from "./pages/BuyServices";
 import RentServices from "./pages/RentServices";
+import Rentals from "./pages/Rentals";
 import MarketInsights from "./pages/MarketInsights";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/property/:id" element={<PropertyDetails />} />
           <Route path="/buy-services" element={<BuyServices />} />
           <Route path="/rent-services" element={<RentServices />} />
+          <Route path="/rentals" element={<Rentals />} />
           <Route path="/market-insights" element={<MarketInsights />} />
           <Route path="/admin" element={<Admin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
