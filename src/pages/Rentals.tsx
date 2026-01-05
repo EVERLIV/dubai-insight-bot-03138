@@ -121,7 +121,7 @@ const Rentals = () => {
       setProperties(data || []);
     } catch (error) {
       console.error('Error loading properties:', error);
-      toast.error('Ошибка загрузки объектов');
+      toast.error('Error loading properties');
     } finally {
       setIsLoading(false);
     }
@@ -255,8 +255,8 @@ const Rentals = () => {
             </h1>
             
             <p className="text-lg md:text-xl text-emerald-100 mb-10 max-w-2xl mx-auto">
-              Эксклюзивная коллекция квартир и вилл для аренды в лучших районах Сайгона. 
-              Найдите идеальное жилье для комфортной жизни.
+              Exclusive collection of apartments and villas for rent in the best districts of Ho Chi Minh City. 
+              Find your perfect home for comfortable living.
             </p>
 
             {/* Search Bar */}
@@ -267,7 +267,7 @@ const Rentals = () => {
                     <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/60" />
                     <Input 
                       type="text"
-                      placeholder="Поиск по названию или району..."
+                      placeholder="Search by name or district..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full pl-12 pr-4 h-14 bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-xl focus:bg-white/20"
@@ -289,7 +289,7 @@ const Rentals = () => {
                     className="h-14 px-6 bg-amber-500 hover:bg-amber-400 text-emerald-900 font-semibold rounded-xl"
                   >
                     <SlidersHorizontal className="w-5 h-5 mr-2" />
-                    Фильтры
+                    Filters
                     {activeFiltersCount > 0 && (
                       <Badge className="ml-2 bg-emerald-900 text-white">{activeFiltersCount}</Badge>
                     )}
@@ -305,16 +305,16 @@ const Rentals = () => {
       <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
         <SheetContent className="w-full sm:max-w-md overflow-y-auto">
           <SheetHeader className="mb-6">
-            <SheetTitle className="font-display text-2xl">Фильтры поиска</SheetTitle>
+            <SheetTitle className="font-display text-2xl">Search Filters</SheetTitle>
             <SheetDescription>
-              Настройте параметры для точного поиска
+              Configure parameters for precise search
             </SheetDescription>
           </SheetHeader>
 
           <div className="space-y-6">
             {/* Property Type */}
             <div>
-              <label className="text-sm font-semibold text-foreground mb-3 block">Тип недвижимости</label>
+              <label className="text-sm font-semibold text-foreground mb-3 block">Property Type</label>
               <Select value={selectedType} onValueChange={setSelectedType}>
                 <SelectTrigger className="w-full">
                   <Home className="w-4 h-4 mr-2 text-muted-foreground" />
@@ -330,7 +330,7 @@ const Rentals = () => {
 
             {/* Bedrooms */}
             <div>
-              <label className="text-sm font-semibold text-foreground mb-3 block">Спальни</label>
+              <label className="text-sm font-semibold text-foreground mb-3 block">Bedrooms</label>
               <Select value={selectedBedrooms} onValueChange={setSelectedBedrooms}>
                 <SelectTrigger className="w-full">
                   <Bed className="w-4 h-4 mr-2 text-muted-foreground" />
@@ -347,7 +347,7 @@ const Rentals = () => {
             {/* Price Range */}
             <div>
               <label className="text-sm font-semibold text-foreground mb-3 block">
-                Цена аренды
+                Rental Price
               </label>
               <div className="px-2">
                 <Slider
@@ -370,8 +370,8 @@ const Rentals = () => {
               <div className="flex items-center gap-3">
                 <span className="text-2xl">🐾</span>
                 <div>
-                  <p className="font-medium">Можно с питомцами</p>
-                  <p className="text-sm text-muted-foreground">Показать только pet-friendly</p>
+                  <p className="font-medium">Pets Allowed</p>
+                  <p className="text-sm text-muted-foreground">Show only pet-friendly</p>
                 </div>
               </div>
               <Button
@@ -379,7 +379,7 @@ const Rentals = () => {
                 size="sm"
                 onClick={() => setPetsAllowed(!petsAllowed)}
               >
-                {petsAllowed ? 'Да' : 'Нет'}
+                {petsAllowed ? 'Yes' : 'No'}
               </Button>
             </div>
 
@@ -391,13 +391,13 @@ const Rentals = () => {
                 onClick={clearFilters}
               >
                 <X className="w-4 h-4 mr-2" />
-                Сбросить
+                Reset
               </Button>
               <Button 
                 className="flex-1 bg-primary"
                 onClick={() => setIsFilterOpen(false)}
               >
-                Показать {filteredProperties.length} объектов
+                Show {filteredProperties.length} properties
               </Button>
             </div>
           </div>
@@ -412,10 +412,10 @@ const Rentals = () => {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div>
               <h2 className="text-2xl font-display font-bold text-foreground">
-                {filteredProperties.length} объект{filteredProperties.length === 1 ? '' : 'ов'} в аренду
+                {filteredProperties.length} {filteredProperties.length === 1 ? 'property' : 'properties'} for rent
               </h2>
               <p className="text-muted-foreground mt-1">
-                {selectedDistrict !== 'All Districts' ? selectedDistrict : 'Все районы Ho Chi Minh City'}
+                {selectedDistrict !== 'All Districts' ? selectedDistrict : 'All districts in Ho Chi Minh City'}
               </p>
             </div>
 
@@ -427,10 +427,10 @@ const Rentals = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="newest">Сначала новые</SelectItem>
-                  <SelectItem value="price-asc">Цена: по возрастанию</SelectItem>
-                  <SelectItem value="price-desc">Цена: по убыванию</SelectItem>
-                  <SelectItem value="area-desc">Площадь: по убыванию</SelectItem>
+                  <SelectItem value="newest">Newest First</SelectItem>
+                  <SelectItem value="price-asc">Price: Low to High</SelectItem>
+                  <SelectItem value="price-desc">Price: High to Low</SelectItem>
+                  <SelectItem value="area-desc">Area: Largest First</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -487,7 +487,7 @@ const Rentals = () => {
                 </Badge>
               )}
               <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
-                Сбросить все
+                Clear All
               </Button>
             </div>
           )}
@@ -525,7 +525,7 @@ const Rentals = () => {
                     {/* Badges */}
                     <div className="absolute top-3 left-3 flex gap-2">
                       <Badge className="bg-primary text-primary-foreground font-semibold">
-                        Аренда
+                        For Rent
                       </Badge>
                       {property.pets_allowed && (
                         <Badge className="bg-amber-500 text-white">
@@ -551,7 +551,7 @@ const Rentals = () => {
                     <div className="absolute bottom-3 left-3 right-3">
                       <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 text-white px-4 py-2 rounded-lg inline-block">
                         <span className="text-lg font-bold">{formatPrice(property.price || 0)}</span>
-                        <span className="text-emerald-100 text-sm">/мес</span>
+                        <span className="text-emerald-100 text-sm">/month</span>
                       </div>
                     </div>
                   </div>
@@ -573,19 +573,19 @@ const Rentals = () => {
                         {property.bedrooms !== null && (
                           <div className="flex items-center gap-1">
                             <Bed className="w-4 h-4" />
-                            <span>{property.bedrooms === 0 ? 'Studio' : `${property.bedrooms} сп.`}</span>
+                            <span>{property.bedrooms === 0 ? 'Studio' : `${property.bedrooms} bed`}</span>
                           </div>
                         )}
                         {property.bathrooms && (
                           <div className="flex items-center gap-1">
                             <Bath className="w-4 h-4" />
-                            <span>{property.bathrooms} ван.</span>
+                            <span>{property.bathrooms} bath</span>
                           </div>
                         )}
                         {property.area_sqft && (
                           <div className="flex items-center gap-1">
                             <Maximize2 className="w-4 h-4" />
-                            <span>{property.area_sqft} м²</span>
+                            <span>{property.area_sqft} sqm</span>
                           </div>
                         )}
                       </div>
@@ -595,11 +595,11 @@ const Rentals = () => {
                       <div className="flex items-center gap-3 mt-4 pt-4 border-t border-border">
                         <Button size="sm" className="gap-2">
                           <Eye className="w-4 h-4" />
-                          Подробнее
+                          View Details
                         </Button>
                         <Button size="sm" variant="outline" className="gap-2">
                           <Heart className="w-4 h-4" />
-                          Сохранить
+                          Save
                         </Button>
                       </div>
                     )}
@@ -612,12 +612,12 @@ const Rentals = () => {
               <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
                 <Building2 className="w-12 h-12 text-muted-foreground" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">Объекты не найдены</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-2">No Properties Found</h3>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Попробуйте изменить параметры поиска или сбросить фильтры
+                Try adjusting your search parameters or reset filters
               </p>
               <Button onClick={clearFilters} variant="outline">
-                Сбросить фильтры
+                Reset Filters
               </Button>
             </div>
           )}
